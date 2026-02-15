@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Human Tennis Battle - Tournament Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #2f855a;
+            touch-action: none;
+            font-family: sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        canvas {
+            display: block;
+            background-color: #38a169;
+            box-shadow: 0 0 50px rgba(0,0,0,0.3);
+            margin: auto;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            color: white;
+            pointer-events: none;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 5;
+        }
+        .score-box {
+            background: rgba(0,0,0,0.3);
+            padding: 0.5rem 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            min-width: 100px;
+        }
+        #message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            color: #2d3748;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 20;
+            min-width: 320px;
+        }
+        #stage-indicator {
+            position: absolute;
+            top: 110px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 1.6rem;
+            pointer-events: none;
+            letter-spacing: 0.2em;
+            z-index: 5;
+            background: rgba(0,0,0,0.2);
+            padding: 5px 0;
+        }
+        #speed-display, #levelup-display {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 900;
+            font-style: italic;
+            text-shadow: 3px 3px 0px #000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 15;
+            white-space: nowrap;
+        }
+        #speed-display {
+            top: 60%;
+            color: #fff176;
+            font-size: 2.5rem;
+        }
+        #levelup-display {
+            top: 45%;
+            color: #ffeb3b;
+            font-size: 4rem;
+            letter-spacing: -0.05em;
+        }
+        button {
+            background-color: #2f855a;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            margin-top: 1.5rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            pointer-events: auto;
+        }
+        button:hover {
+            background-color: #276749;
+            transform: scale(1.05);
+        }
+        .trophy-anim {
+            animation: bounce 2s infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-overlay">
+        <div class="score-box">
+            <p class="text-xs uppercase opacity-80" id="cpu-name">CPU SCORE</p>
+            <p class="text-3xl font-bold" id="cpu-score">0</p>
+        </div>
+        <div class="score-box">
+            <p class="text-xs uppercase opacity-80" id="player-title">PLAYER SCORE</p>
+            <p class="text-3xl font-bold" id="player-score">0</p>
+        </div>
+    </div>
+
+    <div id="stage-indicator">LEVEL 1: BEGINNER</div>
+    <div id="speed-display">120 km/h</div>
+    <div id="levelup-display">PLAYER UPGRADED!</div>
+
+    <div id="message-box">
+        <div id="trophy-display" style="display:none;" class="trophy-anim">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="#ECC94B" style="margin: auto;">
+                <path d="M18 2H6c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 13.9V17H8v2h8v-2h-3v-3.1a5.01 5.01 0 002.61-3.96C18.08 9.63 20 7.55 20 5V4c0-1.1-.9-2-2-2zM6 7V4h2v3c0 .55-.45 1-1 1s-1-.45-1-1zm12 0c0 .55-.45 1-1 1s-1-.45-1-1V4h2v3z"/>
+            </svg>
+        </div>
+        <h2 id="msg-title" class="text-3xl font-bold mb-2 uppercase tracking-tighter">Human Tennis</h2>
+        <p id="msg-body" class="mb-4 text-lg text-gray-600">レベル1から挑戦だ！</p>
+        <button id="start-btn" onclick="nextMatch()">試合開始！</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const pScoreEl = document.getElementById('player-score');
+        const cScoreEl = document.getElementById('cpu-score');
+        const cpuNameEl = document.getElementById('cpu-name');
+        const pTitleEl = document.getElementById('player-title');
+        const stageEl = document.getElementById('stage-indicator');
+        const speedEl = document.getElementById('speed-display');
+        const levelUpEl = document.getElementById('levelup-display');
+        const messageBox = document.getElementById('message-box');
+        const trophyDisplay = document.getElementById('trophy-display');
+        const msgTitle = document.getElementById('msg-title');
+        const msgBody = document.getElementById('msg-body');
+        const startBtn = document.getElementById('start-btn');
+
+        // レベル設定とプレイヤーの進化データ
+        let tournamentStage = 0;
+        const opponents = [
+            { 
+                name: "Beginner", speed: 3.5, ballSpeed: 6, color: "#feb2b2", serveBase: 120, label: "LEVEL 1: BEGINNER", 
+                pSpeed: 7.5, pColor: "#bee3f8", pRacketSize: 1.0, pTitle: "ROOKIE" 
+            },
+            { 
+                name: "Pro", speed: 4.8, ballSpeed: 8.5, color: "#fbd38d", serveBase: 170, label: "LEVEL 2: PRO", 
+                pSpeed: 8.5, pColor: "#63b3ed", pRacketSize: 1.15, pTitle: "ELITE" 
+            },
+            { 
+                name: "Champion", speed: 6.2, ballSpeed: 11, color: "#faf089", serveBase: 220, label: "LEVEL 3: CHAMPION", 
+                pSpeed: 9.5, pColor: "#9f7aea", pRacketSize: 1.3, pTitle: "LEGEND" 
+            }
+        ];
+
+        let player = { x: 0, y: 0, score: 0, swing: 0, speed: 7.5, color: "#bee3f8", racketScale: 1.0 };
+        let cpu = { x: 0, y: 80, score: 0, speed: 3.0, color: "#feb2b2" };
+        let ball = { x: 0, y: 0, dx: 0, dy: 0, radius: 8, speed: 6, serving: true };
+       
+        let keys = {};
+        let gameActive = false;
+        let animationId;
+        let speedTimeout;
+        let particleList = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (!gameActive) {
+                player.x = canvas.width / 2;
+                player.y = canvas.height * 0.85;
+                cpu.x = canvas.width / 2;
+            }
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // エフェクト用パーティクル
+        function createLevelUpParticles() {
+            for (let i = 0; i < 30; i++) {
+                particleList.push({
+                    x: player.x,
+                    y: player.y,
+                    dx: (Math.random() - 0.5) * 10,
+                    dy: (Math.random() - 0.5) * 10,
+                    life: 60,
+                    color: `hsl(${Math.random() * 360}, 70%, 70%)`
+                });
+            }
+        }
+
+        // 操作系
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (e.code === 'Space' || e.code === 'Enter') handleAction();
+        });
+        window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+        function handleInteraction(clientX, clientY) {
+            if (!gameActive) return;
+            const rect = canvas.getBoundingClientRect();
+            player.x = clientX - rect.left;
+            const mouseY = clientY - rect.top - 40; 
+            if (mouseY > canvas.height / 2 + 50) {
+                player.y = mouseY;
+            }
+            if (ball.serving) handleAction();
+        }
+
+        canvas.addEventListener('mousemove', (e) => handleInteraction(e.clientX, e.clientY));
+        canvas.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            handleInteraction(touch.clientX, touch.clientY);
+        }, { passive: false });
+        canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            handleInteraction(touch.clientX, touch.clientY);
+        }, { passive: false });
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 0) handleAction();
+        });
+
+        function showSpeed() {
+            const base = opponents[Math.min(tournamentStage, opponents.length - 1)].serveBase;
+            const randomExtra = Math.floor(Math.random() * 25);
+            speedEl.textContent = `Serve: ${base + randomExtra} km/h`;
+            speedEl.style.opacity = '1';
+            
+            if (speedTimeout) clearTimeout(speedTimeout);
+            speedTimeout = setTimeout(() => {
+                speedEl.style.opacity = '0';
+            }, 1500);
+        }
+
+        function showLevelUpUI(text) {
+            levelUpEl.textContent = text;
+            levelUpEl.style.opacity = '1';
+            levelUpEl.style.transform = 'translate(-50%, -50%) scale(1.2)';
+            setTimeout(() => {
+                levelUpEl.style.opacity = '0';
+                levelUpEl.style.transform = 'translate(-50%, -50%) scale(1.0)';
+            }, 2000);
+        }
+
+        function handleAction() {
+            if (!gameActive) return;
+            if (ball.serving) {
+                ball.serving = false;
+                const stageData = opponents[Math.min(tournamentStage, opponents.length - 1)];
+                ball.speed = stageData.ballSpeed;
+                ball.dy = -ball.speed;
+                ball.dx = (Math.random() - 0.5) * 6;
+                player.swing = 15;
+                showSpeed();
+            } else if (player.swing <= 0) {
+                player.swing = 15;
+            }
+        }
+
+        function resetBall(isPlayerServe) {
+            ball.serving = true;
+            const stageData = opponents[Math.min(tournamentStage, opponents.length - 1)];
+            ball.speed = stageData.ballSpeed;
+           
+            if (isPlayerServe) {
+                ball.y = player.y - 35;
+                ball.x = player.x + 25;
+            } else {
+                ball.serving = false;
+                ball.x = cpu.x;
+                ball.y = cpu.y + 35;
+                ball.dy = ball.speed;
+                ball.dx = (Math.random() - 0.5) * 6;
+                showSpeed();
+            }
+        }
+
+        function nextMatch() {
+            if (tournamentStage >= 3) tournamentStage = 0;
+           
+            const config = opponents[Math.min(tournamentStage, opponents.length - 1)];
+            
+            // CPUの設定
+            cpu.speed = config.speed;
+            cpu.color = config.color;
+            cpuNameEl.textContent = config.name + " SCORE";
+            
+            // プレイヤーの進化設定
+            player.speed = config.pSpeed;
+            player.color = config.pColor;
+            player.racketScale = config.pRacketSize;
+            pTitleEl.textContent = config.pTitle + " (YOU)";
+            
+            stageEl.textContent = config.label;
+           
+            player.score = 0;
+            cpu.score = 0;
+            player.y = canvas.height * 0.85;
+            player.x = canvas.width / 2;
+            cpu.x = canvas.width / 2;
+           
+            updateScoreDisplay();
+            resetBall(true);
+           
+            messageBox.style.display = 'none';
+            trophyDisplay.style.display = 'none';
+            gameActive = true;
+           
+            if (animationId) cancelAnimationFrame(animationId);
+            draw();
+        }
+
+        function updateScoreDisplay() {
+            pScoreEl.textContent = player.score;
+            cScoreEl.textContent = cpu.score;
+           
+            if (player.score >= 5 || cpu.score >= 5) {
+                gameActive = false;
+                if (player.score >= 5) {
+                    tournamentStage++;
+                    if (tournamentStage >= 3) {
+                        msgTitle.textContent = "CONGRATS! 🏆";
+                        msgBody.textContent = "全レベルクリア！君は伝説の王者になった！";
+                        startBtn.textContent = "最初からやり直す";
+                        trophyDisplay.style.display = 'block';
+                    } else {
+                        createLevelUpParticles();
+                        showLevelUpUI("PLAYER UPGRADED!");
+                        msgTitle.textContent = "LEVEL CLEAR!";
+                        msgBody.textContent = `能力がアップしました！次はレベル ${tournamentStage + 1} だ！`;
+                        startBtn.textContent = "強化された自分を試す！";
+                    }
+                } else {
+                    msgTitle.textContent = "LEVEL FAILED";
+                    msgBody.textContent = `負けてしまった... レベル ${tournamentStage + 1} をやり直そう。`;
+                    startBtn.textContent = "もう一度挑戦";
+                }
+                setTimeout(() => {
+                    messageBox.style.display = 'block';
+                }, 500);
+            }
+        }
+
+        function drawHuman(x, y, isPlayer, swingFrame, humanColor, racketScale = 1.0) {
+            ctx.save();
+            ctx.translate(x, y);
+           
+            // 足元の影
+            ctx.fillStyle = "rgba(0,0,0,0.15)";
+            ctx.beginPath();
+            ctx.ellipse(0, 10, 20, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 3;
+            ctx.lineCap = "round";
+            ctx.fillStyle = humanColor;
+
+            // 頭
+            ctx.beginPath(); ctx.arc(0, -40, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            // 体
+            ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(0, -10); ctx.stroke();
+            // 足
+            let walk = Math.sin(Date.now() / 100) * 6;
+            ctx.beginPath();
+            ctx.moveTo(0, -10); ctx.lineTo(-12 + walk, 8);
+            ctx.moveTo(0, -10); ctx.lineTo(12 - walk, 8);
+            ctx.stroke();
+
+            // 腕とラケット
+            let armAngle = isPlayer ? (swingFrame > 0 ? -Math.PI/1.1 : Math.PI/4) : Math.PI/4;
+            let racketAngle = isPlayer ? (swingFrame > 0 ? -1.3 : 0.3) : 2.5;
+
+            ctx.save();
+            ctx.translate(0, -25);
+            ctx.rotate(armAngle);
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(25, 0); ctx.stroke();
+
+            // ラケットの描画 (スケール適用)
+            ctx.translate(25, 0);
+            ctx.rotate(racketAngle);
+            ctx.scale(racketScale, racketScale); // レベルアップで大きくなる
+            ctx.strokeStyle = isPlayer ? "#48bb78" : "#f56565";
+            ctx.lineWidth = 4 / racketScale;
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(15, 0); ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(28, 0, 13, 20, Math.PI/2, 0, Math.PI*2); ctx.stroke();
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            // パーティクルの更新
+            for (let i = particleList.length - 1; i >= 0; i--) {
+                const p = particleList[i];
+                p.x += p.dx;
+                p.y += p.dy;
+                p.life--;
+                if (p.life <= 0) particleList.splice(i, 1);
+            }
+
+            // 移動 (キーボード)
+            if (keys['ArrowLeft'] || keys['KeyA']) player.x -= player.speed;
+            if (keys['ArrowRight'] || keys['KeyD']) player.x += player.speed;
+            if (keys['ArrowUp'] || keys['KeyW']) player.y -= player.speed;
+            if (keys['ArrowDown'] || keys['KeyS']) player.y += player.speed;
+
+            player.x = Math.max(45, Math.min(canvas.width - 45, player.x));
+            player.y = Math.max(canvas.height / 2 + 50, Math.min(canvas.height - 45, player.y));
+
+            if (ball.serving) {
+                ball.x = player.x + 25;
+                ball.y = player.y - 35;
+                return;
+            }
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // 左右の壁
+            if (ball.x < ball.radius + 30 || ball.x > canvas.width - ball.radius - 30) {
+                ball.dx *= -1;
+            }
+
+            // CPU AI
+            let cpuTarget = ball.x;
+            if (cpu.x < cpuTarget - 5) cpu.x += cpu.speed;
+            else if (cpu.x > cpuTarget + 5) cpu.x -= cpu.speed;
+            cpu.x = Math.max(45, Math.min(canvas.width - 45, cpu.x));
+
+            // オートスイングアシスト (スマホ用)
+            if (ball.dy > 0 && Math.abs(ball.y - player.y) < 60 && Math.abs(ball.x - player.x) < (40 * player.racketScale)) {
+                if (player.swing <= 0) player.swing = 12;
+            }
+
+            // プレイヤーとの衝突 (判定範囲をラケットサイズに連動)
+            if (ball.dy > 0 && Math.abs(ball.y - player.y + 10) < 40) {
+                if (Math.abs(ball.x - player.x) < (55 * player.racketScale) && player.swing > 0) {
+                    ball.dy = -ball.speed;
+                    ball.dx = (ball.x - player.x) * 0.4;
+                    ball.y = player.y - 45;
+                }
+            }
+
+            // CPUとの衝突
+            if (ball.dy < 0 && Math.abs(ball.y - cpu.y - 10) < 40) {
+                if (Math.abs(ball.x - cpu.x) < 50) {
+                    ball.dy = ball.speed;
+                    ball.dx = (ball.x - cpu.x) * 0.3;
+                    ball.y = cpu.y + 45;
+                }
+            }
+
+            // アウト判定
+            if (ball.y < 0) {
+                player.score++;
+                updateScoreDisplay();
+                if (gameActive) resetBall(false);
+            } else if (ball.y > canvas.height) {
+                cpu.score++;
+                updateScoreDisplay();
+                if (gameActive) resetBall(true);
+            }
+
+            if (player.swing > 0) player.swing--;
+        }
+
+        function draw() {
+            ctx.fillStyle = "#38a169";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+           
+            // コートのライン
+            ctx.strokeStyle = "rgba(255,255,255,0.7)";
+            ctx.lineWidth = 4;
+            ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 30); ctx.lineTo(canvas.width / 2, canvas.height - 30);
+            ctx.moveTo(30, canvas.height / 2); ctx.lineTo(canvas.width - 30, canvas.height / 2);
+            ctx.stroke();
+
+            // パーティクルの描画
+            particleList.forEach(p => {
+                ctx.globalAlpha = p.life / 60;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 4, 4);
+                ctx.globalAlpha = 1.0;
+            });
+
+            // ボール
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = "#ccff00";
+            ctx.fill();
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // プレイヤーとCPUを描画
+            drawHuman(player.x, player.y, true, player.swing, player.color, player.racketScale);
+            drawHuman(cpu.x, cpu.y, false, 0, cpu.color);
+
+            update();
+            if (gameActive) animationId = requestAnimationFrame(draw);
+        }
+
+        window.onload = () => {
+            resize();
+            messageBox.style.display = 'block';
+        };
+    </script>
+</body>
+</html>
