@@ -1,0 +1,424 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mini Soccer Showdown - Countdown Update</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: 'sans-serif';
+            touch-action: none;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: #2e7d32;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            max-width: 100%;
+            max-height: 100vh;
+        }
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        #countdown-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 8rem;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+            pointer-events: none;
+            z-index: 20;
+            display: none;
+        }
+        .controls-hint {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+        #message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            pointer-events: auto;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div id="score-p1">PLAYER 1: 0</div>
+        <div id="score-p2">PLAYER 2: 0</div>
+    </div>
+
+    <div id="countdown-overlay">3</div>
+
+    <div id="message-box">
+        <h1 id="message-text" class="text-3xl font-bold mb-4">GOAL!</h1>
+        <button onclick="startNextRound()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded text-lg font-bold">NEXT ROUND</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="controls-hint hidden md:flex">
+        <div>P1 (青): マウス移動 & クリックでシュート</div>
+        <div>P2 (赤): 矢印キー & スペースでシュート</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const countdownEl = document.getElementById('countdown-overlay');
+        const scoreP1El = document.getElementById('score-p1');
+        const scoreP2El = document.getElementById('score-p2');
+
+        // Game constants
+        const WIDTH = 800;
+        const HEIGHT = 500;
+        const PLAYER_RADIUS = 25;
+        const GK_RADIUS = 20;
+        const BALL_RADIUS = 15;
+        const GOAL_WIDTH = 10;
+        const GOAL_HEIGHT = 150;
+        const FRICTION = 0.98;
+        const SPEED_LIMIT = 7;
+        const SHOOT_POWER = 15;
+
+        canvas.width = WIDTH;
+        canvas.height = HEIGHT;
+
+        // Game state
+        let gameState = 'countdown'; // Initial state is countdown
+        let score = { p1: 0, p2: 0 };
+        let countdownValue = 3;
+        
+        let mousePos = { x: 200, y: HEIGHT / 2 };
+        let isMouseDown = false;
+        const keys = {};
+
+        // Game objects
+        const p1 = {
+            x: 200, y: HEIGHT / 2,
+            vx: 0, vy: 0,
+            color: '#2196F3', accel: 0.8,
+            radius: PLAYER_RADIUS, animFrame: 0, kickTimer: 0
+        };
+
+        const p2 = {
+            x: WIDTH - 200, y: HEIGHT / 2,
+            vx: 0, vy: 0,
+            color: '#F44336', accel: 0.8,
+            radius: PLAYER_RADIUS, animFrame: 0, kickTimer: 0
+        };
+
+        const gk1 = {
+            x: 50, y: HEIGHT / 2,
+            vx: 0, vy: 0,
+            color: '#4FC3F7', accel: 0.4,
+            radius: GK_RADIUS, animFrame: 0, kickTimer: 0, isGK: true
+        };
+
+        const gk2 = {
+            x: WIDTH - 50, y: HEIGHT / 2,
+            vx: 0, vy: 0,
+            color: '#E57373', accel: 0.4,
+            radius: GK_RADIUS, animFrame: 0, kickTimer: 0, isGK: true
+        };
+
+        const ball = {
+            x: WIDTH / 2, y: HEIGHT / 2,
+            vx: 0, vy: 0, radius: BALL_RADIUS, color: '#FFFFFF'
+        };
+
+        const players = [p1, p2, gk1, gk2];
+
+        // Input Listeners
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'Space' && gameState === 'playing') shoot(p2);
+        });
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            mousePos.x = (e.clientX - rect.left) * scaleX;
+            mousePos.y = (e.clientY - rect.top) * scaleY;
+        });
+
+        canvas.addEventListener('mousedown', () => {
+            isMouseDown = true;
+            if (gameState === 'playing') shoot(p1);
+        });
+        canvas.addEventListener('mouseup', () => isMouseDown = false);
+
+        function startCountdown() {
+            gameState = 'countdown';
+            countdownValue = 3;
+            countdownEl.style.display = 'block';
+            countdownEl.innerText = countdownValue;
+            
+            const timer = setInterval(() => {
+                countdownValue--;
+                if (countdownValue > 0) {
+                    countdownEl.innerText = countdownValue;
+                } else if (countdownValue === 0) {
+                    countdownEl.innerText = 'GO!';
+                } else {
+                    clearInterval(timer);
+                    countdownEl.style.display = 'none';
+                    gameState = 'playing';
+                }
+            }, 1000);
+        }
+
+        function shoot(player) {
+            const dx = ball.x - player.x;
+            const dy = ball.y - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < player.radius + ball.radius + 15) {
+                const angle = Math.atan2(dy, dx);
+                ball.vx = Math.cos(angle) * SHOOT_POWER;
+                ball.vy = Math.sin(angle) * SHOOT_POWER;
+                player.kickTimer = 10;
+            }
+        }
+
+        function startNextRound() {
+            p1.x = 200; p1.y = HEIGHT / 2;
+            p1.vx = 0; p1.vy = 0;
+            p2.x = WIDTH - 200; p2.y = HEIGHT / 2;
+            p2.vx = 0; p2.vy = 0;
+            gk1.x = 50; gk1.y = HEIGHT / 2;
+            gk2.x = WIDTH - 50; gk2.y = HEIGHT / 2;
+            ball.x = WIDTH / 2; ball.y = HEIGHT / 2;
+            ball.vx = 0; ball.vy = 0;
+            messageBox.style.display = 'none';
+            startCountdown();
+        }
+
+        function checkCollision(obj1, obj2) {
+            const dx = obj2.x - obj1.x;
+            const dy = obj2.y - obj1.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const minDistance = obj1.radius + obj2.radius;
+
+            if (distance < minDistance) {
+                const angle = Math.atan2(dy, dx);
+                const targetX = obj1.x + Math.cos(angle) * minDistance;
+                const targetY = obj1.y + Math.sin(angle) * minDistance;
+                const force = 0.6;
+                const ax = (targetX - obj2.x) * force;
+                const ay = (targetY - obj2.y) * force;
+                obj1.vx -= ax;
+                obj1.vy -= ay;
+                obj2.vx += ax;
+                obj2.vy += ay;
+            }
+        }
+
+        function updateGK(gk) {
+            const goalTop = (HEIGHT - GOAL_HEIGHT) / 2;
+            const goalBottom = goalTop + GOAL_HEIGHT;
+            const targetY = Math.max(goalTop, Math.min(goalBottom, ball.y));
+            if (gk.y < targetY) gk.vy += gk.accel;
+            else gk.vy -= gk.accel;
+            gk.vy *= 0.9;
+        }
+
+        function update() {
+            // Only update physics and input if playing
+            if (gameState !== 'playing' && gameState !== 'countdown') return;
+
+            if (gameState === 'playing') {
+                // P1 movement
+                const dx1 = mousePos.x - p1.x;
+                const dy1 = mousePos.y - p1.y;
+                const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+                if (dist1 > 5) {
+                    const angle = Math.atan2(dy1, dx1);
+                    p1.vx += Math.cos(angle) * p1.accel;
+                    p1.vy += Math.sin(angle) * p1.accel;
+                }
+
+                // P2 movement
+                if (keys['ArrowUp']) p2.vy -= p2.accel;
+                if (keys['ArrowDown']) p2.vy += p2.accel;
+                if (keys['ArrowLeft']) p2.vx -= p2.accel;
+                if (keys['ArrowRight']) p2.vx += p2.accel;
+
+                // GK update
+                updateGK(gk1);
+                updateGK(gk2);
+            }
+
+            // Apply physics (always apply during countdown for gravity/idle but here it's static)
+            const allObjs = [...players, ball];
+            allObjs.forEach(obj => {
+                obj.vx *= FRICTION;
+                obj.vy *= FRICTION;
+                const speed = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
+                
+                if (obj.radius >= GK_RADIUS) {
+                    if (speed > SPEED_LIMIT) {
+                        obj.vx = (obj.vx / speed) * SPEED_LIMIT;
+                        obj.vy = (obj.vy / speed) * SPEED_LIMIT;
+                    }
+                    if (speed > 0.5) obj.animFrame += speed * 0.1;
+                    if (obj.kickTimer > 0) obj.kickTimer--;
+                }
+                
+                obj.x += obj.vx;
+                obj.y += obj.vy;
+
+                // Walls
+                if (obj.x < obj.radius) { obj.x = obj.radius; obj.vx *= -0.5; }
+                if (obj.x > WIDTH - obj.radius) { obj.x = WIDTH - obj.radius; obj.vx *= -0.5; }
+                if (obj.y < obj.radius) { obj.y = obj.radius; obj.vy *= -0.5; }
+                if (obj.y > HEIGHT - obj.radius) { obj.y = HEIGHT - obj.radius; obj.vy *= -0.5; }
+            });
+
+            if (gameState === 'playing') {
+                // Collisions
+                for (let i = 0; i < players.length; i++) {
+                    checkCollision(players[i], ball);
+                    for (let j = i + 1; j < players.length; j++) {
+                        checkCollision(players[i], players[j]);
+                    }
+                }
+
+                // Goal detection
+                const goalTop = (HEIGHT - GOAL_HEIGHT) / 2;
+                const goalBottom = goalTop + GOAL_HEIGHT;
+                if (ball.y > goalTop && ball.y < goalBottom) {
+                    if (ball.x < ball.radius + 5) {
+                        score.p2++;
+                        goalScored('PLAYER 2 GOAL!');
+                    } else if (ball.x > WIDTH - ball.radius - 5) {
+                        score.p1++;
+                        goalScored('PLAYER 1 GOAL!');
+                    }
+                }
+            }
+        }
+
+        function goalScored(text) {
+            gameState = 'goal';
+            messageText.innerText = text;
+            messageBox.style.display = 'block';
+            scoreP1El.innerText = `PLAYER 1: ${score.p1}`;
+            scoreP2El.innerText = `PLAYER 2: ${score.p2}`;
+        }
+
+        function drawHuman(player) {
+            const { x, y, color, animFrame, kickTimer, vx, radius } = player;
+            ctx.save();
+            ctx.translate(x, y);
+            
+            const scale = radius / PLAYER_RADIUS;
+            ctx.scale(vx < -0.1 ? -scale : scale, scale);
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+
+            const legSwing = kickTimer > 0 ? 25 : Math.sin(animFrame) * 15;
+            const armSwing = Math.cos(animFrame) * 15;
+
+            ctx.beginPath(); ctx.arc(0, -15, 8, 0, Math.PI * 2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(0, 10); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, -2); ctx.lineTo(armSwing, 8);
+            ctx.moveTo(0, -2); ctx.lineTo(-armSwing, 8); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, 10); ctx.lineTo(legSwing, 22);
+            ctx.moveTo(0, 10); ctx.lineTo(-legSwing, 22); ctx.stroke();
+
+            if (player.isGK) {
+                ctx.fillStyle = '#fff';
+                ctx.beginPath(); ctx.arc(armSwing, 8, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(-armSwing, 8, 4, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function drawBall(b) {
+            ctx.save();
+            ctx.translate(b.x, b.y);
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(0, 0, b.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-5, -5); ctx.lineTo(5, -5); ctx.lineTo(8, 0); 
+            ctx.lineTo(5, 5); ctx.lineTo(-5, 5); ctx.lineTo(-8, 0); ctx.closePath();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawPitch() {
+            ctx.fillStyle = '#2e7d32';
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(10, 10, WIDTH - 20, HEIGHT - 20);
+            ctx.beginPath();
+            ctx.moveTo(WIDTH / 2, 10); ctx.lineTo(WIDTH / 2, HEIGHT - 10); ctx.stroke();
+            ctx.beginPath(); ctx.arc(WIDTH / 2, HEIGHT / 2, 70, 0, Math.PI * 2); ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            const goalY = (HEIGHT - GOAL_HEIGHT) / 2;
+            ctx.fillRect(0, goalY, GOAL_WIDTH, GOAL_HEIGHT);
+            ctx.fillRect(WIDTH - GOAL_WIDTH, goalY, GOAL_WIDTH, GOAL_HEIGHT);
+        }
+
+        function gameLoop() {
+            update();
+            ctx.clearRect(0, 0, WIDTH, HEIGHT);
+            drawPitch();
+            drawBall(ball);
+            players.forEach(drawHuman);
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.onload = () => {
+            gameLoop();
+            startCountdown();
+        };
+    </script>
+</body>
+</html>
