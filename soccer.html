@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mini Soccer Showdown - Countdown Update</title>
+    <title>Mini Soccer Showdown - Mobile Friendly</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -24,15 +23,15 @@
         }
         #ui-layer {
             position: absolute;
-            top: 20px;
+            top: 10px;
             left: 0;
             right: 0;
             pointer-events: none;
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: 20px;
             color: white;
-            font-size: 2rem;
+            font-size: 1.2rem;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
@@ -42,65 +41,109 @@
             left: 50%;
             transform: translate(-50%, -50%);
             color: white;
-            font-size: 8rem;
+            font-size: 6rem;
             font-weight: 900;
             text-shadow: 0 0 20px rgba(0,0,0,0.5);
             pointer-events: none;
             z-index: 20;
             display: none;
         }
-        .controls-hint {
-            position: absolute;
-            bottom: 20px;
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.9rem;
-            pointer-events: none;
-        }
         #message-box {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.9);
             color: white;
             padding: 20px 40px;
-            border-radius: 10px;
+            border-radius: 15px;
             text-align: center;
             display: none;
             pointer-events: auto;
-            z-index: 10;
+            z-index: 30;
+            border: 2px solid white;
+            width: 80%;
+            max-width: 400px;
+        }
+        /* Mobile Controls */
+        #touch-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            height: 150px;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 40;
+        }
+        .joystick-area {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            position: relative;
+            pointer-events: auto;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .joystick-stick {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            position: absolute;
+            top: 35px;
+            left: 35px;
+            pointer-events: none;
+        }
+        .shoot-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid white;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            user-select: none;
+            active: scale(0.9);
         }
     </style>
 </head>
 <body>
 
     <div id="ui-layer">
-        <div id="score-p1">PLAYER 1: 0</div>
-        <div id="score-p2">PLAYER 2: 0</div>
+        <div id="score-p1">P1: 0</div>
+        <div id="score-p2">P2: 0</div>
     </div>
 
     <div id="countdown-overlay">3</div>
 
     <div id="message-box">
-        <h1 id="message-text" class="text-3xl font-bold mb-4">GOAL!</h1>
-        <button onclick="startNextRound()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded text-lg font-bold">NEXT ROUND</button>
+        <h1 id="message-text" class="text-2xl font-black mb-4">GOAL!</h1>
+        <button id="action-button" onclick="handleAction()" class="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-full text-lg font-bold transition-all transform active:scale-95">NEXT ROUND</button>
+    </div>
+
+    <!-- Mobile Touch UI -->
+    <div id="touch-controls">
+        <div class="joystick-area" id="joystick">
+            <div class="joystick-stick" id="stick"></div>
+        </div>
+        <div class="shoot-btn" id="shoot-button">SHOOT</div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
-
-    <div class="controls-hint hidden md:flex">
-        <div>P1 (青): マウス移動 & クリックでシュート</div>
-        <div>P2 (赤): 矢印キー & スペースでシュート</div>
-    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const messageBox = document.getElementById('message-box');
         const messageText = document.getElementById('message-text');
+        const actionButton = document.getElementById('action-button');
         const countdownEl = document.getElementById('countdown-overlay');
         const scoreP1El = document.getElementById('score-p1');
         const scoreP2El = document.getElementById('score-p2');
@@ -116,17 +159,18 @@
         const FRICTION = 0.98;
         const SPEED_LIMIT = 7;
         const SHOOT_POWER = 15;
+        const WINNING_SCORE = 5;
 
         canvas.width = WIDTH;
         canvas.height = HEIGHT;
 
         // Game state
-        let gameState = 'countdown'; // Initial state is countdown
+        let gameState = 'countdown'; 
         let score = { p1: 0, p2: 0 };
         let countdownValue = 3;
         
         let mousePos = { x: 200, y: HEIGHT / 2 };
-        let isMouseDown = false;
+        let joystickVector = { x: 0, y: 0 };
         const keys = {};
 
         // Game objects
@@ -165,13 +209,14 @@
 
         const players = [p1, p2, gk1, gk2];
 
-        // Input Listeners
+        // --- Keyboard Controls ---
         window.addEventListener('keydown', e => {
             keys[e.code] = true;
             if (e.code === 'Space' && gameState === 'playing') shoot(p2);
         });
         window.addEventListener('keyup', e => keys[e.code] = false);
 
+        // --- Mouse Controls (P1) ---
         canvas.addEventListener('mousemove', e => {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -181,10 +226,47 @@
         });
 
         canvas.addEventListener('mousedown', () => {
-            isMouseDown = true;
             if (gameState === 'playing') shoot(p1);
         });
-        canvas.addEventListener('mouseup', () => isMouseDown = false);
+
+        // --- Touch / Mobile Controls (P1) ---
+        const joystick = document.getElementById('joystick');
+        const stick = document.getElementById('stick');
+        const shootBtn = document.getElementById('shoot-button');
+
+        joystick.addEventListener('touchstart', handleJoystick, {passive: false});
+        joystick.addEventListener('touchmove', handleJoystick, {passive: false});
+        joystick.addEventListener('touchend', () => {
+            stick.style.transform = 'translate(0, 0)';
+            joystickVector = { x: 0, y: 0 };
+        });
+
+        function handleJoystick(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = joystick.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            let dx = touch.clientX - centerX;
+            let dy = touch.clientY - centerY;
+            const dist = Math.min(Math.sqrt(dx*dx + dy*dy), 50);
+            const angle = Math.atan2(dy, dx);
+            
+            const moveX = Math.cos(angle) * dist;
+            const moveY = Math.sin(angle) * dist;
+            
+            stick.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            
+            // Normalize for movement
+            joystickVector.x = moveX / 50;
+            joystickVector.y = moveY / 50;
+        }
+
+        shootBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameState === 'playing') shoot(p1);
+        });
 
         function startCountdown() {
             gameState = 'countdown';
@@ -211,12 +293,23 @@
             const dy = ball.y - player.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist < player.radius + ball.radius + 15) {
+            // Allow shooting if ball is close
+            if (dist < player.radius + ball.radius + 20) {
                 const angle = Math.atan2(dy, dx);
                 ball.vx = Math.cos(angle) * SHOOT_POWER;
                 ball.vy = Math.sin(angle) * SHOOT_POWER;
                 player.kickTimer = 10;
             }
+        }
+
+        function handleAction() {
+            if (score.p1 >= WINNING_SCORE || score.p2 >= WINNING_SCORE) {
+                score.p1 = 0;
+                score.p2 = 0;
+                scoreP1El.innerText = `P1: 0`;
+                scoreP2El.innerText = `P2: 0`;
+            }
+            startNextRound();
         }
 
         function startNextRound() {
@@ -262,32 +355,34 @@
         }
 
         function update() {
-            // Only update physics and input if playing
             if (gameState !== 'playing' && gameState !== 'countdown') return;
 
             if (gameState === 'playing') {
-                // P1 movement
-                const dx1 = mousePos.x - p1.x;
-                const dy1 = mousePos.y - p1.y;
-                const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-                if (dist1 > 5) {
-                    const angle = Math.atan2(dy1, dx1);
-                    p1.vx += Math.cos(angle) * p1.accel;
-                    p1.vy += Math.sin(angle) * p1.accel;
+                // P1 movement (Joystick or Mouse)
+                if (joystickVector.x !== 0 || joystickVector.y !== 0) {
+                    p1.vx += joystickVector.x * p1.accel * 1.5;
+                    p1.vy += joystickVector.y * p1.accel * 1.5;
+                } else {
+                    const dx1 = mousePos.x - p1.x;
+                    const dy1 = mousePos.y - p1.y;
+                    const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+                    if (dist1 > 10) {
+                        const angle = Math.atan2(dy1, dx1);
+                        p1.vx += Math.cos(angle) * p1.accel;
+                        p1.vy += Math.sin(angle) * p1.accel;
+                    }
                 }
 
-                // P2 movement
+                // P2 movement (Keys)
                 if (keys['ArrowUp']) p2.vy -= p2.accel;
                 if (keys['ArrowDown']) p2.vy += p2.accel;
                 if (keys['ArrowLeft']) p2.vx -= p2.accel;
                 if (keys['ArrowRight']) p2.vx += p2.accel;
 
-                // GK update
                 updateGK(gk1);
                 updateGK(gk2);
             }
 
-            // Apply physics (always apply during countdown for gravity/idle but here it's static)
             const allObjs = [...players, ball];
             allObjs.forEach(obj => {
                 obj.vx *= FRICTION;
@@ -306,7 +401,6 @@
                 obj.x += obj.vx;
                 obj.y += obj.vy;
 
-                // Walls
                 if (obj.x < obj.radius) { obj.x = obj.radius; obj.vx *= -0.5; }
                 if (obj.x > WIDTH - obj.radius) { obj.x = WIDTH - obj.radius; obj.vx *= -0.5; }
                 if (obj.y < obj.radius) { obj.y = obj.radius; obj.vy *= -0.5; }
@@ -314,7 +408,6 @@
             });
 
             if (gameState === 'playing') {
-                // Collisions
                 for (let i = 0; i < players.length; i++) {
                     checkCollision(players[i], ball);
                     for (let j = i + 1; j < players.length; j++) {
@@ -322,27 +415,38 @@
                     }
                 }
 
-                // Goal detection
                 const goalTop = (HEIGHT - GOAL_HEIGHT) / 2;
                 const goalBottom = goalTop + GOAL_HEIGHT;
                 if (ball.y > goalTop && ball.y < goalBottom) {
                     if (ball.x < ball.radius + 5) {
                         score.p2++;
-                        goalScored('PLAYER 2 GOAL!');
+                        checkWinStatus('PLAYER 2');
                     } else if (ball.x > WIDTH - ball.radius - 5) {
                         score.p1++;
-                        goalScored('PLAYER 1 GOAL!');
+                        checkWinStatus('PLAYER 1');
                     }
                 }
             }
         }
 
-        function goalScored(text) {
+        function checkWinStatus(lastScorer) {
+            scoreP1El.innerText = `P1: ${score.p1}`;
+            scoreP2El.innerText = `P2: ${score.p2}`;
+
+            if (score.p1 >= WINNING_SCORE) {
+                showResult("PLAYER 1 WINS!", "REMATCH");
+            } else if (score.p2 >= WINNING_SCORE) {
+                showResult("PLAYER 2 WINS!", "REMATCH");
+            } else {
+                showResult(`${lastScorer} GOAL!`, "NEXT ROUND");
+            }
+        }
+
+        function showResult(text, btnText) {
             gameState = 'goal';
             messageText.innerText = text;
+            actionButton.innerText = btnText;
             messageBox.style.display = 'block';
-            scoreP1El.innerText = `PLAYER 1: ${score.p1}`;
-            scoreP2El.innerText = `PLAYER 2: ${score.p2}`;
         }
 
         function drawHuman(player) {
