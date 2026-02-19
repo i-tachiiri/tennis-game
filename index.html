@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Human Tennis Battle - Power Shot</title>
+    <title>Human Tennis Battle - Mushroom Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -11,7 +11,7 @@
             overflow: hidden;
             background-color: #2f855a;
             touch-action: none;
-            font-family: sans-serif;
+            font-family: 'Arial', sans-serif;
             -webkit-user-select: none;
             user-select: none;
         }
@@ -30,12 +30,13 @@
             justify-content: space-around;
             color: white;
             pointer-events: none;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             z-index: 5;
         }
         .score-box {
-            background: rgba(0,0,0,0.3);
+            background: rgba(255, 0, 0, 0.7);
             padding: 0.5rem 1.5rem;
+            border: 3px solid white;
             border-radius: 1rem;
             text-align: center;
             min-width: 100px;
@@ -45,15 +46,17 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2.5rem;
+            background: #fff;
+            padding: 2rem;
+            border: 5px solid #e53e3e;
             border-radius: 1.5rem;
             color: #2d3748;
             text-align: center;
             display: none;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             z-index: 20;
-            min-width: 320px;
+            width: 90%;
+            max-width: 450px;
         }
         #stage-indicator {
             position: absolute;
@@ -61,88 +64,114 @@
             left: 0;
             right: 0;
             text-align: center;
-            color: #ffffff;
+            color: #ffd700;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             pointer-events: none;
             z-index: 5;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.4);
             padding: 5px 0;
+            text-shadow: 2px 2px 0px #000;
         }
         #countdown-display {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: white;
+            color: #ff0;
             font-size: 8rem;
             font-weight: 900;
-            text-shadow: 4px 4px 0px rgba(0,0,0,0.5);
+            text-shadow: 6px 6px 0px #000;
             pointer-events: none;
             z-index: 30;
             display: none;
         }
         .game-btn {
-            background-color: #2f855a;
+            background-color: #e53e3e;
             color: white;
-            padding: 1rem 2rem;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 4px solid #9b2c2c;
             border-radius: 0.75rem;
             font-weight: bold;
-            margin: 0.5rem;
+            margin: 0.4rem;
             cursor: pointer;
-            border: none;
-            transition: all 0.2s;
+            transition: all 0.1s;
             pointer-events: auto;
             display: inline-block;
         }
-        #timer-display {
-            font-family: monospace;
-            font-size: 1.2rem;
-            color: #4a5568;
-            margin-top: 10px;
-            font-weight: bold;
+        .game-btn:active {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
         }
-        .trophy-anim {
-            animation: bounce 2s infinite;
-            margin-bottom: 1rem;
+        .char-card {
+            border: 3px solid #e2e8f0;
+            padding: 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
         }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
+        .char-card:hover, .char-card.selected {
+            border-color: #e53e3e;
+            background: #fff5f5;
+            transform: scale(1.05);
         }
     </style>
 </head>
 <body>
 
     <div id="ui-overlay">
-        <div class="score-box">
-            <p class="text-xs opacity-80" id="cpu-name">CPU</p>
+        <div class="score-box" style="background: #4a5568;">
+            <p class="text-xs opacity-90">ライバル</p>
             <p class="text-3xl font-bold" id="cpu-score">0</p>
         </div>
         <div class="score-box">
-            <p class="text-xs opacity-80" id="player-title">PLAYER</p>
+            <p class="text-xs opacity-90">あなた</p>
             <p class="text-3xl font-bold" id="player-score">0</p>
         </div>
     </div>
 
-    <div id="stage-indicator">LEVEL 1</div>
+    <div id="stage-indicator">STAGE 1-1</div>
     <div id="countdown-display">3</div>
 
     <div id="message-box">
-        <div id="trophy-display" style="display:none;" class="trophy-anim">
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="#ECC94B" style="margin: auto;">
-                <path d="M18 2H6c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 13.9V17H8v2h8v-2h-3v-3.1a5.01 5.01 0 002.61-3.96C18.08 9.63 20 7.55 20 5V4c0-1.1-.9-2-2-2zM6 7V4h2v3c0 .55-.45 1-1 1s-1-.45-1-1zm12 0c0 .55-.45 1-1 1s-1-.45-1-1V4h2v3z"/>
-            </svg>
-        </div>
-        <h2 id="msg-title" class="text-3xl font-bold mb-2">Tennis Battle</h2>
-        <p id="msg-body" class="mb-4 text-gray-600">モードを選択してスタート！</p>
-        <div id="timer-display" style="display:none;"></div>
+        <h2 id="msg-title" class="text-3xl font-bold mb-2 text-red-600">Mushroom Tennis</h2>
+        
+        <!-- Mode Select -->
         <div id="mode-selection">
-            <button class="game-btn" onclick="selectMode('singles')">シングルス</button>
-            <button class="game-btn" onclick="selectMode('doubles')">ダブルス</button>
+            <p class="mb-4 font-bold">どうやってあそぶ？</p>
+            <button class="game-btn" onclick="selectMode('singles')">ひとりで</button>
+            <button class="game-btn" onclick="selectMode('doubles')">ふたりで</button>
         </div>
+
+        <!-- Character Select -->
+        <div id="char-selection" style="display:none;">
+            <p class="mb-4 font-bold">だれにする？</p>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="char-card" id="char-0" onclick="pickChar(0)">
+                    <div class="w-10 h-10 bg-red-600 rounded-full mx-auto mb-1 border-2 border-white"></div>
+                    <div class="text-xs font-bold">マリオ風</div>
+                    <div class="text-[10px] text-gray-500">バランス</div>
+                </div>
+                <div class="char-card" id="char-1" onclick="pickChar(1)">
+                    <div class="w-10 h-10 bg-green-600 rounded-full mx-auto mb-1 border-2 border-white"></div>
+                    <div class="text-xs font-bold">ルイージ風</div>
+                    <div class="text-[10px] text-gray-500">スピード</div>
+                </div>
+                <div class="char-card" id="char-2" onclick="pickChar(2)">
+                    <div class="w-10 h-10 bg-yellow-600 rounded-full mx-auto mb-1 border-2 border-white"></div>
+                    <div class="text-xs font-bold">クッパ風</div>
+                    <div class="text-[10px] text-gray-500">パワー</div>
+                </div>
+            </div>
+            <button class="game-btn w-full" id="confirm-char" onclick="confirmCharacter()" style="opacity:0.5; pointer-events:none;">これにきめた！</button>
+        </div>
+
+        <!-- Start Button -->
         <div id="continue-selection" style="display:none;">
-            <button class="game-btn" id="start-btn" onclick="startCountdown()">試合開始！</button>
+            <p id="msg-body" class="mb-4 text-gray-600 font-bold">準備OK？</p>
+            <div id="timer-display" class="mb-2 font-bold text-red-600"></div>
+            <button class="game-btn" id="start-btn" onclick="startCountdown()">スタート！</button>
         </div>
     </div>
 
@@ -156,49 +185,44 @@
         const stageEl = document.getElementById('stage-indicator');
         const countdownEl = document.getElementById('countdown-display');
         const messageBox = document.getElementById('message-box');
-        const trophyDisplay = document.getElementById('trophy-display');
         const msgTitle = document.getElementById('msg-title');
         const msgBody = document.getElementById('msg-body');
+        
         const modeSelection = document.getElementById('mode-selection');
+        const charSelection = document.getElementById('char-selection');
         const continueSelection = document.getElementById('continue-selection');
-        const startBtn = document.getElementById('start-btn');
-        const timerDisplay = document.getElementById('timer-display');
 
         let tournamentStage = 0;
         let gameMode = 'singles'; 
         let isCountingDown = false;
         let startTime = 0;
-        let finalTime = null;
-
-        // ダブルクリック判定用
         let lastClickTime = 0;
         let isPowerShot = false;
 
+        const characters = [
+            { name: "ハヤト", color: "#e53e3e", hatColor: "#fff", speedMult: 1.0, powerMult: 1.0 },
+            { name: "サクラ", color: "#38a169", hatColor: "#fff", speedMult: 1.3, powerMult: 0.8 },
+            { name: "ダイキ", color: "#d69e2e", hatColor: "#fff", speedMult: 0.7, powerMult: 1.5 }
+        ];
+        let selectedCharIndex = -1;
+
         const opponents = [
-            { name: "Beginner", speed: 3.5, ballSpeed: 6, color: "#feb2b2", label: "LEVEL 1: BEGINNER", pSpeed: 7.5, pColor: "#bee3f8" },
-            { name: "Pro", speed: 4.5, ballSpeed: 8, color: "#fbd38d", label: "LEVEL 2: PRO", pSpeed: 8.0, pColor: "#63b3ed" },
-            { name: "Veteran", speed: 5.5, ballSpeed: 9.5, color: "#faf089", label: "LEVEL 3: VETERAN", pSpeed: 8.5, pColor: "#4fd1c5" },
-            { name: "Champion", speed: 6.5, ballSpeed: 11, color: "#9ae6b4", label: "LEVEL 4: CHAMPION", pSpeed: 9.0, pColor: "#9f7aea" },
-            { name: "Legend", speed: 8.0, ballSpeed: 13, color: "#63b3ed", label: "LEVEL 5: WORLD NO.1", pSpeed: 10.0, pColor: "#ed64a6" }
+            { name: "クリボー風", speed: 3.5, ballSpeed: 6.5, color: "#975a16", label: "WORLD 1-1" },
+            { name: "ノコノコ風", speed: 4.8, ballSpeed: 8.5, color: "#38a169", label: "WORLD 1-2" },
+            { name: "テレサ風", speed: 5.8, ballSpeed: 10.0, color: "#edf2f7", label: "WORLD 1-3" },
+            { name: "カメック風", speed: 7.0, ballSpeed: 11.5, color: "#3182ce", label: "WORLD 1-4" },
+            { name: "クッパ風", speed: 8.5, ballSpeed: 13.5, color: "#d69e2e", label: "FINAL BATTLE" }
         ];
 
-        let player = { x: 0, y: 0, score: 0, swing: 0, speed: 7.5, color: "#bee3f8" };
-        let partner = { x: 0, y: 0, swing: 0, speed: 6.0, color: "#a0aec0", active: false };
-        let cpu = { x: 0, y: 80, score: 0, speed: 3.0, color: "#feb2b2" };
-        let cpuPartner = { x: 0, y: 80, swing: 0, speed: 3.0, color: "#fc8181", active: false };
-        let ball = { x: 0, y: 0, dx: 0, dy: 0, radius: 8, speed: 6, serving: true, effect: 0 };
+        let player = { x: 0, y: 0, score: 0, swing: 0, speed: 7.5, color: "#e53e3e", power: 1.0 };
+        let partner = { x: 0, y: 0, swing: 0, speed: 6.0, color: "#fff", active: false };
+        let cpu = { x: 0, y: 80, score: 0, speed: 3.0, color: "#975a16" };
+        let cpuPartner = { x: 0, y: 80, swing: 0, speed: 3.0, color: "#38a169", active: false };
+        let ball = { x: 0, y: 0, dx: 0, dy: 0, radius: 10, speed: 6, serving: true, effect: 0 };
        
         let keys = {};
         let gameActive = false;
         let animationId;
-
-        function formatTime(ms) {
-            const totalSeconds = Math.floor(ms / 1000);
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            const cs = Math.floor((ms % 1000) / 10);
-            return `${minutes}:${seconds.toString().padStart(2, '0')}.${cs.toString().padStart(2, '0')}`;
-        }
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -216,11 +240,29 @@
 
         function selectMode(mode) {
             gameMode = mode;
-            partner.active = (mode === 'doubles');
-            cpuPartner.active = (mode === 'doubles');
             modeSelection.style.display = 'none';
+            charSelection.style.display = 'block';
+        }
+
+        function pickChar(index) {
+            selectedCharIndex = index;
+            document.querySelectorAll('.char-card').forEach((c, i) => {
+                c.classList.toggle('selected', i === index);
+            });
+            const btn = document.getElementById('confirm-char');
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+        }
+
+        function confirmCharacter() {
+            const char = characters[selectedCharIndex];
+            player.color = char.color;
+            player.speed = 8.5 * char.speedMult;
+            player.power = char.powerMult;
+            
+            charSelection.style.display = 'none';
             continueSelection.style.display = 'block';
-            msgBody.textContent = mode === 'singles' ? "ひとりで挑戦！" : "ペアで挑戦！";
+            msgBody.textContent = `このキャラで冒険にでかけよう！`;
         }
 
         function startCountdown() {
@@ -242,21 +284,10 @@
             }, 800);
         }
 
-        window.addEventListener('keydown', (e) => { 
-            keys[e.code] = true; 
-            // スペースキーなどでのダブルクリックシミュレーション
-            if (e.code === 'Space') registerClick();
-        });
-        window.addEventListener('keyup', (e) => { keys[e.code] = false; });
-
         function registerClick() {
             const now = Date.now();
-            // 300ミリ秒以内の連続クリックを「ダブルクリック」と判定
-            if (now - lastClickTime < 300) {
-                isPowerShot = true;
-            } else {
-                isPowerShot = false;
-            }
+            if (now - lastClickTime < 300) isPowerShot = true;
+            else isPowerShot = false;
             lastClickTime = now;
         }
 
@@ -269,15 +300,12 @@
         }
 
         canvas.addEventListener('mousemove', (e) => handleInteraction(e.clientX, e.clientY));
-        
-        // タッチ開始時とマウスダウン時にクリック登録
         canvas.addEventListener('mousedown', registerClick);
         canvas.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
             handleInteraction(touch.clientX, touch.clientY);
             registerClick();
         }, { passive: false });
-        
         canvas.addEventListener('touchmove', (e) => {
             const touch = e.touches[0];
             handleInteraction(touch.clientX, touch.clientY);
@@ -288,12 +316,12 @@
             ball.effect = 0;
             ball.speed = opponents[Math.min(tournamentStage, opponents.length - 1)].ballSpeed;
             if (isPlayerServe) {
-                ball.y = player.y - 35;
-                ball.x = player.x + 25;
+                ball.y = player.y - 45;
+                ball.x = player.x + 20;
             } else {
                 ball.serving = false;
                 ball.x = cpu.x;
-                ball.y = cpu.y + 35;
+                ball.y = cpu.y + 45;
                 ball.dy = ball.speed;
                 ball.dx = (Math.random() - 0.5) * 8;
             }
@@ -305,10 +333,11 @@
             cpu.color = config.color;
             cpuPartner.speed = config.speed * 0.9;
             cpuPartner.color = config.color;
-            player.speed = config.pSpeed;
-            player.color = config.pColor;
             stageEl.textContent = config.label;
             
+            partner.active = (gameMode === 'doubles');
+            cpuPartner.active = (gameMode === 'doubles');
+
             player.score = 0; cpu.score = 0;
             updateScoreDisplay();
             resetBall(true);
@@ -326,72 +355,82 @@
                 if (player.score >= 5) {
                     tournamentStage++;
                     if (tournamentStage >= opponents.length) {
-                        finalTime = Date.now() - startTime;
-                        msgTitle.textContent = "優勝おめでとう！";
-                        msgBody.textContent = "全ステージクリア！";
-                        timerDisplay.innerHTML = `タイム: ${formatTime(finalTime)}`;
-                        timerDisplay.style.display = 'block';
-                        trophyDisplay.style.display = 'block';
+                        msgTitle.textContent = "🏆 ピーチを救った！ 🏆";
+                        msgBody.textContent = `あなたは真のスーパーヒーローです！`;
                         tournamentStage = 0;
+                        modeSelection.style.display = 'block';
+                        continueSelection.style.display = 'none';
                     } else {
-                        msgTitle.textContent = "勝利！";
-                        msgBody.textContent = "次のステージへ進みます。";
+                        msgTitle.textContent = "コースクリア！";
+                        msgBody.textContent = "つぎのワールドへいこう！";
+                        continueSelection.style.display = 'block';
                     }
                 } else {
-                    msgTitle.textContent = "敗北...";
-                    msgBody.textContent = "もう一度挑戦しましょう。";
+                    msgTitle.textContent = "ミス！";
+                    msgBody.textContent = "あきらめないでもういっかい！";
                     tournamentStage = 0;
-                }
-                setTimeout(() => {
-                    messageBox.style.display = 'block';
                     continueSelection.style.display = 'block';
-                }, 500);
+                }
+                setTimeout(() => { messageBox.style.display = 'block'; }, 500);
             }
         }
 
-        function drawHuman(x, y, isPlayerSide, swingFrame, humanColor) {
+        function drawCharacter(x, y, isPlayerSide, swingFrame, color) {
             ctx.save();
             ctx.translate(x, y);
-            ctx.fillStyle = "rgba(0,0,0,0.15)";
-            ctx.beginPath(); ctx.ellipse(0, 10, 20, 10, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.lineCap = "round";
-            ctx.fillStyle = humanColor;
-            ctx.beginPath(); ctx.arc(0, -40, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(0, -10); ctx.stroke();
-            let walk = Math.sin(Date.now() / 100) * 6;
-            ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(-12 + walk, 8);
-            ctx.moveTo(0, -10); ctx.lineTo(12 - walk, 8); ctx.stroke();
+            
+            // Shadow
+            ctx.fillStyle = "rgba(0,0,0,0.2)";
+            ctx.beginPath(); ctx.ellipse(0, 10, 22, 10, 0, 0, Math.PI * 2); ctx.fill();
+
+            // Head (Hat)
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.arc(0, -42, 12, Math.PI, 0); ctx.fill(); // Top of hat
+            ctx.fillRect(-15, -42, 30, 4); // Brim
+            ctx.fillStyle = "#ffdbac"; // Skin
+            ctx.beginPath(); ctx.arc(0, -32, 10, 0, Math.PI * 2); ctx.fill();
+            
+            // Mustache/Mouth
+            ctx.fillStyle = "#4a2c2c";
+            ctx.fillRect(-5, -30, 10, 2);
+
+            // Body (Overalls)
+            ctx.fillStyle = isPlayerSide ? "#2b6cb0" : color; // Blue overalls for player
+            ctx.fillRect(-12, -25, 24, 20);
+            ctx.fillStyle = isPlayerSide ? color : "#2b6cb0"; // Shirt color
+            ctx.fillRect(-12, -25, 5, 20);
+            ctx.fillRect(7, -25, 5, 20);
+            
+            // Shoes
+            ctx.fillStyle = "#4a2c2c";
+            ctx.fillRect(-14, -5, 10, 8);
+            ctx.fillRect(4, -5, 10, 8);
+
+            // Racket
             let armAngle = isPlayerSide ? (swingFrame > 0 ? -Math.PI/1.2 : Math.PI/4) : Math.PI/4;
-            let racketAngle = isPlayerSide ? (swingFrame > 0 ? -1.3 : 0.3) : 2.5;
             ctx.save();
-            ctx.translate(0, -25); ctx.rotate(armAngle);
+            ctx.translate(0, -20); ctx.rotate(armAngle);
+            ctx.strokeStyle = "#fff"; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(25, 0); ctx.stroke();
-            ctx.translate(25, 0); ctx.rotate(racketAngle);
-            ctx.strokeStyle = isPlayerSide ? "#48bb78" : "#f56565"; ctx.lineWidth = 4;
-            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(15, 0); ctx.stroke();
-            ctx.beginPath(); ctx.ellipse(28, 0, 13, 20, Math.PI/2, 0, Math.PI*2); ctx.stroke();
+            ctx.translate(25, 0);
+            ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.ellipse(15, 0, 10, 15, Math.PI/2, 0, Math.PI*2); ctx.stroke();
             ctx.restore();
+
             ctx.restore();
         }
 
         function update() {
             if (!gameActive || isCountingDown) return;
 
-            // 移動キー
-            if (keys['ArrowLeft']) player.x -= player.speed;
-            if (keys['ArrowRight']) player.x += player.speed;
-            if (keys['ArrowUp']) player.y -= player.speed;
-            if (keys['ArrowDown']) player.y += player.speed;
             player.x = Math.max(45, Math.min(canvas.width - 45, player.x));
             player.y = Math.max(canvas.height / 2 + 50, Math.min(canvas.height - 45, player.y));
 
-            // CPU思考
             const targetCpu = (gameMode === 'doubles' && ball.x > canvas.width/2) ? cpuPartner : cpu;
             if (targetCpu.x < ball.x - 5) targetCpu.x += targetCpu.speed;
             else if (targetCpu.x > ball.x + 5) targetCpu.x -= targetCpu.speed;
 
             if (ball.serving) {
-                // サーブ待ち
                 if (!ball.serveTimer) ball.serveTimer = setTimeout(() => {
                     ball.serving = false;
                     ball.dy = -ball.speed;
@@ -405,44 +444,41 @@
             ball.x += ball.dx; ball.y += ball.dy;
             if (ball.x < 30 || ball.x > canvas.width - 30) ball.dx *= -1;
 
-            // 自動スイング判定 (プレイヤー & パートナー)
-            const checkHit = (h) => {
-                if (ball.dy > 0 && Math.abs(ball.y - h.y) < 60 && Math.abs(ball.x - h.x) < 50) {
+            const checkHit = (h, isMainPlayer) => {
+                if (ball.dy > 0 && Math.abs(ball.y - h.y) < 65 && Math.abs(ball.x - h.x) < 55) {
                     h.swing = 15;
-                    
-                    // ショット速度の計算
                     let currentSpeed = ball.speed;
-                    if (isPowerShot) {
-                        currentSpeed *= 1.5; // スピード1.5倍！
-                        ball.effect = 20;    // 赤いエフェクト
-                        isPowerShot = false; // 一度打ったらフラグ解除
-                    } else {
-                        ball.effect = 0;
+                    if (isMainPlayer) {
+                        currentSpeed *= player.power;
+                        if (isPowerShot) {
+                            currentSpeed *= 1.6;
+                            ball.effect = 25;
+                            isPowerShot = false;
+                        } else {
+                            ball.effect = 0;
+                        }
                     }
-                    
                     ball.dy = -currentSpeed;
-                    ball.dx = (ball.x - h.x) * 0.4;
+                    ball.dx = (ball.x - h.x) * 0.45;
                 }
             };
-            checkHit(player);
+            checkHit(player, true);
             if (partner.active) {
-                // パートナーAI
                 if (ball.dy > 0 && ball.y < player.y - 100) {
                     if (partner.x < ball.x) partner.x += partner.speed;
                     else partner.x -= partner.speed;
                 }
-                checkHit(partner);
+                checkHit(partner, false);
             }
 
-            // CPUヒット
-            if (ball.dy < 0 && (Math.abs(ball.y - cpu.y) < 40 && Math.abs(ball.x - cpu.x) < 50)) {
-                ball.dy = ball.speed; ball.dx = (ball.x - cpu.x) * 0.4;
-                ball.effect = 0; // CPUが触ったらエフェクト解除
+            const cpuHit = (c) => {
+                if (ball.dy < 0 && (Math.abs(ball.y - c.y) < 45 && Math.abs(ball.x - c.x) < 55)) {
+                    ball.dy = ball.speed; ball.dx = (ball.x - c.x) * 0.45;
+                    ball.effect = 0;
+                }
             }
-            if (cpuPartner.active && ball.dy < 0 && (Math.abs(ball.y - cpuPartner.y) < 40 && Math.abs(ball.x - cpuPartner.x) < 50)) {
-                ball.dy = ball.speed; ball.dx = (ball.x - cpuPartner.x) * 0.4;
-                ball.effect = 0;
-            }
+            cpuHit(cpu);
+            if (cpuPartner.active) cpuHit(cpuPartner);
 
             if (ball.y < 0) { player.score++; updateScoreDisplay(); if (gameActive) resetBall(false); }
             else if (ball.y > canvas.height) { cpu.score++; updateScoreDisplay(); if (gameActive) resetBall(true); }
@@ -453,33 +489,34 @@
         }
 
         function draw() {
+            // Field
             ctx.fillStyle = "#38a169"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2;
+            
+            // Court Lines
+            ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 4;
             ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
             ctx.beginPath(); ctx.moveTo(30, canvas.height / 2); ctx.lineTo(canvas.width - 30, canvas.height / 2); ctx.stroke();
             
-            // ボールの描画
+            // Ball
             ctx.save();
             if (ball.effect > 0) {
-                // パワフルショットのエフェクト
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = "red";
+                ctx.shadowBlur = 20; ctx.shadowColor = "#f00";
                 ctx.fillStyle = "#ff4d4d";
-                ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius + 2, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius + 3, 0, Math.PI * 2); ctx.fill();
+                // Star particle effect
+                ctx.fillStyle = "#fff"; ctx.fillRect(ball.x + Math.random()*20-10, ball.y + Math.random()*20-10, 4, 4);
             } else {
-                ctx.fillStyle = "#ccff00";
-                ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillStyle = "#ff0";
+                ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = "#000"; ctx.lineWidth = 1; ctx.stroke();
             }
             ctx.restore();
 
-            drawHuman(player.x, player.y, true, player.swing, player.color);
-            if (partner.active) drawHuman(partner.x, partner.y, true, partner.swing, partner.color);
-            drawHuman(cpu.x, cpu.y, false, 0, cpu.color);
-            if (cpuPartner.active) drawHuman(cpuPartner.x, cpuPartner.y, false, 0, cpuPartner.color);
+            // Characters
+            drawCharacter(player.x, player.y, true, player.swing, player.color);
+            if (partner.active) drawCharacter(partner.x, partner.y, true, partner.swing, partner.color);
+            drawCharacter(cpu.x, cpu.y, false, 0, cpu.color);
+            if (cpuPartner.active) drawCharacter(cpuPartner.x, cpuPartner.y, false, 0, cpuPartner.color);
 
             update();
             if (gameActive || isCountingDown) animationId = requestAnimationFrame(draw);
