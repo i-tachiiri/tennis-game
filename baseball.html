@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>野球ホームランダービー</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #2c3e50;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            touch-action: manipulation;
+        }
+        #gameCanvas {
+            display: block;
+            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 40%, #2ecc71 60%, #27ae60 100%);
+            width: 100%;
+            height: 100vh;
+        }
+        .ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+            z-index: 10;
+        }
+        .start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            width: 85%;
+            max-width: 420px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="ui-overlay">
+        <div class="text-2xl font-bold">SCORE: <span id="score">0</span></div>
+        <div class="text-xl">OUTS: <span id="outs">0</span> / 3</div>
+    </div>
+
+    <div id="startScreen" class="start-screen">
+        <h1 class="text-4xl font-black text-blue-600 mb-4">BASEBALL STAR</h1>
+        <p class="mb-6 text-gray-700 font-medium">スピードはずっと一定だよ！<br>自分のペースで打ち返そう！</p>
+        <button id="startButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-10 rounded-full transition-transform transform active:scale-95 shadow-lg">
+            PLAY START
+        </button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const outsEl = document.getElementById('outs');
+        const startScreen = document.getElementById('startScreen');
+        const startButton = document.getElementById('startButton');
+
+        let score = 0;
+        let outs = 0;
+        let gameState = 'START';
+        let ball = null;
+        let bat = { angle: -Math.PI / 3, swinging: false, length: 110 };
+        let pitcherAction = 0;
+        let particles = [];
+        let audience = [];
+
+        function initAudience() {
+            audience = [];
+            const colors = ['#e74c3c', '#f1c40f', '#3498db', '#9b59b6', '#e67e22', '#ffffff'];
+            for (let i = 0; i < 150; i++) {
+                audience.push({
+                    x: Math.random() * canvas.width,
+                    y: (Math.random() * (canvas.height * 0.15)) + (canvas.height * 0.25),
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    offset: Math.random() * Math.PI * 2,
+                    jump: 0
+                });
+            }
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initAudience();
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function spawnBall() {
+            pitcherAction = 1.0;
+            // スピードを固定（scoreに関係なく6のまま）
+            const speed = 6; 
+            
+            setTimeout(() => {
+                if (gameState !== 'PLAYING') return;
+                ball = {
+                    x: canvas.width / 2,
+                    y: canvas.height * 0.45,
+                    radius: 10,
+                    vx: 0,
+                    vy: speed,
+                    active: true,
+                    hit: false,
+                    missed: false
+                };
+            }, 300);
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 1.0,
+                    color: color
+                });
+            }
+        }
+
+        function swing() {
+            if (gameState !== 'PLAYING' || bat.swinging) return;
+            bat.swinging = true;
+            bat.angle = -Math.PI / 1.5;
+
+            let hitSomething = false;
+            if (ball && ball.active && !ball.hit) {
+                const distY = Math.abs(ball.y - (canvas.height * 0.88));
+                if (distY < 60) {
+                    ball.hit = true;
+                    ball.vy = -14 - (Math.random() * 10);
+                    ball.vx = (Math.random() - 0.5) * 12;
+                    hitSomething = true;
+                    
+                    if (distY < 20) {
+                        score += 100;
+                        createParticles(ball.x, ball.y, '#FFD700');
+                        showFeedback("HOME RUN!!");
+                        audienceExcited();
+                    } else {
+                        score += 50;
+                        createParticles(ball.x, ball.y, '#FFFFFF');
+                        showFeedback("HIT!");
+                    }
+                    scoreEl.textContent = score;
+                }
+            }
+
+            if (!hitSomething) {
+                if (ball && ball.active && !ball.hit && ball.y > canvas.height * 0.6) {
+                    recordOut();
+                }
+            }
+        }
+
+        function recordOut() {
+            outs++;
+            outsEl.textContent = outs;
+            showFeedback("STRIKE!", "#ff4444");
+            if (outs >= 3) {
+                gameState = 'GAMEOVER';
+                setTimeout(() => {
+                    startScreen.style.display = 'block';
+                    startScreen.innerHTML = `
+                        <h2 class="text-3xl font-bold text-red-600 mb-2">GAME OVER</h2>
+                        <p class="text-xl mb-4 text-gray-700">SCORE: ${score}</p>
+                        <button onclick="location.reload()" class="bg-blue-500 text-white px-8 py-3 rounded-full font-bold shadow-md">RETRY</button>
+                    `;
+                }, 500);
+            }
+        }
+
+        function audienceExcited() {
+            audience.forEach(person => {
+                person.jump = 15 + Math.random() * 15;
+            });
+        }
+
+        function showFeedback(text, color = "#fbbf24") {
+            const div = document.createElement('div');
+            div.className = 'absolute text-4xl font-black pointer-events-none transition-all duration-1000 z-50';
+            div.style.left = '50%';
+            div.style.top = '40%';
+            div.style.color = color;
+            div.style.transform = 'translate(-50%, -50%)';
+            div.textContent = text;
+            document.body.appendChild(div);
+            
+            setTimeout(() => {
+                div.style.top = '20%';
+                div.style.opacity = '0';
+                setTimeout(() => div.remove(), 1000);
+            }, 50);
+        }
+
+        function update() {
+            if (gameState === 'PLAYING') {
+                if (ball && ball.active) {
+                    ball.x += ball.vx;
+                    ball.y += ball.vy;
+
+                    if (ball.y > canvas.height + 50) {
+                        spawnBall();
+                        ball = null;
+                    } else if (ball.y < -200) {
+                        spawnBall();
+                        ball = null;
+                    }
+                }
+
+                if (bat.swinging) {
+                    bat.angle += 0.5;
+                    if (bat.angle >= Math.PI / 3) {
+                        bat.swinging = false;
+                        bat.angle = -Math.PI / 3;
+                    }
+                }
+
+                if (pitcherAction > 0) pitcherAction -= 0.05;
+
+                particles.forEach((p, i) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.02;
+                    if (p.life <= 0) particles.splice(i, 1);
+                });
+
+                audience.forEach(person => {
+                    if (person.jump > 0) person.jump *= 0.9;
+                });
+            }
+        }
+
+        function drawPerson(x, y, isPitcher, actionVal) {
+            const bodyColor = isPitcher ? '#1e40af' : '#ffffff';
+            const skinColor = '#f3e5ab';
+            const capColor = isPitcher ? '#1e3a8a' : '#b91c1c';
+            const pantsColor = '#ffffff';
+
+            ctx.lineWidth = 2;
+
+            ctx.fillStyle = pantsColor;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - 12, y + 20);
+            ctx.lineTo(x - 5, y + 20);
+            ctx.lineTo(x, y - 5);
+            ctx.lineTo(x + 5, y + 20);
+            ctx.lineTo(x + 12, y + 20);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = bodyColor;
+            ctx.beginPath();
+            ctx.rect(x - 10, y - 40, 20, 35);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.strokeStyle = skinColor;
+            ctx.lineWidth = 6;
+            if (isPitcher) {
+                const throwAngle = actionVal > 0 ? (1 - actionVal) * Math.PI : 0;
+                ctx.beginPath();
+                ctx.moveTo(x, y - 30);
+                const armEndX = x + Math.sin(throwAngle) * 25;
+                const armEndY = (y - 30) + Math.cos(throwAngle) * 25;
+                ctx.lineTo(armEndX, armEndY);
+                ctx.stroke();
+            } else {
+                const armAngle = bat.angle + 0.2;
+                ctx.beginPath();
+                ctx.moveTo(x, y - 30);
+                const handX = x + Math.cos(armAngle) * 30;
+                const handY = (y - 30) + Math.sin(armAngle) * 30;
+                ctx.lineTo(handX, handY);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = skinColor;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y - 55, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = capColor;
+            ctx.beginPath();
+            ctx.arc(x, y - 58, 12, Math.PI, 0);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.rect(x - 12, y - 62, 24, 4);
+            ctx.fill();
+        }
+
+        function drawAudience() {
+            ctx.fillStyle = '#34495e';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height * 0.25);
+            ctx.lineTo(canvas.width, canvas.height * 0.25);
+            ctx.lineTo(canvas.width, canvas.height * 0.45);
+            ctx.lineTo(0, canvas.height * 0.45);
+            ctx.fill();
+
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height * 0.45);
+            ctx.lineTo(canvas.width, canvas.height * 0.45);
+            ctx.stroke();
+
+            audience.forEach(person => {
+                const wobble = Math.sin((Date.now() / 200) + person.offset) * 2;
+                ctx.fillStyle = person.color;
+                ctx.beginPath();
+                ctx.arc(person.x, person.y - person.jump + wobble, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawAudience();
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, canvas.height * 0.5);
+            ctx.lineTo(0, canvas.height);
+            ctx.moveTo(canvas.width / 2, canvas.height * 0.5);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.stroke();
+
+            ctx.fillStyle = '#d35400';
+            ctx.beginPath();
+            ctx.ellipse(canvas.width/2, canvas.height * 0.5, 60, 30, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            drawPerson(canvas.width / 2, canvas.height * 0.5, true, pitcherAction);
+
+            ctx.fillStyle = '#d35400';
+            ctx.beginPath();
+            ctx.ellipse(canvas.width/2, canvas.height * 0.88, 120, 60, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            drawPerson(canvas.width / 2 - 70, canvas.height * 0.88, false, 0);
+
+            particles.forEach(p => {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+
+            if (ball && ball.active) {
+                const shadowRadius = Math.max(0, ball.radius * (ball.y / (canvas.height * 0.88)));
+                ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                ctx.beginPath();
+                ctx.ellipse(ball.x, canvas.height * 0.88, shadowRadius, 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+
+            ctx.save();
+            const armAngle = bat.angle + 0.2;
+            const batPivotX = (canvas.width / 2 - 70) + Math.cos(armAngle) * 30;
+            const batPivotY = (canvas.height * 0.88 - 30) + Math.sin(armAngle) * 30;
+            
+            ctx.translate(batPivotX, batPivotY);
+            ctx.rotate(bat.angle);
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(0, -5, 25, 10);
+            ctx.fillStyle = '#d7ccc8';
+            ctx.fillRect(25, -8, bat.length - 25, 16);
+            ctx.restore();
+
+            requestAnimationFrame(() => {
+                update();
+                draw();
+            });
+        }
+
+        startButton.addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            gameState = 'PLAYING';
+            score = 0;
+            outs = 0;
+            scoreEl.textContent = "0";
+            outsEl.textContent = "0";
+            spawnBall();
+        });
+
+        canvas.addEventListener('mousedown', swing);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            swing();
+        });
+
+        draw();
+    </script>
+</body>
+</html>
