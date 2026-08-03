@@ -1150,7 +1150,11 @@
 
                 let buttonHtml = '';
                 if (isUnlocked) {
-                    buttonHtml = `<button onclick="plantSeedHere('${breed.id}')" class="mt-2 w-full bg-lime-500 hover:bg-lime-600 text-white font-bold py-1 px-3 rounded-lg text-xs transition">この種をここに植える</button>`;
+                    buttonHtml = `
+                        <button onclick="plantSeedHere('${breed.id}')" class="mt-2 w-full bg-lime-500 hover:bg-lime-600 text-white font-bold py-1 px-3 rounded-lg text-xs transition">この種をここに植える</button>
+                        <button onclick="plantSeedInAll('${breed.id}')" class="mt-1 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded-lg text-xs transition flex justify-center items-center gap-1">
+                            <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> 空き鉢すべてに植える
+                        </button>`;
                 } else {
                     buttonHtml = `<button onclick="buyBreed('${breed.id}', ${breed.price})" class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-1 px-3 rounded-lg text-xs transition flex justify-center items-center gap-1">
                         <i data-lucide="coins" class="w-3.5 h-3.5"></i> ${breed.price}で購入
@@ -1270,6 +1274,36 @@
             showNotification(`🌱 ${BREEDS[breedId].name}の種を${state.activePlantIndex + 1}号鉢に植えました！`, "success");
             saveGame();
             updateUI();
+        };
+
+        // --- 空いている鉢すべてに同じ種を一括で植える ---
+        window.plantSeedInAll = function(breedId) {
+            let planted = 0;
+            for (let i = 0; i < MAX_PLANTS; i++) {
+                if (!state.plants[i] || state.plants[i].health <= 0) {
+                    state.plants[i] = {
+                        breed: breedId,
+                        growth: 0,
+                        stage: 0,
+                        water: 50,
+                        nutrition: 50,
+                        health: 100,
+                        pruningDone: 0,
+                        pestRemoved: 0,
+                        brixBonus: 0,
+                        wakiMeSpawned: false,
+                        pestSpawned: false
+                    };
+                    planted++;
+                }
+            }
+            if (planted > 0) {
+                showNotification(`🌱 ${BREEDS[breedId].name}の種を空き鉢 ${planted} 個にまとめて植えました！`, "success");
+                saveGame();
+                updateUI();
+            } else {
+                showNotification("空いている鉢がありません。まず収穫して整理してください！", "info");
+            }
         };
 
         // ショップ機能
