@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ぷるるんミニトマト栽培記 - 100マルチメガファーム</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@300;400;500&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap');
+        body {
+            font-family: 'Zen Maru Gothic', 'Kiwi Maru', sans-serif;
+            background-color: #f7fee7;
+        }
+        .tomato-bounce {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .pest-wiggle {
+            animation: wiggle 0.5s infinite ease-in-out;
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+        /* バリアのエフェクト */
+        .barrier-glow {
+            animation: barrier-pulse 1.5s infinite alternate;
+        }
+        @keyframes barrier-pulse {
+            0% { box-shadow: 0 0 10px rgba(14, 165, 233, 0.4); }
+            100% { box-shadow: 0 0 25px rgba(14, 165, 233, 0.8); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-800">
+
+    <!-- ヘッダー -->
+    <header class="bg-gradient-to-r from-red-500 to-amber-500 text-white shadow-md p-4 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-black flex items-center gap-2">
+                <i data-lucide="cherry" class="w-8 h-8 fill-white text-red-100"></i>
+                ぷるるんミニトマト栽培記 <span class="text-xs md:text-sm bg-white/20 px-2 py-0.5 rounded-full">100マルチメガファーム版</span>
+            </h1>
+            <div class="flex items-center gap-2 md:gap-4">
+                <!-- 手持ちコイン -->
+                <div class="bg-white/20 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs md:text-base font-bold" title="手持ちコイン">
+                    <i data-lucide="wallet" class="w-4 h-4 text-yellow-300"></i>
+                    <span id="coin-display">100</span> <span class="text-[10px] md:text-xs">コイン</span>
+                </div>
+                <!-- 金庫コイン -->
+                <div class="bg-amber-950/40 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs md:text-base font-bold text-amber-200" title="絶対に減らない金庫のコイン">
+                    <i data-lucide="landmark" class="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse"></i>
+                    <span id="vault-display">0</span> <span class="text-[10px] md:text-xs text-amber-300">金庫</span>
+                </div>
+                <button id="btn-how-to" class="hover:bg-white/10 p-2 rounded-full transition" title="遊び方">
+                    <i data-lucide="help-circle" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-7xl w-full mx-auto p-4 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- 左サイド：100プランターメガファームグリッド (L: col-span-6) -->
+        <div class="lg:col-span-6 flex flex-col gap-4">
+            
+            <!-- コイン金庫（貯金箱）コントロールパネル -->
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-3xl p-4 shadow-sm border border-amber-200">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-black text-amber-800 flex items-center gap-1.5">
+                        <i data-lucide="landmark" class="w-5 h-5 text-amber-600 fill-amber-300"></i>
+                        あんしん貯金箱 (預ければ絶対に減りません)
+                    </h3>
+                    <span class="text-[10px] text-amber-600 font-bold bg-amber-100 px-2 py-0.5 rounded-full">セーフティ100%</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mb-3 leading-snug">金庫に入れたお金は、お店でのお買い物やトマトが枯れた時でも、何があっても絶対に減りません！いつでも預けたり引き出したりできます。</p>
+                <div class="flex gap-2">
+                    <button id="btn-vault-deposit-half" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition shadow flex items-center justify-center gap-1">
+                        半分預ける
+                    </button>
+                    <button id="btn-vault-deposit-all" class="flex-1 bg-amber-700 hover:bg-amber-800 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition shadow flex items-center justify-center gap-1">
+                        全部預ける <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button id="btn-vault-withdraw-all" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition shadow flex items-center justify-center gap-1">
+                        <i data-lucide="arrow-down-left" class="w-3.5 h-3.5"></i> 全部引き出す
+                    </button>
+                </div>
+            </div>
+
+            <!-- 100プランターグリッド -->
+            <div class="bg-white rounded-3xl p-4 shadow-md border border-lime-100 flex-grow flex flex-col">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-base font-black text-slate-700 flex items-center gap-1.5">
+                        <i data-lucide="layout-grid" class="w-5 h-5 text-emerald-500"></i>
+                        メガファームグリッド (100スロット)
+                    </h2>
+                    <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold" id="farm-usage-text">1/100 栽培中</span>
+                </div>
+
+                <!-- 100苗の極小グリッドコンテナ -->
+                <div class="grid grid-cols-5 sm:grid-cols-10 gap-1.5 max-h-[350px] lg:max-h-[480px] overflow-y-auto p-1 bg-lime-50/50 rounded-2xl border border-lime-100/60" id="farm-grid">
+                    <!-- JavaScriptで100個のスロットを極小正方形として動的生成 -->
+                </div>
+
+                <!-- 一括お世話コントロール -->
+                <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[11px] font-bold text-slate-400 block">全自動一括テクノロジー（ショップで購入後に解放されます）</span>
+                        <!-- 自動収穫ロボの動作インジケーター -->
+                        <span id="auto-harvest-indicator" class="hidden text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-black animate-pulse flex items-center gap-1">
+                            <i data-lucide="cpu" class="w-3 h-3"></i> 収穫ロボ稼働中
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btn-bulk-water" class="bg-sky-500 hover:bg-sky-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow" disabled>
+                            <i data-lucide="shower-head" class="w-4 h-4"></i> 100株一括水やり
+                        </button>
+                        <button id="btn-bulk-fertilizer" class="bg-amber-500 hover:bg-amber-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow" disabled>
+                            <i data-lucide="plane" class="w-4 h-4"></i> 100株一括施肥
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中央＆右：選択中トマトの詳細お世話 & ステータス (L: col-span-6) -->
+        <div class="lg:col-span-6 flex flex-col gap-4">
+            
+            <!-- 選択中トマトの情報とお世話 -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 flex-grow">
+                
+                <!-- ビジュアル表示パネル (col-span-7) -->
+                <div id="visual-panel" class="md:col-span-7 bg-gradient-to-b from-sky-100 via-sky-50 to-emerald-50 rounded-3xl p-5 shadow-md border-2 border-lime-200 relative flex-col justify-between min-h-[350px] flex transition-all duration-300">
+                    
+                    <!-- 安全保護中バッジ -->
+                    <div id="safety-shield-badge" class="hidden absolute top-14 left-5 z-20 bg-sky-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1 animate-bounce">
+                        <i data-lucide="shield" class="w-3 h-3"></i> おやすみ保護中
+                    </div>
+
+                    <!-- 上部情報 (品種) -->
+                    <div class="flex justify-between items-start z-10 pointer-events-none">
+                        <div class="bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-xl border border-lime-100">
+                            <span class="text-[9px] font-bold text-slate-400 block">選択中のプランター</span>
+                            <span id="tomato-breed" class="font-extrabold text-slate-700 text-xs md:text-sm">プチレッド (標準種)</span>
+                        </div>
+                        <div class="bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-xl border border-lime-100 text-right">
+                            <span class="text-[9px] font-bold text-slate-400 block">推定糖度 / 成長</span>
+                            <span id="estimated-sweetness" class="font-black text-red-500 text-xs md:text-sm">0.0 Brix</span>
+                        </div>
+                    </div>
+
+                    <!-- SVG 描画コンテナ -->
+                    <div class="relative w-full h-[220px] md:h-[260px] flex items-end justify-center my-auto">
+                        <div id="interactive-layer" class="absolute inset-0 z-20"></div>
+
+                        <div class="w-full max-w-[220px] h-full flex items-end justify-center z-10 pointer-events-none">
+                            <svg id="tomato-svg" viewBox="0 0 200 250" class="w-full h-full drop-shadow-md">
+                                <ellipse cx="100" cy="225" rx="45" ry="12" fill="#c2410c" />
+                                <path d="M 58 225 L 63 245 L 137 245 L 142 225 Z" fill="#9a3412" />
+                                <ellipse cx="100" cy="225" rx="42" ry="8" fill="#78350f" />
+                                <g id="plant-growth-group"></g>
+                            </svg>
+                        </div>
+
+                        <div id="popup-container" class="absolute inset-0 pointer-events-none z-30 flex items-center justify-center"></div>
+                    </div>
+
+                    <!-- 下部案内 -->
+                    <div class="bg-white/95 backdrop-blur-sm p-2.5 rounded-2xl border border-lime-100 z-10">
+                        <div class="flex items-center gap-1.5">
+                            <div class="bg-red-100 text-red-600 p-1 rounded-lg animate-pulse" id="helper-icon">
+                                <i data-lucide="speech" class="w-3.5 h-3.5"></i>
+                            </div>
+                            <p id="helper-text" class="text-[11px] font-bold text-slate-600">お世話を始めましょう！</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ステータス & お世話コントロール (col-span-5) -->
+                <div class="md:col-span-5 flex flex-col gap-4 justify-between">
+                    
+                    <!-- コンディションメータ -->
+                    <div class="bg-white rounded-3xl p-4 shadow-sm border border-lime-100 space-y-3 flex-grow">
+                        <div class="flex justify-between items-center border-b pb-1.5">
+                            <span class="text-xs font-black text-slate-500 flex items-center gap-1">
+                                <i data-lucide="gauge" class="w-4 h-4 text-emerald-500"></i>個体ステータス
+                            </span>
+                            <div id="weather-badge-right" class="flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold"></div>
+                        </div>
+
+                        <!-- 水分 -->
+                        <div>
+                            <div class="flex justify-between text-[11px] font-bold text-slate-600 mb-0.5">
+                                <span class="flex items-center gap-0.5"><i data-lucide="droplet" class="w-3 h-3 text-blue-500 fill-blue-500"></i> 水分</span>
+                                <span id="water-status">ちょうど良い</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden relative">
+                                <div class="absolute inset-y-0 left-[40%] right-[30%] bg-blue-100 border-x border-blue-200"></div>
+                                <div id="water-bar" class="absolute left-0 top-0 h-full bg-blue-500 transition-all duration-300" style="width: 50%"></div>
+                            </div>
+                        </div>
+
+                        <!-- 栄養 -->
+                        <div>
+                            <div class="flex justify-between text-[11px] font-bold text-slate-600 mb-0.5">
+                                <span class="flex items-center gap-0.5"><i data-lucide="sparkles" class="w-3 h-3 text-amber-500 fill-amber-500"></i> 栄養</span>
+                                <span id="nutrition-status">普通</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden relative">
+                                <div class="absolute inset-y-0 left-[50%] right-[15%] bg-amber-100 border-x border-amber-200"></div>
+                                <div id="nutrition-bar" class="absolute left-0 top-0 h-full bg-amber-500 transition-all duration-300" style="width: 50%"></div>
+                            </div>
+                            <p class="text-[9px] text-slate-400 mt-0.5" id="nutrition-tip-text">※50%以上に保つと成長にボーナス。肥料の与えすぎに注意！</p>
+                        </div>
+
+                        <!-- 体力 -->
+                        <div>
+                            <div class="flex justify-between text-[11px] font-bold text-slate-600 mb-0.5">
+                                <span class="flex items-center gap-0.5"><i data-lucide="heart" class="w-3 h-3 text-rose-500 fill-rose-500"></i> 体力</span>
+                                <span id="health-status">元気</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="health-bar" class="bg-rose-500 h-full transition-all duration-300" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <!-- 成長率 -->
+                        <div>
+                            <div class="flex justify-between text-[11px] font-bold text-slate-600 mb-0.5">
+                                <span>成長率</span>
+                                <span id="growth-percent">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="growth-bar" class="bg-gradient-to-r from-lime-400 to-green-500 h-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 個別アクション -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btn-water" class="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold py-2 rounded-xl shadow transition flex flex-col items-center gap-0.5">
+                            <i data-lucide="droplets" class="w-5 h-5"></i>
+                            <span class="text-xs">水やり</span>
+                        </button>
+                        <button id="btn-fertilizer" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold py-2 rounded-xl shadow transition flex flex-col items-center gap-0.5">
+                            <i data-lucide="leaf" class="w-5 h-5"></i>
+                            <span class="text-xs">肥料やり</span>
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- 下部：アップグレードショップ / 図鑑 / 実績 -->
+            <div class="bg-white rounded-3xl shadow-md border border-lime-100 overflow-hidden">
+                <!-- タブヘッダー -->
+                <div class="flex border-b border-slate-100 bg-slate-50">
+                    <button id="tab-shop" class="flex-1 py-3 px-4 text-center font-bold text-sm text-red-500 border-b-2 border-red-500 focus:outline-none transition flex justify-center items-center gap-1.5">
+                        <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+                        ウルトラメガショップ🛒
+                    </button>
+                    <button id="tab-records" class="flex-1 py-3 px-4 text-center font-bold text-sm text-slate-400 hover:text-slate-600 focus:outline-none transition flex justify-center items-center gap-1.5">
+                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                        品種・図鑑
+                    </button>
+                    <button id="tab-stats" class="flex-1 py-3 px-4 text-center font-bold text-sm text-slate-400 hover:text-slate-600 focus:outline-none transition flex justify-center items-center gap-1.5">
+                        <i data-lucide="trophy" class="w-4 h-4"></i>
+                        実績・統計
+                    </button>
+                </div>
+
+                <!-- タブ中身 -->
+                <div class="p-4 max-h-[350px] overflow-y-auto">
+                    <!-- 1. ショップ -->
+                    <div id="panel-shop" class="space-y-4">
+                        <!-- 種の購入 -->
+                        <div>
+                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+                                トマトの種（購入すると空きのプランターに直接植えられます！）
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="shop-seeds">
+                                <!-- 種アイテム -->
+                            </div>
+                        </div>
+                        <!-- 便利ツールの購入 -->
+                        <div class="pt-2 border-t border-slate-100">
+                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                <i data-lucide="wrench" class="w-4 h-4 text-indigo-500"></i>
+                                お世話おたすけ、全自動一括オートテクノロジー＆魔法グッズ
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="shop-upgrades">
+                                <!-- アップグレード -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. 品種図鑑 -->
+                    <div id="panel-records" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- 図鑑カード -->
+                    </div>
+
+                    <!-- 3. 実績・統計 -->
+                    <div id="panel-stats" class="hidden space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                                <span class="text-[10px] text-slate-400 font-bold block">トータル収穫数</span>
+                                <span id="stat-total-harvest" class="text-2xl font-black text-red-500">0</span> <span class="text-xs text-red-500 font-bold">個</span>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                                <span class="text-[10px] text-slate-400 font-bold block">最高糖度記録</span>
+                                <span id="stat-max-sweetness" class="text-2xl font-black text-amber-500">0.0</span> <span class="text-xs text-amber-500 font-bold">Brix</span>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                                <span class="text-[10px] text-slate-400 font-bold block">累計獲得コイン</span>
+                                <span id="stat-total-coins" class="text-2xl font-black text-amber-600">100</span> <span class="text-xs text-amber-600 font-bold">コイン</span>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                                <span class="text-[10px] text-slate-400 font-bold block">お世話回数</span>
+                                <span id="stat-care-count" class="text-2xl font-black text-emerald-600">0</span> <span class="text-xs text-emerald-600 font-bold">回</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-slate-100 text-slate-400 text-center py-4 border-t border-slate-200 text-xs">
+        <div class="max-w-6xl mx-auto px-4">
+            <p>© 2026 ぷるるんミニトマト栽培記 - 甘いトマトを目指して毎日お世話しよう！</p>
+        </div>
+    </footer>
+
+    <!-- 遊び方ポップアップ -->
+    <div id="modal-howto" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-lg font-black text-slate-700 flex items-center gap-1">
+                    <i data-lucide="help-circle" class="text-red-500"></i> 遊び方ガイド
+                </h3>
+                <button id="btn-close-howto" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3 text-sm text-slate-600 leading-relaxed">
+                <div>
+                    <h4 class="font-bold text-red-500 mb-1">🌱 1. 基本のお世話</h4>
+                    <p>左側のファーム（最大100スロット）から好きなトマト苗を選び、水と栄養を適正レベルにキープしてお世話します。
+                    水分（40%〜70%）と栄養（50%以上）を理想範囲に保つとグングン育ちます！</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-amber-500 mb-1">☀️ 2. 一括お世話マシンのアンロック</h4>
+                    <p>ショップで「自動一括スプリンクラー」や「一括ドローン施肥機」を購入すると、100個すべてのプランターに一度にお世話をすることができて、作業が大幅にスピードアップ＆超楽になります！</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-teal-500 mb-1">🤖 3. 自動収穫ロボット</h4>
+                    <p>ショップで「全自動収穫ロボット」をアンロックすると、完熟したトマトをロボットが自動で収穫してお金に変えてくれるようになります！100株の大量栽培でも安心の最強アイテムです！</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-indigo-500 mb-1">🛍️ 4. 宇宙トマト「コズミックダイヤモンド」</h4>
+                    <p>コインが貯まったら、高額の宇宙トマトや伝説の不死鳥トマトの種を購入！1株でラクラク1万円（1万コイン）を突破できるようになります！</p>
+                </div>
+            </div>
+
+            <button id="btn-close-howto-footer" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl transition shadow-md">
+                よし、100苗の大農家になるぞ！
+            </button>
+        </div>
+    </div>
+
+    <!-- 収穫リザルトポップアップ -->
+    <div id="modal-harvest" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-xl space-y-4">
+            <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto tomato-bounce">
+                <i data-lucide="cherry" class="w-12 h-12 text-red-500 fill-red-500"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-black text-slate-800">トマトを収穫しました！</h3>
+                <p id="harvest-breed" class="text-xs text-slate-400 font-bold mt-1">品種：プチレッド</p>
+            </div>
+            
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-bold text-slate-500">収穫数</span>
+                    <span id="harvest-qty" class="text-lg font-black text-slate-700">5 個</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-bold text-slate-500">平均糖度 (Brix)</span>
+                    <span id="harvest-brix" class="text-lg font-black text-red-500">8.5 Brix</span>
+                </div>
+                <div class="flex justify-between items-center border-t pt-2 mt-2">
+                    <span class="text-sm font-bold text-slate-500">獲得コイン</span>
+                    <span id="harvest-earnings" class="text-xl font-black text-amber-500 flex items-center gap-1">
+                        <i data-lucide="coins" class="w-5 h-5 fill-amber-500"></i> +150
+                    </span>
+                </div>
+            </div>
+
+            <p id="harvest-comment" class="text-xs font-bold text-slate-600 bg-amber-50 p-3 rounded-xl border border-amber-100">
+                お見事！
+            </p>
+
+            <button id="btn-next-plant" class="w-full bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-white font-black py-3 rounded-2xl shadow-lg transition">
+                プランターを整理して次へ 🌱
+            </button>
+        </div>
+    </div>
+
+    <!-- ゲームロジック -->
+    <script>
+        // --- 状態管理 ---
+        const state = {
+            coins: 500, // 100株拡張に合わせて、初期種を植えやすいように初期コインを500に
+            vaultCoins: 0, // ★ 新機能：絶対に減らない金庫コイン
+            weather: 'sunny', 
+            activePlantIndex: 0, // 選択中プランターのインデックス (0~99)
+
+            // 最大100株のトマトデータ配列
+            plants: [
+                {
+                    breed: 'standard',
+                    growth: 0,
+                    stage: 0,
+                    water: 50,
+                    nutrition: 50,
+                    health: 100,
+                    pruningDone: 0,
+                    pestRemoved: 0,
+                    brixBonus: 0,
+                    wakiMeSpawned: false,
+                    pestSpawned: false
+                }
+            ],
+
+            // 購入済みの永続アップグレード
+            upgrades: {
+                autoWater: false,        // 自動水やり器
+                greenhouse: false,       // ビニールハウス (成長速度1.5倍)
+                premiumFertilizer: false,// 金の有機肥料 (栄養+35% & 使うたびに糖度+0.1)
+                pestGuard: false,        // てんとう虫ハウス (アブラムシを自動退治)
+                bgmSpeaker: false,       // おんがくスピーカー (体力減少スピード削減)
+                goldenShears: false,     // 黄金のはさみ (わき芽かき効果2倍)
+                autoFertilizer: false,   // 自動施肥機
+                weatherShield: false,    // お天気ドーム
+                luckyClover: false,      // 幸運のクローバー (収穫コイン1.2倍)
+                growthElixir: false,     // ミラクル成長エキス (成長速度1.2倍)
+                beeNest: false,          // ハチさんの巣箱 (開花時成長スピード3倍)
+                nutritionShield: false,  // 栄養シールド
+                decoSticker: false,      // プランターデコステッカー
+                ledLight: false,         // 育成用LEDライト
+                superNutrition: false,   // 栄養限界突破アンプル (栄養上限が120%に)
+                bearPlush: false,        // くまさんのぬいぐるみ (収穫量+2個)
+                magicWateringCan: false, // まほうのじょうろ (確率で+10%成長)
+                bulkWaterItem: false,    // 一括散水器 (一括水やりが解放)
+                bulkFertilizerItem: false, // 一括施肥機 (一括肥料が解放)
+                autoHarvestBot: false     // 全自動収穫ロボット (完熟したトマトを自動で収穫)
+            },
+
+            unlockedBreeds: ['standard'],
+
+            stats: {
+                totalHarvest: 0,
+                maxSweetness: 0,
+                totalCoins: 500,
+                careCount: 0
+            }
+        };
+
+        // 最大プランター数
+        const MAX_PLANTS = 100;
+
+        // --- 定数データ ---
+        const STAGES = [
+            { name: "種まき完了", emoji: "🌱", minGrowth: 0, helper: "土が乾いたら「水やり」をして、芽が出るのをワクワクしながら待ちましょう！" },
+            { name: "ふたば", emoji: "🌱", minGrowth: 15, helper: "可愛いふたばが出てきました！水と栄養をバランス良くあげてね。" },
+            { name: "本葉・急成長", emoji: "🌿", minGrowth: 35, helper: "茎が伸びてきました！「わき芽」や「アブラムシ(🐛)」が出たらタップして摘み取ってね！" },
+            { name: "黄色い花が満開", emoji: "🌼", minGrowth: 60, helper: "お花が咲きました！この時期に栄養をたっぷり与えると、とても甘い実ができます。" },
+            { name: "青い実が結実", emoji: "🟢", minGrowth: 80, helper: "ちいさな青い実ができました！赤く色づくまで大切に見守りましょう。" },
+            { name: "収穫期（完熟！）", emoji: "🍅", minGrowth: 100, helper: "完熟しました！実をタップ、または「収穫する」でお金をたくさんゲット！" }
+        ];
+
+        const BREEDS = {
+            standard: {
+                id: 'standard', name: 'プチレッド', desc: '育てやすい基本 of 基本赤いミニトマト。初心者に最適。',
+                price: 0, baseBrix: 5.5, maxBrix: 8.0, coinMultiplier: 1.0, color: '#ef4444', shape: 'circle'
+            },
+            yellow: {
+                id: 'yellow', name: 'イエローピコ', desc: 'フルーティーで酸味が少なく大人気！',
+                price: 150, baseBrix: 7.0, maxBrix: 9.5, coinMultiplier: 1.3, color: '#eab308', shape: 'circle'
+            },
+            sweet: {
+                id: 'sweet', name: '極甘シュガーゴールド',
+                desc: '糖度10％を超えることもある、まるで果物なトマト。',
+                price: 350, baseBrix: 9.0, maxBrix: 12.5, coinMultiplier: 1.8, color: '#f97316', shape: 'circle'
+            },
+            heart: {
+                id: 'heart', name: 'ハッピートマト（ハート）',
+                desc: '愛らしいハートの実がなる。甘くてハッピー！',
+                price: 550, baseBrix: 10.5, maxBrix: 14.0, coinMultiplier: 2.2, color: '#ec4899', shape: 'heart'
+            },
+            cat: {
+                id: 'cat', name: 'キャットミント（ねこ型）',
+                desc: 'ねこの耳が付いたピンク色のキュートなトマト。',
+                price: 700, baseBrix: 11.5, maxBrix: 15.0, coinMultiplier: 2.5, color: '#f472b6', shape: 'cat'
+            },
+            cosmo: {
+                id: 'cosmo', name: 'コスモスター（星型）',
+                desc: '星形をしたきらめくイエロートマト。夜空の味がするかも？',
+                price: 800, baseBrix: 11.0, maxBrix: 15.5, coinMultiplier: 2.7, color: '#fbbf24', shape: 'star'
+            },
+            chocolate: {
+                id: 'chocolate', name: 'ショコラミニ',
+                desc: 'ビターチョコレート色の深いコクがある大人なトマト。',
+                price: 900, baseBrix: 12.0, maxBrix: 16.0, coinMultiplier: 3.0, color: '#78350f', shape: 'circle'
+            },
+            watermelon: {
+                id: 'watermelon', name: 'スイカミニ',
+                desc: 'ちいさなスイカ模様！中身は最高にフルーティーな極甘種。',
+                price: 1000, baseBrix: 12.5, maxBrix: 16.5, coinMultiplier: 3.2, color: '#16a34a', shape: 'watermelon'
+            },
+            purple: {
+                id: 'purple', name: 'マジカルパープル',
+                desc: '神秘のパープル。美しさと健康、甘さを兼ね備える。',
+                price: 1100, baseBrix: 13.0, maxBrix: 17.0, coinMultiplier: 3.5, color: '#8b5cf6', shape: 'circle'
+            },
+            snow: {
+                id: 'snow', name: 'スノージュエル',
+                desc: '真っ白に輝く雪のようなミニトマト。超一級の価値。',
+                price: 1300, baseBrix: 13.5, maxBrix: 18.0, coinMultiplier: 3.8, color: '#e2e8f0', shape: 'circle'
+            },
+            crown: {
+                id: 'crown', name: 'クラウンゴールド',
+                desc: '王冠の形をしたトマト。糖度・価格ともに最上級。',
+                price: 1500, baseBrix: 14.0, maxBrix: 19.5, coinMultiplier: 4.5, color: '#f59e0b', shape: 'crown'
+            },
+            rainbow: {
+                id: 'rainbow', name: 'レインボーミラクル',
+                desc: '七色に光り輝く伝説のミニトマト。夢の栽培を目指そう！',
+                price: 2000, baseBrix: 15.0, maxBrix: 21.0, coinMultiplier: 5.5, color: 'url(#rainbow-grad)', shape: 'star'
+            },
+            diamond: {
+                id: 'diamond', name: 'コズミックダイヤモンド',
+                desc: '【超大富豪】ダイヤモンド型をした宇宙ブルーのトマト。一気に1万円以上のコインを稼ぎ出す。',
+                price: 3000, baseBrix: 25.0, maxBrix: 35.0, coinMultiplier: 12.0, color: '#38bdf8', shape: 'diamond'
+            },
+            phoenix: {
+                id: 'phoenix', name: 'ソルフェニックス（不死鳥）',
+                desc: '【絶対無敵】絶対に枯れない太陽の不死鳥トマト。驚異的な糖度と15倍 of コイン価格！',
+                price: 5000, baseBrix: 30.0, maxBrix: 45.0, coinMultiplier: 15.0, color: '#f97316', shape: 'phoenix'
+            }
+        };
+
+        const SHOP_ITEMS = [
+            { id: 'autoWater', name: '自動散水器', desc: '水分が30%以下になると自動で20%水を補給。', price: 180, icon: 'droplet' },
+            { id: 'greenhouse', name: 'プチビニールハウス', desc: '全プランターの成長速度が常に1.5倍。', price: 320, icon: 'home' },
+            { id: 'premiumFertilizer', name: '金の有機肥料', desc: '肥料効率+35%、さらに使うたび糖度+0.1アップ。', price: 280, icon: 'sparkles' },
+            { id: 'pestGuard', name: 'てんとう虫ハウス', desc: '害虫発生率半減＆アブラムシを時々自動退治。', price: 400, icon: 'bug' },
+            { id: 'bgmSpeaker', name: 'おんがくスピーカー', desc: 'クラシック音楽で、トマトの体力減少スピードを30%カット。', price: 450, icon: 'music' },
+            { id: 'goldenShears', name: '黄金のはさみ', desc: 'わき芽かきの糖度ボーナスがなんと2倍に！', price: 500, icon: 'scissors' },
+            { id: 'autoFertilizer', name: '自動施肥機（オートフィーダー）', desc: '栄養が30%以下になると自動で肥料補給。', price: 550, icon: 'cpu' },
+            { id: 'growthElixir', name: 'ミラクル成長エキス', desc: '全体のトマトの基本成長速度が常時1.2倍。', price: 600, icon: 'flask-conical' },
+            { id: 'weatherShield', name: 'お天気ドーム', desc: '天候による土の「激しい乾燥や湿気」の変化を優しく緩和。', price: 650, icon: 'umbrella' },
+            { id: 'nutritionShield', name: '栄養活力シールド', desc: '土の栄養が減るスピードを30%カットし負担を軽減。', price: 700, icon: 'shield-check' },
+            { id: 'beeNest', name: 'ハチさんの巣箱', desc: '受粉お手伝い！開花期の成長スピードがなんと3倍に！', price: 750, icon: 'box' },
+            { id: 'luckyClover', name: '幸運のクローバー', desc: '収穫時に手に入るコインが常に1.2倍にアップ！', price: 800, icon: 'clover' },
+            { id: 'decoSticker', name: 'ぷるるんデコステッカー', desc: 'お世話をするたびに体力が+5%追加回復します。', price: 900, icon: 'palette' },
+            { id: 'ledLight', name: 'おてんと様LEDライト', desc: '曇りや雨でも常に晴れと同じ成長率をキープ。', price: 1000, icon: 'sun' },
+            { id: 'superNutrition', name: '栄養限界突破アンプル', desc: '栄養上限が120%になり、与えすぎペナルティが完全消失。', price: 1100, icon: 'flask-round' },
+            { id: 'bearPlush', name: 'くまさんのぬいぐるみ', desc: 'お世話を見守る！1株からの収穫数が7個(通常5)にアップ！', price: 1300, icon: 'gift' },
+            { id: 'magicWateringCan', name: 'まほうのじょうろ', desc: '水やり時に15%の確率で一気に成長が10%進む。', price: 1600, icon: 'wand' },
+            // 20マルチ・100マルチ用の一括お世話＆自動テクノロジー
+            { id: 'bulkWaterItem', name: '全自動一括スプリンクラー', desc: 'ファーム内のすべての苗にまとめて一度に水やりができるボタンが解放！', price: 1500, icon: 'shower-head' },
+            { id: 'bulkFertilizerItem', name: '一括ドローン施肥機', desc: 'ファーム内のすべての苗にまとめて一度に肥料を配れるボタンが解放！', price: 2000, icon: 'plane' },
+            { id: 'autoHarvestBot', name: '全自動収穫ロボット', desc: '【最強アイテム】100株のどこかでトマトが完熟した瞬間、自動で即時に収穫してコインを回収！', price: 4000, icon: 'cpu' }
+        ];
+
+        // 天気ごとのパラメータ設定
+        const WEATHER_SETTINGS = {
+            sunny: { name: '晴れ', icon: 'sun', class: 'bg-amber-100 text-amber-700 border-amber-200', waterDrain: 3.5, growthGain: 1.2 },
+            cloudy: { name: '曇り', icon: 'cloud', class: 'bg-slate-100 text-slate-700 border-slate-200', waterDrain: 1.8, growthGain: 0.8 },
+            rainy: { name: '雨', icon: 'cloud-rain', class: 'bg-blue-100 text-blue-700 border-blue-200', waterDrain: -2.0, growthGain: 0.5 }
+        };
+
+        // --- ローカルストレージロード (キーをultimateに変更し恒久セーブを実現) ---
+        function loadGame() {
+            const saved = localStorage.getItem('tomato_grower_save_ultimate_v1');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    Object.assign(state, parsed);
+                    
+                    if (state.vaultCoins === undefined) state.vaultCoins = 0;
+
+                    if (!state.plants || !Array.isArray(state.plants)) {
+                        state.plants = [{
+                            breed: 'standard', growth: 0, stage: 0, water: 50, nutrition: 50, health: 100,
+                            pruningDone: 0, pestRemoved: 0, brixBonus: 0, wakiMeSpawned: false, pestSpawned: false
+                        }];
+                    }
+                    if (state.activePlantIndex === undefined) state.activePlantIndex = 0;
+                    // アップグレードキーの補完
+                    const defaultKeys = SHOP_ITEMS.map(i => i.id);
+                    defaultKeys.forEach(k => {
+                        if (state.upgrades[k] === undefined) state.upgrades[k] = false;
+                    });
+                } catch(e) {
+                    console.error("セーブデータのロードに失敗", e);
+                }
+            }
+        }
+
+        function saveGame() {
+            localStorage.setItem('tomato_grower_save_ultimate_v1', JSON.stringify(state));
+        }
+
+        // 選択中のトマト
+        function getActivePlant() {
+            return state.plants[state.activePlantIndex];
+        }
+
+        // 糖度計算
+        function calculateCurrentBrixOf(plant) {
+            if (plant.stage < 4) return 0.0;
+            const breed = BREEDS[plant.breed] || BREEDS.standard;
+            
+            const pruningMultiplier = state.upgrades.goldenShears ? 0.8 : 0.4;
+            let bonus = (plant.pruningDone * pruningMultiplier) + (plant.pestRemoved * 0.2);
+            
+            if (plant.nutrition >= 50 && plant.nutrition <= (state.upgrades.superNutrition ? 120 : 85)) {
+                bonus += 0.5;
+            }
+            
+            let finalBrix = breed.baseBrix + bonus + plant.brixBonus;
+            if (finalBrix > breed.maxBrix) finalBrix = breed.maxBrix;
+            return finalBrix;
+        }
+
+        // --- 100苗ファームグリッドの描画 ---
+        function renderFarmGrid() {
+            const farmGrid = document.getElementById('farm-grid');
+            if (!farmGrid) return;
+            farmGrid.innerHTML = '';
+
+            for (let i = 0; i < MAX_PLANTS; i++) {
+                const plant = state.plants[i];
+                const card = document.createElement('div');
+                
+                // 100個並ぶためコンパクトなスタイルに調整
+                card.className = `p-1 rounded-lg border text-center cursor-pointer transition flex flex-col justify-between relative h-12 w-full ${
+                    i === state.activePlantIndex 
+                        ? 'border-red-500 bg-red-50 ring-1 ring-red-300' 
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                }`;
+
+                card.onclick = () => {
+                    state.activePlantIndex = i;
+                    updateUI();
+                };
+
+                if (plant) {
+                    const isHarvestable = plant.stage === 5;
+                    const isDead = plant.health <= 0;
+
+                    let statusBgColor = 'bg-emerald-500';
+                    if (isDead) statusBgColor = 'bg-slate-400';
+                    else if (isHarvestable) statusBgColor = 'bg-rose-500 animate-pulse';
+                    else if (plant.water < 30 || plant.water > 80 || plant.health < 40) statusBgColor = 'bg-amber-400';
+
+                    card.innerHTML = `
+                        <!-- スロット番号と状態ランプ -->
+                        <div class="flex justify-between items-center w-full px-0.5">
+                            <span class="text-[8px] text-slate-400 font-bold">${i+1}</span>
+                            <span class="w-1.5 h-1.5 rounded-full ${statusBgColor}"></span>
+                        </div>
+                        <!-- 植物の絵文字 -->
+                        <div class="text-sm select-none leading-none mb-0.5">
+                            ${isDead ? '💀' : (isHarvestable ? '🍅' : STAGES[plant.stage].emoji)}
+                        </div>
+                        <!-- 進捗ミニゲージ -->
+                        <div class="w-full bg-slate-100 h-0.5 rounded-full overflow-hidden">
+                            <div class="h-full bg-lime-500" style="width: ${plant.growth}%"></div>
+                        </div>
+                    `;
+                } else {
+                    // 空いているスロット
+                    card.innerHTML = `
+                        <div class="text-left px-0.5">
+                            <span class="text-[8px] text-slate-300 font-bold">${i+1}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-300 font-black mb-0.5 leading-none">
+                            ➕
+                        </div>
+                        <div class="w-full bg-slate-100 h-0.5 rounded-full"></div>
+                    `;
+                }
+
+                farmGrid.appendChild(card);
+            }
+
+            // 植えられている個数カウント
+            const currentCount = state.plants.filter(p => p !== null).length;
+            const farmUsageText = document.getElementById('farm-usage-text');
+            if (farmUsageText) farmUsageText.textContent = `${currentCount}/${MAX_PLANTS} 栽培中`;
+
+            // 一括お世話ボタンの有効化チェック
+            const btnBulkWater = document.getElementById('btn-bulk-water');
+            const btnBulkFertilizer = document.getElementById('btn-bulk-fertilizer');
+            if (btnBulkWater) btnBulkWater.disabled = !state.upgrades.bulkWaterItem;
+            if (btnBulkFertilizer) btnBulkFertilizer.disabled = !state.upgrades.bulkFertilizerItem;
+
+            // 自動収穫ロボのアクティブ表示
+            const autoHarvestIndicator = document.getElementById('auto-harvest-indicator');
+            if (autoHarvestIndicator) {
+                if (state.upgrades.autoHarvestBot) {
+                    autoHarvestIndicator.classList.remove('hidden');
+                } else {
+                    autoHarvestIndicator.classList.add('hidden');
+                }
+            }
+
+            lucide.createIcons();
+        }
+
+        // --- 全体更新UI ---
+        function updateUI() {
+            // コイン & 金庫
+            if (coinDisplay) coinDisplay.textContent = Math.floor(state.coins);
+            if (vaultDisplay) vaultDisplay.textContent = Math.floor(state.vaultCoins);
+
+            const activePlant = getActivePlant();
+
+            if (activePlant) {
+                const breed = BREEDS[activePlant.breed] || BREEDS.standard;
+                
+                // 品種名カラークラス、エフェクト適用
+                if (tomatoBreedText) {
+                    tomatoBreedText.textContent = `${state.activePlantIndex + 1}号鉢: ${breed.name}`;
+                    if (breed.id === 'rainbow') {
+                        tomatoBreedText.className = "font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-green-500 to-indigo-500 text-xs md:text-sm";
+                    } else if (breed.id === 'diamond') {
+                        tomatoBreedText.className = "font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 text-xs md:text-sm animate-pulse";
+                    } else if (breed.id === 'phoenix') {
+                        tomatoBreedText.className = "font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-xs md:text-sm";
+                    } else {
+                        tomatoBreedText.className = "font-bold text-xs md:text-sm";
+                        tomatoBreedText.style.color = breed.color;
+                    }
+                }
+
+                // おやすみ自動セーフバリア表示
+                const safetyShieldBadge = document.getElementById('safety-shield-badge');
+                const visualPanel = document.getElementById('visual-panel');
+                // 体力が低くて自動保護中の時
+                if (activePlant.health <= 15 && breed.id !== 'phoenix') {
+                    if (safetyShieldBadge) safetyShieldBadge.classList.remove('hidden');
+                    if (visualPanel) visualPanel.classList.add('barrier-glow', 'border-sky-400');
+                } else {
+                    if (safetyShieldBadge) safetyShieldBadge.classList.add('hidden');
+                    if (visualPanel) visualPanel.classList.remove('barrier-glow', 'border-sky-400');
+                }
+
+                const currentBrix = calculateCurrentBrixOf(activePlant);
+                if (estimatedSweetnessText) {
+                    estimatedSweetnessText.textContent = `${currentBrix.toFixed(1)} Brix / 成長 ${Math.floor(activePlant.growth)}%`;
+                }
+
+                // ゲージ表示
+                if (growthBar) growthBar.style.width = `${activePlant.growth}%`;
+                if (growthPercent) growthPercent.textContent = `${Math.floor(activePlant.growth)}%`;
+                if (globalGrowthBar) globalGrowthBar.style.width = `${activePlant.growth}%`;
+                if (globalGrowthPercent) globalGrowthPercent.textContent = `${Math.floor(activePlant.growth)}%`;
+
+                if (waterBar) waterBar.style.width = `${activePlant.water}%`;
+                if (waterStatus) {
+                    if (activePlant.water <= 0) {
+                        waterStatus.textContent = "カラカラ (0%)";
+                        waterStatus.className = "text-red-500 font-bold";
+                    } else if (activePlant.water < 40) {
+                        waterStatus.textContent = "乾燥気味";
+                        waterStatus.className = "text-amber-500 font-bold";
+                    } else if (activePlant.water <= 70) {
+                        waterStatus.textContent = "ちょうどよい";
+                        waterStatus.className = "text-emerald-500 font-bold";
+                    } else {
+                        waterStatus.textContent = "湿りすぎ";
+                        waterStatus.className = "text-blue-500 font-bold";
+                    }
+                }
+
+                const maxNut = state.upgrades.superNutrition ? 120 : 100;
+                if (nutritionBar) nutritionBar.style.width = `${(activePlant.nutrition / maxNut) * 100}%`;
+                
+                if (nutritionTipText) {
+                    if (state.upgrades.superNutrition) {
+                        nutritionTipText.textContent = "※アンプル効果により、どれだけ栄養をあげても過剰ペナルティはありません！";
+                    } else {
+                        nutritionTipText.textContent = "※50%以上に保つと成長にボーナス。肥料の与えすぎに注意！";
+                    }
+                }
+
+                if (nutritionStatus) {
+                    if (activePlant.nutrition < 30) {
+                        nutritionStatus.textContent = "栄養不足";
+                        nutritionStatus.className = "text-red-400 font-bold";
+                    } else if (activePlant.nutrition <= 85 || state.upgrades.superNutrition) {
+                        nutritionStatus.textContent = "栄養たっぷり";
+                        nutritionStatus.className = "text-emerald-500 font-bold";
+                    } else {
+                        nutritionStatus.textContent = "肥料過多";
+                        nutritionStatus.className = "text-amber-500 font-bold";
+                    }
+                }
+
+                if (healthBar) healthBar.style.width = `${activePlant.health}%`;
+                if (healthStatus) {
+                    if (activePlant.health > 80) {
+                        healthStatus.textContent = "超元気！";
+                        healthStatus.className = "text-emerald-500 font-bold";
+                    } else if (activePlant.health > 30) {
+                        healthStatus.textContent = "普通";
+                        healthStatus.className = "text-slate-600 font-bold";
+                    } else if (activePlant.health > 0) {
+                        healthStatus.textContent = "バリア保護中！";
+                        healthStatus.className = "text-sky-500 font-black animate-pulse";
+                    } else {
+                        healthStatus.textContent = "枯れた";
+                        healthStatus.className = "text-slate-400 font-bold";
+                    }
+                }
+
+                // ボタン制御
+                if (btnWater) btnWater.disabled = false;
+                if (btnFertilizer) btnFertilizer.disabled = false;
+
+                const currentStageInfo = STAGES[activePlant.stage];
+                if (stageIcon) stageIcon.textContent = currentStageInfo.emoji;
+                if (stageName) stageName.textContent = currentStageInfo.name;
+                if (helperText) helperText.textContent = currentStageInfo.helper;
+
+                // 害虫やわき芽のインタラクション
+                renderInteractiveTriggersFor(activePlant);
+
+            } else {
+                // 空きスロット選択時
+                const safetyShieldBadge = document.getElementById('safety-shield-badge');
+                const visualPanel = document.getElementById('visual-panel');
+                if (safetyShieldBadge) safetyShieldBadge.classList.add('hidden');
+                if (visualPanel) visualPanel.classList.remove('barrier-glow', 'border-sky-400');
+
+                if (tomatoBreedText) {
+                    tomatoBreedText.textContent = `${state.activePlantIndex + 1}号鉢: 空っぽ`;
+                    tomatoBreedText.style.color = '#cbd5e1';
+                }
+                if (estimatedSweetnessText) estimatedSweetnessText.textContent = '苗を植えてね！';
+                if (growthBar) growthBar.style.width = `0%`;
+                if (growthPercent) growthPercent.textContent = `0%`;
+                if (globalGrowthBar) globalGrowthBar.style.width = `0%`;
+                if (globalGrowthPercent) globalGrowthPercent.textContent = `0%`;
+                if (waterBar) waterBar.style.width = `0%`;
+                if (waterStatus) waterStatus.textContent = 'なし';
+                if (nutritionBar) nutritionBar.style.width = `0%`;
+                if (nutritionStatus) nutritionStatus.textContent = 'なし';
+                if (healthBar) healthBar.style.width = `0%`;
+                if (healthStatus) healthStatus.textContent = 'なし';
+
+                if (btnWater) btnWater.disabled = true;
+                if (btnFertilizer) btnFertilizer.disabled = true;
+
+                if (stageIcon) stageIcon.textContent = "❌";
+                if (stageName) stageName.textContent = "苗がありません";
+                if (helperText) helperText.textContent = "ショップからアンロック済みの「種」をえらんで購入すると、この鉢に直接植えることができます！";
+                clearInteractiveLayer();
+            }
+
+            // 統計
+            if (statTotalHarvest) statTotalHarvest.textContent = state.stats.totalHarvest;
+            if (statMaxSweetness) statMaxSweetness.textContent = state.stats.maxSweetness.toFixed(1);
+            if (statTotalCoins) statTotalCoins.textContent = Math.floor(state.stats.totalCoins);
+            if (statCareCount) statCareCount.textContent = state.stats.careCount;
+
+            // 天気
+            const w = WEATHER_SETTINGS[state.weather];
+            if (weatherBadge) {
+                weatherBadge.className = `flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${w.class}`;
+                weatherBadge.innerHTML = `<i data-lucide="${w.icon}" class="w-3 h-3"></i> ${w.name}`;
+            }
+            if (weatherBadgeRight) {
+                weatherBadgeRight.className = `flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${w.class}`;
+                weatherBadgeRight.innerHTML = `<i data-lucide="${w.icon}" class="w-3 h-3"></i> ${w.name}`;
+            }
+
+            renderFarmGrid();
+            renderShop();
+            renderRecords();
+            drawPlant();
+        }
+
+        // --- 植物のSVG描画 ---
+        function drawPlant() {
+            const activePlant = getActivePlant();
+            if (!activePlant) {
+                plantGrowthGroup.innerHTML = `
+                    <!-- 植木鉢の土だけ表示 -->
+                    <ellipse cx="100" cy="225" rx="42" ry="8" fill="#5c2d10" />
+                `;
+                return;
+            }
+
+            let svgContent = '';
+            const breed = BREEDS[activePlant.breed] || BREEDS.standard;
+            const color = breed.color;
+
+            const leafColor = activePlant.health < 30 ? '#a3a3a3' : (activePlant.health < 60 ? '#84cc16' : '#22c55e');
+            const stemColor = activePlant.health < 30 ? '#78716c' : '#15803d';
+
+            // レインボー等のグラデーション
+            const defs = `
+                <defs>
+                    <linearGradient id="rainbow-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ff007f" />
+                        <stop offset="30%" stop-color="#ffae00" />
+                        <stop offset="60%" stop-color="#00e1ff" />
+                        <stop offset="100%" stop-color="#7000ff" />
+                    </linearGradient>
+                </defs>
+            `;
+
+            // 実の形状描写
+            function getFruitSVG(cx, cy, rx, ry) {
+                if (breed.shape === 'heart') {
+                    return `
+                        <g transform="translate(${cx}, ${cy - 2}) scale(1.1)">
+                            <path d="M 0 -3 C -5 -10 -11 -6 -11 0 C -11 6 -5 10 0 14 C 5 10 11 6 11 0 C 11 -6 5 -10 0 -3" fill="${color}" />
+                            <ellipse cx="-3" cy="-2" rx="2" ry="1" fill="#fff" opacity="0.6" transform="rotate(-30 -3 -2)" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'star') {
+                    return `
+                        <g transform="translate(${cx}, ${cy})">
+                            <polygon points="0,-12 3,-3 12,-3 5,2 8,11 0,6 -8,11 -5,2 -12,-3 -3,-3" fill="${color}" />
+                            <circle cx="-2" cy="-2" r="2" fill="#fff" opacity="0.8" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'crown') {
+                    return `
+                        <g transform="translate(${cx}, ${cy}) scale(0.9)">
+                            <path d="M -12 8 L -15 -8 L -6 -2 L 0 -12 L 6 -2 L 15 -8 L 12 8 Z" fill="${color}" />
+                            <ellipse cx="0" cy="8" rx="12" ry="4" fill="#d97706" opacity="0.5" />
+                            <circle cx="-15" cy="-8" r="2.5" fill="#fef08a" />
+                            <circle cx="0" cy="-12" r="2.5" fill="#fef08a" />
+                            <circle cx="15" cy="-8" r="2.5" fill="#fef08a" />
+                            <circle cx="-3" cy="2" r="1.5" fill="#fff" opacity="0.8" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'diamond') {
+                    return `
+                        <g transform="translate(${cx}, ${cy}) scale(0.9)">
+                            <polygon points="0,-12 11,-2 0,12 -11,-2" fill="${color}" stroke="#e0f2fe" stroke-width="1" />
+                            <polygon points="0,-6 5,-2 0,6 -5,-2" fill="#fff" opacity="0.5" />
+                            <circle cx="-3" cy="-4" r="1.5" fill="#fff" opacity="0.9" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'cat') {
+                    return `
+                        <g transform="translate(${cx}, ${cy}) scale(1.05)">
+                            <polygon points="-8,-6 -12,-15 -2,-8" fill="${color}" />
+                            <polygon points="8,-6 12,-15 2,-8" fill="${color}" />
+                            <circle cx="0" cy="0" r="9" fill="${color}" />
+                            <circle cx="-3" cy="-3" r="2" fill="#fff" opacity="0.6" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'watermelon') {
+                    return `
+                        <g transform="translate(${cx}, ${cy})">
+                            <circle cx="0" cy="0" r="9.5" fill="${color}" />
+                            <path d="M -9 0 Q -3 -5 0 -9" stroke="#14532d" stroke-width="1.5" fill="none" />
+                            <path d="M -5 7 Q 0 0 5 -7" stroke="#14532d" stroke-width="1.5" fill="none" />
+                            <path d="M 0 9 Q 3 5 9 0" stroke="#14532d" stroke-width="1.5" fill="none" />
+                            <circle cx="-3" cy="-3" r="1.5" fill="#fff" opacity="0.6" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'phoenix') {
+                    return `
+                        <g transform="translate(${cx}, ${cy}) scale(1.1)">
+                            <path d="M -12 5 Q -18 -8 -5 -15 Q 0 -5 -12 5" fill="${color}" />
+                            <path d="M 12 5 Q 18 -8 5 -15 Q 0 -5 12 5" fill="${color}" />
+                            <path d="M 0 10 Q -8 -3 0 -18 Q 8 -3 0 10" fill="#ef4444" />
+                            <path d="M 0 8 Q -4 0 0 -10 Q 4 0 0 8" fill="#fbbf24" />
+                        </g>
+                    `;
+                } else {
+                    return `
+                        <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${color}" />
+                        <ellipse cx="${cx - 3}" cy="${cy - 3}" rx="2" ry="1" fill="#fff" opacity="0.6" />
+                    `;
+                }
+            }
+
+            // 幸運のクローバー
+            let cloverSVG = state.upgrades.luckyClover ? `
+                <g transform="translate(155, 230) scale(0.8)">
+                    <path d="M 0 0 C -5 -5 -10 0 -5 5 C 0 10 5 5 0 0" fill="#22c55e" />
+                    <path d="M 0 0 C -5 5 0 10 5 5 C 10 0 5 -5 0 0" fill="#22c55e" />
+                    <path d="M 0 0 C 5 5 10 0 5 -5 C 0 -10 -5 -5 0 0" fill="#22c55e" />
+                    <path d="M 0 0 C 5 -5 0 -10 -5 -5 C -10 0 -5 5 0 0" fill="#22c55e" />
+                    <path d="M 0 5 Q 5 15 2 20" stroke="#16a34a" stroke-width="2" fill="none" />
+                </g>
+            ` : '';
+
+            // 巣箱
+            let beeHiveSVG = state.upgrades.beeNest ? `
+                <g transform="translate(30, 160) scale(0.7)">
+                    <rect x="-10" y="30" width="20" height="40" fill="#b45309" />
+                    <path d="M -20 10 Q -25 -20 0 -25 Q 25 -20 20 10 Q 20 30 0 35 Q -20 30 -20 10 Z" fill="#f59e0b" stroke="#d97706" stroke-width="2" />
+                    <circle cx="0" cy="5" r="5" fill="#78350f" />
+                </g>
+            ` : '';
+
+            // ドーム
+            let domeSVG = state.upgrades.weatherShield ? `
+                <path d="M 30 220 A 80 80 0 0 1 170 220" fill="rgba(14, 165, 233, 0.05)" stroke="rgba(14, 165, 233, 0.35)" stroke-width="2" stroke-dasharray="4 4" />
+            ` : '';
+
+            // くまさん
+            let bearSVG = state.upgrades.bearPlush ? `
+                <g transform="translate(45, 226) scale(0.85)">
+                    <circle cx="0" cy="10" r="10" fill="#7c2d12" />
+                    <circle cx="0" cy="-2" r="8" fill="#7c2d12" />
+                    <circle cx="-6" cy="-8" r="3" fill="#7c2d12" />
+                    <circle cx="6" cy="-8" r="3" fill="#7c2d12" />
+                </g>
+            ` : '';
+
+            // LED
+            let ledLightSVG = state.upgrades.ledLight ? `
+                <g transform="translate(100, 20)">
+                    <rect x="-35" y="-5" width="70" height="8" rx="2" fill="#475569" />
+                    <polygon points="-30,3 -50,220 50,220 30,3" fill="rgba(253, 224, 71, 0.12)" />
+                </g>
+            ` : '';
+
+            const potSoil = `<ellipse cx="100" cy="225" rx="42" ry="8" fill="#78350f" />`;
+
+            // おやすみバリアが発動している場合のうっすら光るエフェクト
+            let shieldGlowSVG = '';
+            if (activePlant.health <= 15 && breed.id !== 'phoenix') {
+                shieldGlowSVG = `<circle cx="100" cy="150" r="75" fill="rgba(14, 165, 233, 0.08)" stroke="#0ea5e9" stroke-width="2.5" stroke-dasharray="6 4" class="tomato-bounce" style="animation-duration: 3s" />`;
+            }
+
+            if (activePlant.stage === 0) {
+                svgContent = defs + domeSVG + potSoil + cloverSVG + beeHiveSVG + bearSVG + `
+                    <ellipse cx="100" cy="222" rx="4" ry="2.5" fill="#f59e0b" transform="rotate(-15 100 222)" />
+                ` + ledLightSVG + shieldGlowSVG;
+            } else if (activePlant.stage === 1) {
+                svgContent = defs + domeSVG + potSoil + cloverSVG + beeHiveSVG + bearSVG + `
+                    <path d="M 100 225 Q 100 210 98 200" stroke="${stemColor}" stroke-width="4" fill="none" stroke-linecap="round"/>
+                    <path d="M 98 200 Q 85 195 80 200 Q 88 205 98 200" fill="${leafColor}" />
+                    <path d="M 98 200 Q 111 195 116 200 Q 108 205 98 200" fill="${leafColor}" />
+                ` + ledLightSVG + shieldGlowSVG;
+            } else if (activePlant.stage === 2) {
+                svgContent = defs + domeSVG + potSoil + cloverSVG + beeHiveSVG + bearSVG + `
+                    <path d="M 100 225 Q 103 180 97 145" stroke="${stemColor}" stroke-width="5" fill="none" stroke-linecap="round"/>
+                    <g transform="translate(100, 200)">
+                        <path d="M 0 0 Q -25 -10 -35 0 Q -20 15 0 0" fill="${leafColor}" />
+                    </g>
+                    <g transform="translate(101, 175)">
+                        <path d="M 0 0 Q 25 -15 35 -5 Q 20 15 0 0" fill="${leafColor}" />
+                    </g>
+                ` + ledLightSVG + shieldGlowSVG;
+            } else if (activePlant.stage === 3) {
+                svgContent = defs + domeSVG + potSoil + cloverSVG + beeHiveSVG + bearSVG + `
+                    <path d="M 100 225 Q 104 170 95 100" stroke="${stemColor}" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <g transform="translate(101, 190)"><path d="M 0 0 Q -35 -5 -45 10 Q -25 25 0 0" fill="${leafColor}" /></g>
+                    <g transform="translate(102, 160)"><path d="M 0 0 Q 35 -15 45 -5 Q 25 20 0 0" fill="${leafColor}" /></g>
+                    <!-- 花 -->
+                    <g transform="translate(85, 120)">
+                        <circle cx="0" cy="0" r="6" fill="#facc15" />
+                        <circle cx="0" cy="0" r="3" fill="#ca8a04" />
+                    </g>
+                    <g transform="translate(115, 140)">
+                        <circle cx="0" cy="0" r="6" fill="#facc15" />
+                        <circle cx="0" cy="0" r="3" fill="#ca8a04" />
+                    </g>
+                ` + ledLightSVG + shieldGlowSVG;
+            } else if (activePlant.stage === 4) {
+                svgContent = defs + domeSVG + potSoil + cloverSVG + beeHiveSVG + bearSVG + `
+                    <line x1="105" y1="225" x2="105" y2="50" stroke="#047857" stroke-width="4" stroke-linecap="round" />
+                    <path d="M 100 225 Q 104 160 96 70" stroke="${stemColor}" stroke-width="7" fill="none" stroke-linecap="round"/>
+                    <g transform="translate(101, 180)"><path d="M 0 0 Q -40 -10 -50 10 Q -30 30 0 0" fill="${leafColor}" /></g>
+                    <g transform="translate(102, 150)"><path d="M 0 0 Q 40 -20 50 -5 Q 30 25 0 0" fill="${leafColor}" /></g>
+                    <!-- 青いトマト -->
+                    <g transform="translate(80, 130)">
+                        <ellipse cx="0" cy="0" rx="9" ry="8.5" fill="#84cc16" />
+                    </g>
+                    <g transform="translate(120, 110)">
+                        <ellipse cx="0" cy="0" rx="10" ry="9" fill="#4ade80" />
+                    </g>
+                ` + ledLightSVG + shieldGlowSVG;
+            } else if (activePlant.stage === 5) {
+                svgContent = defs + domeSVG + potSoil + cloverSVG + beeHiveSVG + bearSVG + `
+                    <line x1="105" y1="225" x2="105" y2="50" stroke="#047857" stroke-width="4" stroke-linecap="round" />
+                    <path d="M 100 225 Q 104 160 96 70" stroke="${stemColor}" stroke-width="7" fill="none" stroke-linecap="round"/>
+                    <g transform="translate(101, 180)"><path d="M 0 0 Q -40 -10 -50 10 Q -30 30 0 0" fill="${leafColor}" /></g>
+                    <g transform="translate(102, 150)"><path d="M 0 0 Q 40 -20 50 -5 Q 30 25 0 0" fill="${leafColor}" /></g>
+                    
+                    <!-- 色づいた実 -->
+                    <g transform="translate(80, 130)" class="cursor-pointer">
+                        ${getFruitSVG(0, 0, 9, 8.5)}
+                    </g>
+                    <g transform="translate(70, 140)" class="cursor-pointer">
+                        ${getFruitSVG(0, 0, 8, 7.5)}
+                    </g>
+                    <g transform="translate(120, 110)" class="cursor-pointer">
+                        ${getFruitSVG(0, 0, 10, 9)}
+                    </g>
+                    <g transform="translate(132, 120)" class="cursor-pointer">
+                        ${getFruitSVG(0, 0, 8, 7.5)}
+                    </g>
+                    <g transform="translate(100, 100)" class="cursor-pointer">
+                        ${getFruitSVG(0, 0, 9, 8.5)}
+                    </g>
+                ` + ledLightSVG + shieldGlowSVG;
+            }
+
+            plantGrowthGroup.innerHTML = svgContent;
+        }
+
+        // --- ショップリストの描画 ---
+        function renderShop() {
+            // 1. 品種の種
+            shopSeedsList.innerHTML = '';
+            Object.values(BREEDS).forEach(breed => {
+                const isUnlocked = state.unlockedBreeds.includes(breed.id);
+                
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-xl border flex flex-col justify-between bg-white hover:border-slate-300 transition shadow-sm`;
+
+                let buttonHtml = '';
+                if (isUnlocked) {
+                    buttonHtml = `<button onclick="plantSeedHere('${breed.id}')" class="mt-2 w-full bg-lime-500 hover:bg-lime-600 text-white font-bold py-1 px-3 rounded-lg text-xs transition">この種をここに植える</button>`;
+                } else {
+                    buttonHtml = `<button onclick="buyBreed('${breed.id}', ${breed.price})" class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-1 px-3 rounded-lg text-xs transition flex justify-center items-center gap-1">
+                        <i data-lucide="coins" class="w-3.5 h-3.5"></i> ${breed.price}で購入
+                    </button>`;
+                }
+
+                let breedColorDisplay = `color: ${breed.color}`;
+                if (breed.id === 'rainbow') breedColorDisplay = 'background-image: linear-gradient(to right, #ff007f, #ffae00, #00e1ff)';
+                else if (breed.id === 'diamond') breedColorDisplay = 'background-image: linear-gradient(to right, #38bdf8, #3b82f6, #6366f1)';
+                else if (breed.id === 'phoenix') breedColorDisplay = 'background-image: linear-gradient(to right, #f97316, #ef4444, #facc15)';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <span class="font-extrabold text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${ (breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix') ? 'transparent' : 'initial'}">${breed.name}</span>
+                            <span class="text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded font-bold">糖度: ~${breed.maxBrix} Brix</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1 leading-tight h-8 overflow-hidden">${breed.desc}</p>
+                    </div>
+                    ${buttonHtml}
+                `;
+                shopSeedsList.appendChild(card);
+            });
+
+            // 2. アップグレード
+            shopUpgradesList.innerHTML = '';
+            SHOP_ITEMS.forEach(item => {
+                const isBought = state.upgrades[item.id];
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-xl border flex flex-col justify-between transition ${
+                    isBought ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200 bg-white shadow-sm'
+                }`;
+
+                let buttonHtml = '';
+                if (isBought) {
+                    buttonHtml = `<span class="text-xs font-bold text-emerald-600 flex items-center gap-1 mt-2 justify-center"><i data-lucide="check" class="w-4 h-4"></i> 導入済み</span>`;
+                } else {
+                    buttonHtml = `<button onclick="buyUpgrade('${item.id}')" class="mt-2 w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1 px-3 rounded-lg text-xs transition flex justify-center items-center gap-1 shadow">
+                        <i data-lucide="coins" class="w-3.5 h-3.5"></i> ${item.price}で購入
+                    </button>`;
+                }
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center gap-1">
+                            <i data-lucide="${item.icon}" class="w-3.5 h-3.5 text-indigo-500"></i>
+                            <span class="font-bold text-xs text-slate-700">${item.name}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1 leading-tight h-8 overflow-hidden">${item.desc}</p>
+                    </div>
+                    ${buttonHtml}
+                `;
+                shopUpgradesList.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        // --- 品種図鑑描画 ---
+        function renderRecords() {
+            panelRecords.innerHTML = '';
+            Object.values(BREEDS).forEach(breed => {
+                const isUnlocked = state.unlockedBreeds.includes(breed.id);
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl border flex flex-col gap-1.5 ${
+                    isUnlocked ? 'bg-white border-lime-100 shadow-sm' : 'bg-slate-50 border-slate-200 opacity-60'
+                }`;
+
+                if (isUnlocked) {
+                    let breedColorDisplay = `color: ${breed.color}`;
+                    if (breed.id === 'rainbow') breedColorDisplay = 'background-image: linear-gradient(to right, #ff007f, #ffae00, #00e1ff)';
+                    else if (breed.id === 'diamond') breedColorDisplay = 'background-image: linear-gradient(to right, #38bdf8, #3b82f6, #6366f1)';
+                    else if (breed.id === 'phoenix') breedColorDisplay = 'background-image: linear-gradient(to right, #f97316, #ef4444, #facc15)';
+
+                    card.innerHTML = `
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xl">🍅</span>
+                            <div>
+                                <h4 class="font-black text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix') ? 'transparent' : 'initial'}">${breed.name}</h4>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-500">${breed.desc}</p>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xl filter grayscale">🍅</span>
+                            <h4 class="font-black text-xs text-slate-400">??? (未解放)</h4>
+                        </div>
+                    `;
+                }
+                panelRecords.appendChild(card);
+            });
+        }
+
+        // --- 空スロットへ種を植える ---
+        window.plantSeedHere = function(breedId) {
+            if (state.plants[state.activePlantIndex]) {
+                showNotification("❌ 現在のプランターにはすでにトマトが植えられています。空き鉢を選択してください！", "error");
+                return;
+            }
+
+            state.plants[state.activePlantIndex] = {
+                breed: breedId,
+                growth: 0,
+                stage: 0,
+                water: 50,
+                nutrition: 50,
+                health: 100,
+                pruningDone: 0,
+                pestRemoved: 0,
+                brixBonus: 0,
+                wakiMeSpawned: false,
+                pestSpawned: false
+            };
+
+            showNotification(`🌱 ${BREEDS[breedId].name}の種を${state.activePlantIndex + 1}号鉢に植えました！`, "success");
+            saveGame();
+            updateUI();
+        };
+
+        // ショップ機能
+        window.buyBreed = function(breedId, price) {
+            if (state.coins >= price) {
+                state.coins -= price;
+                state.unlockedBreeds.push(breedId);
+                showNotification(`🎉 ${BREEDS[breedId].name}の種がアンロックされました！`, "success");
+                saveGame();
+                updateUI();
+            } else {
+                showNotification("❌ 手持ちのコインが足りません。貯金箱（金庫）から引き出すか、トマトを収穫してください！", "error");
+            }
+        };
+
+        window.buyUpgrade = function(itemId) {
+            const item = SHOP_ITEMS.find(i => i.id === itemId);
+            if (state.coins >= item.price) {
+                state.coins -= item.price;
+                state.upgrades[itemId] = true;
+                showNotification(`🛠️ 「${item.name}」を導入しました！`, "success");
+                saveGame();
+                updateUI();
+            } else {
+                showNotification("❌ 手持ちのコインが足りません。貯金箱（金庫）から引き出すか、トマトを収穫してください！", "error");
+            }
+        };
+
+        // --- DOM要素 ---
+        const coinDisplay = document.getElementById('coin-display');
+        const vaultDisplay = document.getElementById('vault-display'); // ★追加
+        const weatherBadge = document.getElementById('weather-badge');
+        const weatherBadgeRight = document.getElementById('weather-badge-right');
+        const stageIcon = document.getElementById('stage-icon');
+        const stageName = document.getElementById('stage-name');
+        const growthBar = document.getElementById('growth-bar');
+        const growthPercent = document.getElementById('growth-percent');
+        const globalGrowthBar = document.getElementById('global-growth-bar');
+        const globalGrowthPercent = document.getElementById('global-growth-percent');
+        const waterStatus = document.getElementById('water-status');
+        const waterBar = document.getElementById('water-bar');
+        const nutritionStatus = document.getElementById('nutrition-status');
+        const nutritionBar = document.getElementById('nutrition-bar');
+        const healthStatus = document.getElementById('health-status');
+        const healthBar = document.getElementById('health-bar');
+        const helperText = document.getElementById('helper-text');
+        const tomatoBreedText = document.getElementById('tomato-breed');
+        const estimatedSweetnessText = document.getElementById('estimated-sweetness');
+        const interactiveLayer = document.getElementById('interactive-layer');
+        const plantGrowthGroup = document.getElementById('plant-growth-group');
+        const popupContainer = document.getElementById('popup-container');
+        const nutritionTipText = document.getElementById('nutrition-tip-text');
+
+        // タブ・パネル
+        const tabShop = document.getElementById('tab-shop');
+        const tabRecords = document.getElementById('tab-records');
+        const tabStats = document.getElementById('tab-stats');
+        const panelShop = document.getElementById('panel-shop');
+        const panelRecords = document.getElementById('panel-records');
+        const panelStats = document.getElementById('panel-stats');
+
+        // ショップリスト
+        const shopSeedsList = document.getElementById('shop-seeds');
+        const shopUpgradesList = document.getElementById('shop-upgrades');
+
+        // 統計表示
+        const statTotalHarvest = document.getElementById('stat-total-harvest');
+        const statMaxSweetness = document.getElementById('stat-max-sweetness');
+        const statTotalCoins = document.getElementById('stat-total-coins');
+        const statCareCount = document.getElementById('stat-care-count');
+
+        // ポップアップ
+        const modalHowto = document.getElementById('modal-howto');
+        const btnHowto = document.getElementById('btn-how-to');
+        const btnCloseHowto = document.getElementById('btn-close-howto');
+        const btnCloseHowtoFooter = document.getElementById('btn-close-howto-footer');
+
+        const modalHarvest = document.getElementById('modal-harvest');
+        const btnNextPlant = document.getElementById('btn-next-plant');
+        const harvestBreed = document.getElementById('harvest-breed');
+        const harvestQty = document.getElementById('harvest-qty');
+        const harvestBrix = document.getElementById('harvest-brix');
+        const harvestEarnings = document.getElementById('harvest-earnings');
+        const harvestComment = document.getElementById('harvest-comment');
+
+        // アクション
+        const btnWater = document.getElementById('btn-water');
+        const btnFertilizer = document.getElementById('btn-fertilizer');
+
+        // --- ★貯金箱（金庫）のコントロールイベント ---
+        document.getElementById('btn-vault-deposit-half').addEventListener('click', () => {
+            if (state.coins <= 0) {
+                showNotification("❌ 預けるコインがありません。", "error");
+                return;
+            }
+            const amount = Math.floor(state.coins / 2);
+            state.coins -= amount;
+            state.vaultCoins += amount;
+            showNotification(`🏦 貯金箱に ${amount} コインを預けました！`, "success");
+            saveGame();
+            updateUI();
+        });
+
+        document.getElementById('btn-vault-deposit-all').addEventListener('click', () => {
+            if (state.coins <= 0) {
+                showNotification("❌ 預けるコインがありません。", "error");
+                return;
+            }
+            const amount = state.coins;
+            state.coins = 0;
+            state.vaultCoins += amount;
+            showNotification(`🏦 貯金箱に ${amount} コインすべて預けました！絶対に安全です！`, "success");
+            saveGame();
+            updateUI();
+        });
+
+        document.getElementById('btn-vault-withdraw-all').addEventListener('click', () => {
+            if (state.vaultCoins <= 0) {
+                showNotification("❌ 貯金箱の中身は空っぽです。", "error");
+                return;
+            }
+            const amount = state.vaultCoins;
+            state.vaultCoins = 0;
+            state.coins += amount;
+            showNotification(`💰 貯金箱から ${amount} コインすべて引き出しました！`, "success");
+            saveGame();
+            updateUI();
+        });
+
+        // --- 単体お世話 ---
+        btnWater.addEventListener('click', () => {
+            const plant = getActivePlant();
+            if (!plant || plant.health <= 0) return;
+            plant.water = Math.min(100, plant.water + 25);
+            state.stats.careCount++;
+
+            let magicText = '';
+            if (state.upgrades.magicWateringCan && Math.random() < 0.15) {
+                plant.growth = Math.min(100, plant.growth + 10);
+                magicText = ' ✨まほうで一気に成長+10%！';
+            }
+
+            if (state.upgrades.decoSticker) {
+                plant.health = Math.min(100, plant.health + 5);
+                showEffectText(`💦 水やり +25% (体力回復！)${magicText}`);
+            } else {
+                showEffectText(`💦 水やり +25%${magicText}`);
+            }
+
+            triggerWaterAnimation();
+            saveGame();
+            updateUI();
+        });
+
+        btnFertilizer.addEventListener('click', () => {
+            const plant = getActivePlant();
+            if (!plant || plant.health <= 0) return;
+
+            const maxNut = state.upgrades.superNutrition ? 120 : 100;
+            let addAmt = state.upgrades.premiumFertilizer ? 35 : 20;
+
+            plant.nutrition = Math.min(maxNut, plant.nutrition + addAmt);
+            if (state.upgrades.premiumFertilizer) {
+                plant.brixBonus += 0.1;
+            }
+
+            let stickerRecovery = '';
+            if (state.upgrades.decoSticker) {
+                plant.health = Math.min(100, plant.health + 5);
+                stickerRecovery = ' (体力回復！)';
+            }
+
+            if (state.upgrades.premiumFertilizer) {
+                showEffectText(`✨ 金の有機肥料 +35% (糖度UP!)${stickerRecovery}`);
+            } else {
+                showEffectText(`✨ 肥料 +20%${stickerRecovery}`);
+            }
+            state.stats.careCount++;
+            saveGame();
+            updateUI();
+        });
+
+        // --- ★ 一括お世話処理 ---
+        document.getElementById('btn-bulk-water').addEventListener('click', () => {
+            let processed = 0;
+            state.plants.forEach((plant, index) => {
+                if (plant && plant.health > 0 && plant.water < 90) {
+                    plant.water = Math.min(100, plant.water + 30);
+                    processed++;
+                }
+            });
+            if (processed > 0) {
+                showNotification(`💦 全自動一括スプリンクラー作動！${processed}株の苗に水やりをしました！`, "success");
+                state.stats.careCount++;
+                saveGame();
+                updateUI();
+            } else {
+                showNotification("乾燥しているトマトがありません。", "info");
+            }
+        });
+
+        document.getElementById('btn-bulk-fertilizer').addEventListener('click', () => {
+            let processed = 0;
+            const maxNut = state.upgrades.superNutrition ? 120 : 100;
+            state.plants.forEach(plant => {
+                if (plant && plant.health > 0 && plant.nutrition < 80) {
+                    plant.nutrition = Math.min(maxNut, plant.nutrition + 25);
+                    processed++;
+                }
+            });
+            if (processed > 0) {
+                showNotification(`🛸 一括ドローン施肥機が発進！${processed}株の苗に栄養を配りました！`, "success");
+                state.stats.careCount++;
+                saveGame();
+                updateUI();
+            } else {
+                showNotification("肥料を必要とするトマトがありません。", "info");
+            }
+        });
+
+        // --- タブ切り替え ---
+        tabShop.addEventListener('click', () => switchTab('shop'));
+        tabRecords.addEventListener('click', () => switchTab('records'));
+        tabStats.addEventListener('click', () => switchTab('stats'));
+
+        function switchTab(tab) {
+            tabShop.className = `flex-1 py-3 px-4 text-center font-bold text-sm ${tab === 'shop' ? 'text-red-500 border-b-2 border-red-500' : 'text-slate-400 hover:text-slate-600'} focus:outline-none transition flex justify-center items-center gap-1.5`;
+            tabRecords.className = `flex-1 py-3 px-4 text-center font-bold text-sm ${tab === 'records' ? 'text-red-500 border-b-2 border-red-500' : 'text-slate-400 hover:text-slate-600'} focus:outline-none transition flex justify-center items-center gap-1.5`;
+            tabStats.className = `flex-1 py-3 px-4 text-center font-bold text-sm ${tab === 'stats' ? 'text-red-500 border-b-2 border-red-500' : 'text-slate-400 hover:text-slate-600'} focus:outline-none transition flex justify-center items-center gap-1.5`;
+
+            panelShop.classList.toggle('hidden', tab !== 'shop');
+            panelRecords.classList.toggle('hidden', tab !== 'records');
+            panelStats.classList.toggle('hidden', tab !== 'stats');
+        }
+
+        // 遊び方モーダル
+        btnHowto.addEventListener('click', () => modalHowto.classList.remove('hidden'));
+        btnCloseHowto.addEventListener('click', () => modalHowto.classList.add('hidden'));
+        btnCloseHowtoFooter.addEventListener('click', () => modalHowto.classList.add('hidden'));
+
+        function triggerWaterAnimation() {
+            const pot = document.querySelector('ellipse');
+            if (pot) {
+                pot.setAttribute('fill', '#1e40af');
+                setTimeout(() => pot.setAttribute('fill', '#c2410c'), 500);
+            }
+        }
+
+        function showEffectText(text) {
+            const el = document.createElement('div');
+            el.className = 'absolute text-xs font-black text-blue-500 bg-white/95 px-2.5 py-1 rounded-full shadow border border-blue-200 animate-bounce pointer-events-none z-40';
+            el.textContent = text;
+            
+            const x = Math.random() * 50 + 25; 
+            const y = Math.random() * 30 + 30; 
+            el.style.left = `${x}%`;
+            el.style.top = `${y}%`;
+
+            popupContainer.appendChild(el);
+            setTimeout(() => el.remove(), 1200);
+        }
+
+        function showNotification(message, type = "info") {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-2xl shadow-lg text-white font-bold text-xs transition-all duration-300 transform translate-y-10 opacity-0 ${
+                type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-red-500' : 'bg-slate-700'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 50);
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // --- 障害物インタラクション ---
+        function clearInteractiveLayer() {
+            if (interactiveLayer) interactiveLayer.innerHTML = '';
+        }
+
+        function renderInteractiveTriggersFor(plant) {
+            clearInteractiveLayer();
+            if (!interactiveLayer) return;
+
+            // 1. わき芽
+            if (plant.wakiMeSpawned && plant.stage >= 2 && plant.stage < 5) {
+                const wakiMe = document.createElement('div');
+                wakiMe.className = 'absolute w-12 h-12 bg-lime-400/90 border border-lime-300 rounded-full flex flex-col items-center justify-center cursor-pointer shadow-md text-[9px] font-bold text-emerald-800 transition transform hover:scale-110 z-30 animate-bounce';
+                wakiMe.style.left = '40%';
+                wakiMe.style.top = '45%';
+                wakiMe.innerHTML = `<span>🌱</span><span>わき芽</span>`;
+                wakiMe.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    plant.wakiMeSpawned = false;
+                    plant.pruningDone++;
+                    const addedBrix = state.upgrades.goldenShears ? 0.6 : 0.3;
+                    plant.brixBonus += addedBrix;
+                    showEffectText(`✂️ 摘み取り成功！ (糖度+${addedBrix})`);
+                    saveGame();
+                    updateUI();
+                });
+                interactiveLayer.appendChild(wakiMe);
+            }
+
+            // 2. 害虫
+            if (plant.pestSpawned && plant.stage >= 2 && plant.stage < 5) {
+                const pest = document.createElement('div');
+                pest.className = 'absolute w-10 h-10 bg-yellow-100 border-2 border-yellow-400 rounded-full flex items-center justify-center cursor-pointer shadow-md text-xs pest-wiggle z-30';
+                pest.style.left = '55%';
+                pest.style.top = '35%';
+                pest.innerHTML = '🐛';
+                pest.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    plant.pestSpawned = false;
+                    plant.pestRemoved++;
+                    plant.health = Math.min(100, plant.health + 15);
+                    showEffectText("💥 害虫駆除！");
+                    saveGame();
+                    updateUI();
+                });
+                interactiveLayer.appendChild(pest);
+            }
+
+            // 3. 完熟収穫ボタン（直接タップ用）
+            if (plant.stage === 5) {
+                const btnHarvest = document.createElement('button');
+                btnHarvest.className = 'absolute bg-rose-500 hover:bg-rose-600 text-white font-black px-4 py-2 rounded-2xl shadow-lg transition transform hover:scale-105 z-30 animate-pulse text-xs';
+                btnHarvest.style.left = '32%';
+                btnHarvest.style.top = '40%';
+                btnHarvest.textContent = '🍅 収穫する！';
+                btnHarvest.onclick = () => {
+                    harvest();
+                };
+                interactiveLayer.appendChild(btnHarvest);
+            }
+        }
+
+        // --- 収穫処理 ---
+        function harvest() {
+            const activePlant = getActivePlant();
+            if (!activePlant || activePlant.stage !== 5) return;
+
+            const breed = BREEDS[activePlant.breed] || BREEDS.standard;
+            const count = state.upgrades.bearPlush ? 7 : 5;
+            const finalBrix = calculateCurrentBrixOf(activePlant);
+            
+            const rate = 8;
+            let earnings = Math.floor(finalBrix * breed.coinMultiplier * count * rate);
+
+            if (state.upgrades.luckyClover) {
+                earnings = Math.floor(earnings * 1.2);
+            }
+
+            state.coins += earnings;
+            state.stats.totalHarvest += count;
+            if (finalBrix > state.stats.maxSweetness) {
+                state.stats.maxSweetness = finalBrix;
+            }
+            state.stats.totalCoins += earnings;
+
+            // リザルトモーダル
+            if (harvestBreed) harvestBreed.textContent = `品種：${breed.name}`;
+            if (harvestQty) harvestQty.textContent = `${count} 個`;
+            if (harvestBrix) harvestBrix.textContent = `${finalBrix.toFixed(1)} Brix`;
+            
+            if (harvestEarnings) {
+                let coinDisplayHtml = `<i data-lucide="coins" class="w-5 h-5 fill-amber-500 text-amber-500"></i> +${earnings}`;
+                if (state.upgrades.luckyClover) {
+                    coinDisplayHtml += ` <span class="text-xs text-emerald-500 font-bold">(クローバー+20%)</span>`;
+                }
+                harvestEarnings.innerHTML = coinDisplayHtml;
+            }
+
+            if (harvestComment) {
+                if (earnings >= 10000) {
+                    harvestComment.textContent = "💎 1万円（1万コイン）以上の超・ウルトラダイヤモンド収穫達成！大農園の新しい伝説がここに誕生しました！";
+                    harvestComment.className = "text-xs font-bold text-sky-700 bg-sky-50 p-3 rounded-xl border border-sky-100 animate-pulse";
+                } else if (finalBrix >= breed.maxBrix * 0.95) {
+                    harvestComment.textContent = "🏆 奇跡の糖度！最高に甘くてみずみずしい究極品質のトマトです！";
+                    harvestComment.className = "text-xs font-bold text-emerald-700 bg-emerald-50 p-3 rounded-xl border border-emerald-100";
+                } else {
+                    harvestComment.textContent = "😊 収穫おめでとうございます！美味しいミニトマトにファームのみんなも大喜びです！";
+                    harvestComment.className = "text-xs font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100";
+                }
+            }
+
+            if (modalHarvest) modalHarvest.classList.remove('hidden');
+            lucide.createIcons();
+            saveGame();
+        }
+
+        // 収穫後にプランターをリセット
+        if (btnNextPlant) {
+            btnNextPlant.addEventListener('click', () => {
+                if (modalHarvest) modalHarvest.classList.add('hidden');
+                state.plants[state.activePlantIndex] = null;
+                clearInteractiveLayer();
+                saveGame();
+                updateUI();
+                showNotification("プランターを整理しました。次の種を植えましょう！", "success");
+            });
+        }
+
+        // --- 全自動収穫ロボットの動作関数 ---
+        function runAutoHarvestBot() {
+            if (!state.upgrades.autoHarvestBot) return;
+
+            let harvestedCount = 0;
+            let totalEarnings = 0;
+
+            state.plants.forEach((plant, index) => {
+                if (plant && plant.stage === 5) {
+                    const breed = BREEDS[plant.breed] || BREEDS.standard;
+                    const count = state.upgrades.bearPlush ? 7 : 5;
+                    const finalBrix = calculateCurrentBrixOf(plant);
+                    const rate = 8;
+                    
+                    let earnings = Math.floor(finalBrix * breed.coinMultiplier * count * rate);
+                    if (state.upgrades.luckyClover) {
+                        earnings = Math.floor(earnings * 1.2);
+                    }
+
+                    // お金と実績の加算
+                    state.coins += earnings;
+                    state.stats.totalHarvest += count;
+                    if (finalBrix > state.stats.maxSweetness) {
+                        state.stats.maxSweetness = finalBrix;
+                    }
+                    state.stats.totalCoins += earnings;
+
+                    // プランターを空っぽにする
+                    state.plants[index] = null;
+                    harvestedCount += count;
+                    totalEarnings += earnings;
+                }
+            });
+
+            if (harvestedCount > 0) {
+                showNotification(`🤖 収穫ロボ稼働！${harvestedCount}個のミニトマトを自動収穫し、+${totalEarnings}コインを獲得しました！`, "success");
+                if (state.plants[state.activePlantIndex] === null) {
+                    clearInteractiveLayer();
+                }
+                saveGame();
+                updateUI();
+            }
+        }
+
+        // --- ゲームメインループ (1秒に1回) ---
+        function gameTick() {
+            state.plants.forEach((plant, index) => {
+                if (!plant) return; 
+
+                const breed = BREEDS[plant.breed] || BREEDS.standard;
+
+                // 枯れているなら何もしない
+                if (plant.health <= 0) return;
+
+                // 不死鳥トマトは絶対に枯れない
+                if (breed.id === 'phoenix') {
+                    plant.health = 100;
+                }
+
+                const weatherConf = WEATHER_SETTINGS[state.weather];
+
+                // 1. 水分減少 (お天気ドーム補正)
+                let drain = weatherConf.waterDrain;
+                if (state.upgrades.weatherShield) drain *= 0.7;
+                plant.water = Math.max(0, Math.min(100, plant.water - drain));
+
+                // 自動水やり
+                if (state.upgrades.autoWater && plant.water <= 30) {
+                    plant.water = Math.min(100, plant.water + 20);
+                }
+
+                // 2. 栄養減少 (栄養シールド補正)
+                if (plant.stage > 0 && plant.growth < 100) {
+                    const lossRate = state.upgrades.nutritionShield ? 0.56 : 0.8;
+                    plant.nutrition = Math.max(0, plant.nutrition - lossRate);
+                }
+
+                // 自動施肥
+                if (state.upgrades.autoFertilizer && plant.nutrition <= 30) {
+                    const maxNut = state.upgrades.superNutrition ? 120 : 100;
+                    plant.nutrition = Math.min(maxNut, plant.nutrition + 15);
+                }
+
+                // 3. 健康度の変動 (おやすみ自動セーフバリア機能の実装)
+                if (breed.id !== 'phoenix') {
+                    let healthDelta = 0;
+                    if (plant.water <= 0 || plant.water >= 95) healthDelta -= 4;
+                    else if (plant.water < 30 || plant.water > 80) healthDelta -= 1;
+                    else healthDelta += 1;
+
+                    let overNutLimit = state.upgrades.superNutrition ? 125 : 90;
+                    if (plant.nutrition < 20 || plant.nutrition > overNutLimit) healthDelta -= 2;
+                    else healthDelta += 1;
+
+                    if (plant.pestSpawned) healthDelta -= 3;
+                    if (breed.id === 'cat' && Math.random() < 0.25) healthDelta += 2; 
+
+                    if (state.upgrades.bgmSpeaker && healthDelta < 0) {
+                        healthDelta = Math.floor(healthDelta * 0.7);
+                    }
+
+                    // ★「おやすみ自動セーフバリア」：体力が10以下に減らないように強制保護！絶対に枯れなくする
+                    const nextHealth = plant.health + healthDelta;
+                    if (nextHealth <= 10) {
+                        plant.health = 10; // 体力を10でロック
+                    } else {
+                        plant.health = Math.min(100, nextHealth);
+                    }
+                }
+
+                // 4. 成長の計算
+                if (plant.growth < 100 && plant.health > 20) {
+                    let growthSpeed = 0.8;
+
+                    let currentGrowthGain = weatherConf.growthGain;
+                    if (state.upgrades.ledLight && (state.weather === 'cloudy' || state.weather === 'rainy')) {
+                        currentGrowthGain = 1.2;
+                    }
+                    growthSpeed *= currentGrowthGain;
+
+                    const idealMaxNut = state.upgrades.superNutrition ? 120 : 85;
+                    if (plant.nutrition >= 50 && plant.nutrition <= idealMaxNut) growthSpeed *= 1.3;
+                    else if (plant.nutrition < 30) growthSpeed *= 0.5;
+
+                    if (plant.water < 40 || plant.water > 75) growthSpeed *= 0.6;
+
+                    if (state.upgrades.greenhouse) growthSpeed *= 1.5;
+                    if (state.upgrades.growthElixir) growthSpeed *= 1.2;
+                    if (state.upgrades.beeNest && plant.stage === 3) growthSpeed *= 3.0;
+
+                    plant.growth = Math.min(100, plant.growth + growthSpeed);
+                }
+
+                // 5. 成長ステージ判定
+                const oldStage = plant.stage;
+                for (let i = STAGES.length - 1; i >= 0; i--) {
+                    if (plant.growth >= STAGES[i].minGrowth) {
+                        plant.stage = i;
+                        break;
+                    }
+                }
+
+                if (plant.stage > oldStage) {
+                    if (index === state.activePlantIndex) {
+                        showNotification(`🎉 ${index + 1}号鉢が「${STAGES[plant.stage].name}」に成長！`, "success");
+                    }
+                }
+
+                // 6. ランダム障害イベント (体力が15以下の時は保護モードのため障害イベントを起こさない)
+                if (plant.stage >= 2 && plant.stage <= 4 && plant.health > 15) {
+                    const pestSpawnProb = state.upgrades.pestGuard ? 0.03 : 0.07;
+                    if (!plant.wakiMeSpawned && Math.random() < 0.08) {
+                        plant.wakiMeSpawned = true;
+                    }
+                    if (!plant.pestSpawned && Math.random() < pestSpawnProb) {
+                        plant.pestSpawned = true;
+                    }
+                }
+            });
+
+            // 7. 天気変動
+            if (Math.random() < 0.1) {
+                const weathers = ['sunny', 'cloudy', 'rainy'];
+                state.weather = weathers[Math.floor(Math.random() * weathers.length)];
+                showNotification(`☁️ 天気が「${WEATHER_SETTINGS[state.weather].name}」に変わりました。`, "info");
+            }
+
+            // ★全自動収穫ロボットの動作実行
+            runAutoHarvestBot();
+
+            saveGame();
+            updateUI();
+        }
+
+        // --- イニシャライズ ---
+        window.onload = function() {
+            loadGame();
+
+            // スロット数100個に満たない場合は配列を100個に拡張補完
+            while (state.plants.length < MAX_PLANTS) {
+                state.plants.push(null);
+            }
+
+            updateUI();
+
+            setInterval(gameTick, 1000);
+            lucide.createIcons();
+        };
+
+    </script>
+</body>
+</html>
