@@ -48,6 +48,10 @@
                 ぷるるんミニトマト栽培記 <span class="text-xs md:text-sm bg-white/20 px-2 py-0.5 rounded-full">10000ウルトラギガファーム版</span>
             </h1>
             <div class="flex items-center gap-2 md:gap-4">
+                <!-- 宇宙モードトグル (購入後のみ表示) -->
+                <button id="btn-cosmic-toggle" class="hidden bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 px-3 py-1.5 rounded-full text-xs md:text-sm font-black text-white shadow-lg border border-indigo-300/40 transition" title="宇宙農業モードのON/OFFを切替">
+                    <span id="cosmic-toggle-label">🌌 宇宙モードOFF</span>
+                </button>
                 <!-- 手持ちコイン -->
                 <div class="bg-white/20 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs md:text-base font-bold" title="手持ちコイン">
                     <i data-lucide="wallet" class="w-4 h-4 text-yellow-300"></i>
@@ -435,7 +439,8 @@
         const state = {
             coins: 500, // 100株拡張に合わせて、初期種を植えやすいように初期コインを500に
             vaultCoins: 0, // ★ 新機能：絶対に減らない金庫コイン
-            weather: 'sunny', 
+            cosmicActive: false, // ★ 宇宙農業モードON/OFF (upgrades.cosmicModeを購入するとトグル可能)
+            weather: 'sunny',
             activePlantIndex: 0, // 選択中プランターのインデックス (0~99)
 
             // 最大100株のトマトデータ配列
@@ -596,8 +601,37 @@
             // 20マルチ・100マルチ用の一括お世話＆自動テクノロジー
             { id: 'bulkWaterItem', name: '全自動一括スプリンクラー', desc: 'ファーム内のすべての苗にまとめて一度に水やりができるボタンが解放！', price: 1500, icon: 'shower-head' },
             { id: 'bulkFertilizerItem', name: '一括ドローン施肥機', desc: 'ファーム内のすべての苗にまとめて一度に肥料を配れるボタンが解放！', price: 2000, icon: 'plane' },
-            { id: 'autoHarvestBot', name: '全自動収穫ロボット', desc: '【最強アイテム】100株のどこかでトマトが完熟した瞬間、自動で即時に収穫してコインを回収！', price: 4000, icon: 'cpu' }
+            { id: 'autoHarvestBot', name: '全自動収穫ロボット', desc: '【最強アイテム】100株のどこかでトマトが完熟した瞬間、自動で即時に収穫してコインを回収！', price: 4000, icon: 'cpu' },
+            { id: 'cosmicMode', name: '🌌 宇宙農業モード', desc: '【究極解放】1鉢=1兆株のギガ・スケール宇宙栽培！収穫コインが×1兆になります。ヘッダーのトグルでON/OFF切替可能！', price: 50000, icon: 'sparkles' }
         ];
+
+        // 宇宙農業モードの倍率 (1兆株/鉢)
+        const COSMIC_MULT = 1e12;
+
+        // 大きな数字を日本語単位で読みやすく整形
+        function formatBigNumber(n) {
+            if (n === undefined || n === null || isNaN(n)) return '0';
+            if (!isFinite(n)) return '∞';
+            const abs = Math.abs(n);
+            if (abs < 10000) return Math.floor(n).toLocaleString();
+            const units = [
+                { v: 1e28, u: '垓' },
+                { v: 1e24, u: '秭' },
+                { v: 1e20, u: '𥝱' },
+                { v: 1e16, u: '京' },
+                { v: 1e12, u: '兆' },
+                { v: 1e8, u: '億' },
+                { v: 1e4, u: '万' }
+            ];
+            for (const { v, u } of units) {
+                if (abs >= v) {
+                    const val = n / v;
+                    const str = val >= 100 ? val.toFixed(0) : val.toFixed(2);
+                    return `${str}${u}`;
+                }
+            }
+            return Math.floor(n).toLocaleString();
+        }
 
         // 天気ごとのパラメータ設定
         const WEATHER_SETTINGS = {
@@ -615,6 +649,7 @@
                     Object.assign(state, parsed);
                     
                     if (state.vaultCoins === undefined) state.vaultCoins = 0;
+                    if (state.cosmicActive === undefined) state.cosmicActive = false;
 
                     if (!state.plants || !Array.isArray(state.plants)) {
                         state.plants = [{
@@ -775,9 +810,24 @@
 
         // --- 全体更新UI ---
         function updateUI() {
-            // コイン & 金庫
-            if (coinDisplay) coinDisplay.textContent = Math.floor(state.coins);
-            if (vaultDisplay) vaultDisplay.textContent = Math.floor(state.vaultCoins);
+            // コイン & 金庫 (宇宙モードでも読める整形表示)
+            if (coinDisplay) coinDisplay.textContent = formatBigNumber(state.coins);
+            if (vaultDisplay) vaultDisplay.textContent = formatBigNumber(state.vaultCoins);
+
+            // 宇宙モードトグルボタンの表示制御
+            const btnCosmic = document.getElementById('btn-cosmic-toggle');
+            const cosmicLabel = document.getElementById('cosmic-toggle-label');
+            if (btnCosmic) {
+                if (state.upgrades.cosmicMode) {
+                    btnCosmic.classList.remove('hidden');
+                    if (cosmicLabel) cosmicLabel.textContent = state.cosmicActive ? '🌌 宇宙モードON ×1兆' : '🌌 宇宙モードOFF';
+                    btnCosmic.className = state.cosmicActive
+                        ? 'bg-gradient-to-r from-fuchsia-500 to-indigo-600 hover:from-fuchsia-600 hover:to-indigo-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-black text-white shadow-lg border border-fuchsia-200/60 animate-pulse transition'
+                        : 'bg-gradient-to-r from-indigo-700 to-purple-800 hover:from-indigo-800 hover:to-purple-900 px-3 py-1.5 rounded-full text-xs md:text-sm font-black text-white/80 shadow-lg border border-indigo-300/40 transition';
+                } else {
+                    btnCosmic.classList.add('hidden');
+                }
+            }
 
             const activePlant = getActivePlant();
 
@@ -925,9 +975,9 @@
             }
 
             // 統計
-            if (statTotalHarvest) statTotalHarvest.textContent = state.stats.totalHarvest;
+            if (statTotalHarvest) statTotalHarvest.textContent = formatBigNumber(state.stats.totalHarvest);
             if (statMaxSweetness) statMaxSweetness.textContent = state.stats.maxSweetness.toFixed(1);
-            if (statTotalCoins) statTotalCoins.textContent = Math.floor(state.stats.totalCoins);
+            if (statTotalCoins) statTotalCoins.textContent = formatBigNumber(state.stats.totalCoins);
             if (statCareCount) statCareCount.textContent = state.stats.careCount;
 
             // 天気
@@ -1433,6 +1483,23 @@
         const btnFertilizer = document.getElementById('btn-fertilizer');
 
         // --- ★貯金箱（金庫）のコントロールイベント ---
+        // 🌌 宇宙モードトグル
+        const btnCosmicToggle = document.getElementById('btn-cosmic-toggle');
+        if (btnCosmicToggle) {
+            btnCosmicToggle.addEventListener('click', () => {
+                if (!state.upgrades.cosmicMode) {
+                    showNotification("宇宙農業モードはショップで購入すると解放されます！", "info");
+                    return;
+                }
+                state.cosmicActive = !state.cosmicActive;
+                showNotification(state.cosmicActive
+                    ? "🌌 宇宙農業モードON！1鉢=1兆株の宇宙スケールで栽培中！収穫コイン×1兆！"
+                    : "🌍 通常モードに戻りました。地に足のついた栽培です。", "success");
+                saveGame();
+                updateUI();
+            });
+        }
+
         document.getElementById('btn-vault-deposit-half').addEventListener('click', () => {
             if (state.coins <= 0) {
                 showNotification("❌ 預けるコインがありません。", "error");
@@ -1441,7 +1508,7 @@
             const amount = Math.floor(state.coins / 2);
             state.coins -= amount;
             state.vaultCoins += amount;
-            showNotification(`🏦 貯金箱に ${amount} コインを預けました！`, "success");
+            showNotification(`🏦 貯金箱に ${formatBigNumber(amount)} コインを預けました！`, "success");
             saveGame();
             updateUI();
         });
@@ -1454,7 +1521,7 @@
             const amount = state.coins;
             state.coins = 0;
             state.vaultCoins += amount;
-            showNotification(`🏦 貯金箱に ${amount} コインすべて預けました！絶対に安全です！`, "success");
+            showNotification(`🏦 貯金箱に ${formatBigNumber(amount)} コインすべて預けました！絶対に安全です！`, "success");
             saveGame();
             updateUI();
         });
@@ -1467,7 +1534,7 @@
             const amount = state.vaultCoins;
             state.vaultCoins = 0;
             state.coins += amount;
-            showNotification(`💰 貯金箱から ${amount} コインすべて引き出しました！`, "success");
+            showNotification(`💰 貯金箱から ${formatBigNumber(amount)} コインすべて引き出しました！`, "success");
             saveGame();
             updateUI();
         });
@@ -1698,8 +1765,13 @@
                 earnings = Math.floor(earnings * 1.2);
             }
 
+            // 🌌 宇宙農業モードで×1兆
+            const cosmicOn = state.cosmicActive && state.upgrades.cosmicMode;
+            const yieldedCount = cosmicOn ? count * COSMIC_MULT : count;
+            if (cosmicOn) earnings = earnings * COSMIC_MULT;
+
             state.coins += earnings;
-            state.stats.totalHarvest += count;
+            state.stats.totalHarvest += yieldedCount;
             if (finalBrix > state.stats.maxSweetness) {
                 state.stats.maxSweetness = finalBrix;
             }
@@ -1707,19 +1779,25 @@
 
             // リザルトモーダル
             if (harvestBreed) harvestBreed.textContent = `品種：${breed.name}`;
-            if (harvestQty) harvestQty.textContent = `${count} 個`;
+            if (harvestQty) harvestQty.textContent = cosmicOn ? `${formatBigNumber(yieldedCount)} 株 (1鉢×1兆株)` : `${count} 個`;
             if (harvestBrix) harvestBrix.textContent = `${finalBrix.toFixed(1)} Brix`;
-            
+
             if (harvestEarnings) {
-                let coinDisplayHtml = `<i data-lucide="coins" class="w-5 h-5 fill-amber-500 text-amber-500"></i> +${earnings}`;
+                let coinDisplayHtml = `<i data-lucide="coins" class="w-5 h-5 fill-amber-500 text-amber-500"></i> +${formatBigNumber(earnings)}`;
                 if (state.upgrades.luckyClover) {
                     coinDisplayHtml += ` <span class="text-xs text-emerald-500 font-bold">(クローバー+20%)</span>`;
+                }
+                if (cosmicOn) {
+                    coinDisplayHtml += ` <span class="text-[10px] text-indigo-500 font-black">🌌 宇宙×1兆</span>`;
                 }
                 harvestEarnings.innerHTML = coinDisplayHtml;
             }
 
             if (harvestComment) {
-                if (earnings >= 10000) {
+                if (cosmicOn && earnings >= 1e15) {
+                    harvestComment.textContent = "🌌 宇宙的スケールの収穫！銀河が震えるほどの兆コインを一撃で獲得！";
+                    harvestComment.className = "text-xs font-bold text-indigo-700 bg-indigo-50 p-3 rounded-xl border border-indigo-100 animate-pulse";
+                } else if (earnings >= 10000) {
                     harvestComment.textContent = "💎 1万円（1万コイン）以上の超・ウルトラダイヤモンド収穫達成！大農園の新しい伝説がここに誕生しました！";
                     harvestComment.className = "text-xs font-bold text-sky-700 bg-sky-50 p-3 rounded-xl border border-sky-100 animate-pulse";
                 } else if (finalBrix >= breed.maxBrix * 0.95) {
@@ -1767,9 +1845,13 @@
                         earnings = Math.floor(earnings * 1.2);
                     }
 
+                    const cosmicOn = state.cosmicActive && state.upgrades.cosmicMode;
+                    const yieldedCount = cosmicOn ? count * COSMIC_MULT : count;
+                    if (cosmicOn) earnings = earnings * COSMIC_MULT;
+
                     // お金と実績の加算
                     state.coins += earnings;
-                    state.stats.totalHarvest += count;
+                    state.stats.totalHarvest += yieldedCount;
                     if (finalBrix > state.stats.maxSweetness) {
                         state.stats.maxSweetness = finalBrix;
                     }
@@ -1777,13 +1859,13 @@
 
                     // プランターを空っぽにする
                     state.plants[index] = null;
-                    harvestedCount += count;
+                    harvestedCount += yieldedCount;
                     totalEarnings += earnings;
                 }
             });
 
             if (harvestedCount > 0) {
-                showNotification(`🤖 収穫ロボ稼働！${harvestedCount}個のミニトマトを自動収穫し、+${totalEarnings}コインを獲得しました！`, "success");
+                showNotification(`🤖 収穫ロボ稼働！${formatBigNumber(harvestedCount)}個のミニトマトを自動収穫し、+${formatBigNumber(totalEarnings)}コインを獲得しました！`, "success");
                 if (state.plants[state.activePlantIndex] === null) {
                     clearInteractiveLayer();
                 }
