@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ぷるるんミニトマト栽培記 - 100マルチメガファーム</title>
+    <title>ぷるるんミニトマト栽培記 - 10000ウルトラギガファーム</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -45,7 +45,7 @@
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <h1 class="text-xl md:text-2xl font-black flex items-center gap-2">
                 <i data-lucide="cherry" class="w-8 h-8 fill-white text-red-100"></i>
-                ぷるるんミニトマト栽培記 <span class="text-xs md:text-sm bg-white/20 px-2 py-0.5 rounded-full">100マルチメガファーム版</span>
+                ぷるるんミニトマト栽培記 <span class="text-xs md:text-sm bg-white/20 px-2 py-0.5 rounded-full">10000ウルトラギガファーム版</span>
             </h1>
             <div class="flex items-center gap-2 md:gap-4">
                 <!-- 手持ちコイン -->
@@ -99,14 +99,24 @@
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-base font-black text-slate-700 flex items-center gap-1.5">
                         <i data-lucide="layout-grid" class="w-5 h-5 text-emerald-500"></i>
-                        メガファームグリッド (100スロット)
+                        ギガファームグリッド (10,000スロット)
                     </h2>
-                    <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold" id="farm-usage-text">1/100 栽培中</span>
+                    <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold" id="farm-usage-text">1/10,000 栽培中</span>
                 </div>
 
-                <!-- 100苗の極小グリッドコンテナ -->
-                <div class="grid grid-cols-5 sm:grid-cols-10 gap-1.5 max-h-[350px] lg:max-h-[480px] overflow-y-auto p-1 bg-lime-50/50 rounded-2xl border border-lime-100/60" id="farm-grid">
-                    <!-- JavaScriptで100個のスロットを極小正方形として動的生成 -->
+                <!-- ページャ -->
+                <div class="flex justify-between items-center mb-2 gap-2">
+                    <button id="btn-farm-prev" onclick="farmPagePrev()" class="bg-slate-200 hover:bg-slate-300 disabled:bg-slate-100 disabled:text-slate-300 text-slate-700 font-bold text-xs py-1 px-2 rounded-lg transition">◀ 前500</button>
+                    <span id="farm-pager-info" class="text-[11px] font-bold text-slate-500">1〜500 (1/20ページ)</span>
+                    <div class="flex gap-1">
+                        <button onclick="farmJumpToActive()" class="bg-red-100 hover:bg-red-200 text-red-600 font-bold text-xs py-1 px-2 rounded-lg transition">選択鉢へ</button>
+                        <button id="btn-farm-next" onclick="farmPageNext()" class="bg-slate-200 hover:bg-slate-300 disabled:bg-slate-100 disabled:text-slate-300 text-slate-700 font-bold text-xs py-1 px-2 rounded-lg transition">次500 ▶</button>
+                    </div>
+                </div>
+
+                <!-- 10000苗の極小グリッドコンテナ(500ずつページ表示) -->
+                <div class="grid grid-cols-10 sm:grid-cols-20 gap-1 max-h-[350px] lg:max-h-[480px] overflow-y-auto p-1 bg-lime-50/50 rounded-2xl border border-lime-100/60" id="farm-grid" style="grid-template-columns: repeat(20, minmax(0, 1fr));">
+                    <!-- JavaScriptでスロットを極小正方形として動的生成 -->
                 </div>
 
                 <!-- 一括お世話コントロール -->
@@ -120,10 +130,10 @@
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <button id="btn-bulk-water" class="bg-sky-500 hover:bg-sky-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow" disabled>
-                            <i data-lucide="shower-head" class="w-4 h-4"></i> 100株一括水やり
+                            <i data-lucide="shower-head" class="w-4 h-4"></i> 全10000株一括水やり
                         </button>
                         <button id="btn-bulk-fertilizer" class="bg-amber-500 hover:bg-amber-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow" disabled>
-                            <i data-lucide="plane" class="w-4 h-4"></i> 100株一括施肥
+                            <i data-lucide="plane" class="w-4 h-4"></i> 全10000株一括施肥
                         </button>
                     </div>
                 </div>
@@ -358,16 +368,16 @@
             <div class="space-y-3 text-sm text-slate-600 leading-relaxed">
                 <div>
                     <h4 class="font-bold text-red-500 mb-1">🌱 1. 基本のお世話</h4>
-                    <p>左側のファーム（最大100スロット）から好きなトマト苗を選び、水と栄養を適正レベルにキープしてお世話します。
+                    <p>左側のファーム（最大10,000スロット・500鉢ずつページ表示）から好きなトマト苗を選び、水と栄養を適正レベルにキープしてお世話します。
                     水分（40%〜70%）と栄養（50%以上）を理想範囲に保つとグングン育ちます！</p>
                 </div>
                 <div>
                     <h4 class="font-bold text-amber-500 mb-1">☀️ 2. 一括お世話マシンのアンロック</h4>
-                    <p>ショップで「自動一括スプリンクラー」や「一括ドローン施肥機」を購入すると、100個すべてのプランターに一度にお世話をすることができて、作業が大幅にスピードアップ＆超楽になります！</p>
+                    <p>ショップで「自動一括スプリンクラー」や「一括ドローン施肥機」を購入すると、10,000個すべてのプランターに一度にお世話をすることができて、作業が大幅にスピードアップ＆超楽になります！</p>
                 </div>
                 <div>
                     <h4 class="font-bold text-teal-500 mb-1">🤖 3. 自動収穫ロボット</h4>
-                    <p>ショップで「全自動収穫ロボット」をアンロックすると、完熟したトマトをロボットが自動で収穫してお金に変えてくれるようになります！100株の大量栽培でも安心の最強アイテムです！</p>
+                    <p>ショップで「全自動収穫ロボット」をアンロックすると、完熟したトマトをロボットが自動で収穫してお金に変えてくれるようになります！10,000株の大量栽培でも安心の最強アイテムです！</p>
                 </div>
                 <div>
                     <h4 class="font-bold text-indigo-500 mb-1">🛍️ 4. 宇宙トマト「コズミックダイヤモンド」</h4>
@@ -376,7 +386,7 @@
             </div>
 
             <button id="btn-close-howto-footer" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl transition shadow-md">
-                よし、100苗の大農家になるぞ！
+                よし、10,000苗のギガ農家になるぞ！
             </button>
         </div>
     </div>
@@ -480,7 +490,9 @@
         };
 
         // 最大プランター数
-        const MAX_PLANTS = 100;
+        const MAX_PLANTS = 10000;
+        const FARM_PAGE_SIZE = 500;
+        let farmPageStart = 0;
 
         // --- 定数データ ---
         const STAGES = [
@@ -648,72 +660,86 @@
             return finalBrix;
         }
 
-        // --- 100苗ファームグリッドの描画 ---
+        // --- 10000苗ファームグリッドの描画 (ページング + 文字列連結で高速化) ---
+        let farmGridDelegated = false;
         function renderFarmGrid() {
             const farmGrid = document.getElementById('farm-grid');
             if (!farmGrid) return;
-            farmGrid.innerHTML = '';
 
-            for (let i = 0; i < MAX_PLANTS; i++) {
+            // 現在の選択が表示ページ外なら追従
+            if (state.activePlantIndex < farmPageStart || state.activePlantIndex >= farmPageStart + FARM_PAGE_SIZE) {
+                farmPageStart = Math.floor(state.activePlantIndex / FARM_PAGE_SIZE) * FARM_PAGE_SIZE;
+            }
+            const pageEnd = Math.min(farmPageStart + FARM_PAGE_SIZE, MAX_PLANTS);
+
+            // 一度だけイベント委譲を登録
+            if (!farmGridDelegated) {
+                farmGrid.addEventListener('click', (e) => {
+                    const cell = e.target.closest('[data-idx]');
+                    if (!cell) return;
+                    const idx = parseInt(cell.dataset.idx, 10);
+                    if (!isNaN(idx)) {
+                        state.activePlantIndex = idx;
+                        updateUI();
+                    }
+                });
+                farmGridDelegated = true;
+            }
+
+            // 文字列を組み立てて一度で流し込み(10k規模でも高速)
+            const parts = [];
+            for (let i = farmPageStart; i < pageEnd; i++) {
                 const plant = state.plants[i];
-                const card = document.createElement('div');
-                
-                // 100個並ぶためコンパクトなスタイルに調整
-                card.className = `p-1 rounded-lg border text-center cursor-pointer transition flex flex-col justify-between relative h-12 w-full ${
-                    i === state.activePlantIndex 
-                        ? 'border-red-500 bg-red-50 ring-1 ring-red-300' 
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                }`;
-
-                card.onclick = () => {
-                    state.activePlantIndex = i;
-                    updateUI();
-                };
+                const isActive = i === state.activePlantIndex;
+                const border = isActive
+                    ? 'border-red-500 bg-red-50 ring-1 ring-red-300'
+                    : 'border-slate-200 bg-white';
 
                 if (plant) {
                     const isHarvestable = plant.stage === 5;
                     const isDead = plant.health <= 0;
+                    let statusBg = 'bg-emerald-500';
+                    if (isDead) statusBg = 'bg-slate-400';
+                    else if (isHarvestable) statusBg = 'bg-rose-500 animate-pulse';
+                    else if (plant.water < 30 || plant.water > 80 || plant.health < 40) statusBg = 'bg-amber-400';
 
-                    let statusBgColor = 'bg-emerald-500';
-                    if (isDead) statusBgColor = 'bg-slate-400';
-                    else if (isHarvestable) statusBgColor = 'bg-rose-500 animate-pulse';
-                    else if (plant.water < 30 || plant.water > 80 || plant.health < 40) statusBgColor = 'bg-amber-400';
-
-                    card.innerHTML = `
-                        <!-- スロット番号と状態ランプ -->
-                        <div class="flex justify-between items-center w-full px-0.5">
-                            <span class="text-[8px] text-slate-400 font-bold">${i+1}</span>
-                            <span class="w-1.5 h-1.5 rounded-full ${statusBgColor}"></span>
-                        </div>
-                        <!-- 植物の絵文字 -->
-                        <div class="text-sm select-none leading-none mb-0.5">
-                            ${isDead ? '💀' : (isHarvestable ? '🍅' : STAGES[plant.stage].emoji)}
-                        </div>
-                        <!-- 進捗ミニゲージ -->
-                        <div class="w-full bg-slate-100 h-0.5 rounded-full overflow-hidden">
-                            <div class="h-full bg-lime-500" style="width: ${plant.growth}%"></div>
-                        </div>
-                    `;
+                    const emoji = isDead ? '💀' : (isHarvestable ? '🍅' : STAGES[plant.stage].emoji);
+                    parts.push(
+                        `<div data-idx="${i}" class="p-0.5 rounded border text-center cursor-pointer flex flex-col justify-between h-9 w-full ${border}">`
+                        + `<div class="flex justify-between items-center w-full px-0.5"><span class="text-[7px] text-slate-400 font-bold">${i+1}</span><span class="w-1 h-1 rounded-full ${statusBg}"></span></div>`
+                        + `<div class="text-[11px] select-none leading-none">${emoji}</div>`
+                        + `<div class="w-full bg-slate-100 h-0.5 rounded-full overflow-hidden"><div class="h-full bg-lime-500" style="width:${plant.growth}%"></div></div>`
+                        + `</div>`
+                    );
                 } else {
-                    // 空いているスロット
-                    card.innerHTML = `
-                        <div class="text-left px-0.5">
-                            <span class="text-[8px] text-slate-300 font-bold">${i+1}</span>
-                        </div>
-                        <div class="text-[10px] text-slate-300 font-black mb-0.5 leading-none">
-                            ➕
-                        </div>
-                        <div class="w-full bg-slate-100 h-0.5 rounded-full"></div>
-                    `;
+                    parts.push(
+                        `<div data-idx="${i}" class="p-0.5 rounded border text-center cursor-pointer flex flex-col justify-between h-9 w-full ${border}">`
+                        + `<div class="text-left px-0.5"><span class="text-[7px] text-slate-300 font-bold">${i+1}</span></div>`
+                        + `<div class="text-[9px] text-slate-300 font-black leading-none">➕</div>`
+                        + `<div class="w-full bg-slate-100 h-0.5 rounded-full"></div>`
+                        + `</div>`
+                    );
                 }
-
-                farmGrid.appendChild(card);
             }
+            farmGrid.innerHTML = parts.join('');
 
             // 植えられている個数カウント
-            const currentCount = state.plants.filter(p => p !== null).length;
+            let currentCount = 0;
+            for (let i = 0; i < MAX_PLANTS; i++) if (state.plants[i]) currentCount++;
             const farmUsageText = document.getElementById('farm-usage-text');
-            if (farmUsageText) farmUsageText.textContent = `${currentCount}/${MAX_PLANTS} 栽培中`;
+            if (farmUsageText) farmUsageText.textContent = `${currentCount.toLocaleString()}/${MAX_PLANTS.toLocaleString()} 栽培中`;
+
+            // ページャ更新
+            const pagerInfo = document.getElementById('farm-pager-info');
+            if (pagerInfo) {
+                const pageNum = Math.floor(farmPageStart / FARM_PAGE_SIZE) + 1;
+                const totalPages = Math.ceil(MAX_PLANTS / FARM_PAGE_SIZE);
+                pagerInfo.textContent = `${(farmPageStart+1).toLocaleString()}〜${pageEnd.toLocaleString()} (${pageNum}/${totalPages}ページ)`;
+            }
+            const btnPrev = document.getElementById('btn-farm-prev');
+            const btnNext = document.getElementById('btn-farm-next');
+            if (btnPrev) btnPrev.disabled = farmPageStart <= 0;
+            if (btnNext) btnNext.disabled = farmPageStart + FARM_PAGE_SIZE >= MAX_PLANTS;
 
             // 一括お世話ボタンの有効化チェック
             const btnBulkWater = document.getElementById('btn-bulk-water');
@@ -730,9 +756,22 @@
                     autoHarvestIndicator.classList.add('hidden');
                 }
             }
-
-            lucide.createIcons();
         }
+
+        window.farmPagePrev = function() {
+            farmPageStart = Math.max(0, farmPageStart - FARM_PAGE_SIZE);
+            renderFarmGrid();
+        };
+        window.farmPageNext = function() {
+            if (farmPageStart + FARM_PAGE_SIZE < MAX_PLANTS) {
+                farmPageStart += FARM_PAGE_SIZE;
+                renderFarmGrid();
+            }
+        };
+        window.farmJumpToActive = function() {
+            farmPageStart = Math.floor(state.activePlantIndex / FARM_PAGE_SIZE) * FARM_PAGE_SIZE;
+            renderFarmGrid();
+        };
 
         // --- 全体更新UI ---
         function updateUI() {
