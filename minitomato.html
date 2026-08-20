@@ -730,7 +730,13 @@
             { id: 'bulkWaterItem', name: '全自動一括スプリンクラー', desc: 'ファーム内のすべての苗にまとめて一度に水やりができるボタンが解放！', price: 1500, icon: 'shower-head' },
             { id: 'bulkFertilizerItem', name: '一括ドローン施肥機', desc: 'ファーム内のすべての苗にまとめて一度に肥料を配れるボタンが解放！', price: 2000, icon: 'plane' },
             { id: 'autoHarvestBot', name: '全自動収穫ロボット', desc: '【最強アイテム】100株のどこかでトマトが完熟した瞬間、自動で即時に収穫してコインを回収！', price: 4000, icon: 'cpu' },
-            { id: 'cosmicMode', name: '🌌 宇宙農業モード', desc: '【究極解放】1鉢=1兆株のギガ・スケール宇宙栽培！収穫コインが×1兆になります。ヘッダーのトグルでON/OFF切替可能！', price: 50000, icon: 'sparkles' }
+            { id: 'cosmicMode', name: '🌌 宇宙農業モード', desc: '【究極解放】1鉢=1兆株のギガ・スケール宇宙栽培！収穫コインが×1兆になります。ヘッダーのトグルでON/OFF切替可能！', price: 50000, icon: 'sparkles' },
+            // ---- 🌌 宇宙シリーズ ----
+            { id: 'stardustSprinkler', name: '⭐ スターダストじょうろ', desc: '星屑を含む水で一括水やりの補給量が2倍に！乾燥した宇宙農場でも安心。', price: 2500, icon: 'star' },
+            { id: 'rocketFertilizer', name: '🚀 ロケットブースター肥料', desc: 'ロケット燃料級の推進力！一括施肥での栄養補給量が2倍にアップ！', price: 3000, icon: 'rocket' },
+            { id: 'ufoDrone', name: '🛸 UFO集荷ドローン', desc: 'UFOが上空から回収！全収穫コインが×1.5倍にアップします。', price: 5500, icon: 'plane' },
+            { id: 'wormholeVault', name: '🕳 ワームホール金庫', desc: '時空を歪めて貯金箱に預ける時、預入額の+10%ボーナスコインがもらえます！', price: 4500, icon: 'landmark' },
+            { id: 'warpEngine', name: '💫 光速栽培エンジン', desc: '光速航行の技術で成長速度が全鉢2倍に！ワープする勢いで完熟へ。', price: 8500, icon: 'zap' }
         ];
 
         // 宇宙農業モードの倍率 (1兆株/鉢)
@@ -1631,15 +1637,20 @@
             });
         }
 
+        function depositToVault(amount) {
+            const bonus = state.upgrades.wormholeVault ? Math.floor(amount * 0.1) : 0;
+            state.coins -= amount;
+            state.vaultCoins += amount + bonus;
+            const bonusTag = bonus > 0 ? ` (🕳ワームホール+${formatBigNumber(bonus)})` : '';
+            showNotification(`🏦 貯金箱に ${formatBigNumber(amount)} コインを預けました！${bonusTag}`, "success");
+        }
+
         document.getElementById('btn-vault-deposit-half').addEventListener('click', () => {
             if (state.coins <= 0) {
                 showNotification("❌ 預けるコインがありません。", "error");
                 return;
             }
-            const amount = Math.floor(state.coins / 2);
-            state.coins -= amount;
-            state.vaultCoins += amount;
-            showNotification(`🏦 貯金箱に ${formatBigNumber(amount)} コインを預けました！`, "success");
+            depositToVault(Math.floor(state.coins / 2));
             saveGame();
             updateUI();
         });
@@ -1649,10 +1660,7 @@
                 showNotification("❌ 預けるコインがありません。", "error");
                 return;
             }
-            const amount = state.coins;
-            state.coins = 0;
-            state.vaultCoins += amount;
-            showNotification(`🏦 貯金箱に ${formatBigNumber(amount)} コインすべて預けました！絶対に安全です！`, "success");
+            depositToVault(state.coins);
             saveGame();
             updateUI();
         });
@@ -1726,14 +1734,16 @@
         // --- ★ 一括お世話処理 ---
         document.getElementById('btn-bulk-water').addEventListener('click', () => {
             let processed = 0;
+            const addAmt = state.upgrades.stardustSprinkler ? 60 : 30;
             state.plants.forEach((plant, index) => {
                 if (plant && plant.health > 0 && plant.water < 90) {
-                    plant.water = Math.min(100, plant.water + 30);
+                    plant.water = Math.min(100, plant.water + addAmt);
                     processed++;
                 }
             });
             if (processed > 0) {
-                showNotification(`💦 全自動一括スプリンクラー作動！${processed}株の苗に水やりをしました！`, "success");
+                const bonusTag = state.upgrades.stardustSprinkler ? ' ⭐星屑パワー2倍!' : '';
+                showNotification(`💦 全自動一括スプリンクラー作動！${processed}株の苗に水やりをしました！${bonusTag}`, "success");
                 state.stats.careCount++;
                 saveGame();
                 updateUI();
@@ -1745,14 +1755,16 @@
         document.getElementById('btn-bulk-fertilizer').addEventListener('click', () => {
             let processed = 0;
             const maxNut = state.upgrades.superNutrition ? 120 : 100;
+            const addAmt = state.upgrades.rocketFertilizer ? 50 : 25;
             state.plants.forEach(plant => {
                 if (plant && plant.health > 0 && plant.nutrition < 80) {
-                    plant.nutrition = Math.min(maxNut, plant.nutrition + 25);
+                    plant.nutrition = Math.min(maxNut, plant.nutrition + addAmt);
                     processed++;
                 }
             });
             if (processed > 0) {
-                showNotification(`🛸 一括ドローン施肥機が発進！${processed}株の苗に栄養を配りました！`, "success");
+                const bonusTag = state.upgrades.rocketFertilizer ? ' 🚀ロケット推進2倍!' : '';
+                showNotification(`🛸 一括ドローン施肥機が発進！${processed}株の苗に栄養を配りました！${bonusTag}`, "success");
                 state.stats.careCount++;
                 saveGame();
                 updateUI();
@@ -1894,6 +1906,9 @@
 
             if (state.upgrades.luckyClover) {
                 earnings = Math.floor(earnings * 1.2);
+            }
+            if (state.upgrades.ufoDrone) {
+                earnings = Math.floor(earnings * 1.5);
             }
 
             // 🌌 宇宙農業モードで×1兆
@@ -2090,6 +2105,7 @@
                     if (state.upgrades.greenhouse) growthSpeed *= 1.5;
                     if (state.upgrades.growthElixir) growthSpeed *= 1.2;
                     if (state.upgrades.beeNest && plant.stage === 3) growthSpeed *= 3.0;
+                    if (state.upgrades.warpEngine) growthSpeed *= 2.0;
 
                     plant.growth = Math.min(100, plant.growth + growthSpeed);
                 }
