@@ -224,6 +224,14 @@
                         <i data-lucide="arrow-down-left" class="w-3.5 h-3.5"></i> 全部引き出す
                     </button>
                 </div>
+                <div class="mt-2 flex gap-2">
+                    <button id="btn-coin-repair" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-1 px-3 rounded-lg text-[11px] transition" title="コイン表示が0やバグったときにクリック">
+                        🔧 コインを修復
+                    </button>
+                    <button id="btn-give-me-coins" class="flex-1 bg-yellow-200 hover:bg-yellow-300 text-amber-800 font-bold py-1 px-3 rounded-lg text-[11px] transition" title="コインが足りない時のブースト">
+                        💰 応急コイン+1兆
+                    </button>
+                </div>
             </div>
 
             <!-- 100プランターグリッド -->
@@ -811,15 +819,28 @@
         };
 
         // --- ローカルストレージロード (キーをultimateに変更し恒久セーブを実現) ---
+        // 破損したコイン系フィールドを安全な値に修復
+        function sanitizeCoinFields() {
+            const clamp = v => (typeof v === 'number' && isFinite(v) && !isNaN(v)) ? Math.min(1e300, Math.max(0, v)) : 0;
+            state.coins = clamp(state.coins);
+            state.vaultCoins = clamp(state.vaultCoins);
+            if (!state.stats) state.stats = { totalHarvest: 0, maxSweetness: 0, totalCoins: 0, careCount: 0 };
+            state.stats.totalCoins = clamp(state.stats.totalCoins);
+            state.stats.totalHarvest = clamp(state.stats.totalHarvest);
+            state.stats.maxSweetness = clamp(state.stats.maxSweetness);
+            state.stats.careCount = clamp(state.stats.careCount);
+        }
+
         function loadGame() {
             const saved = localStorage.getItem('tomato_grower_save_ultimate_v1');
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
                     Object.assign(state, parsed);
-                    
+
                     if (state.vaultCoins === undefined) state.vaultCoins = 0;
                     if (state.cosmicActive === undefined) state.cosmicActive = false;
+                    sanitizeCoinFields();
 
                     if (!state.plants || !Array.isArray(state.plants)) {
                         state.plants = [{
@@ -1786,6 +1807,25 @@
             showNotification(`🏦 貯金箱に ${formatBigNumber(amount)} コインを預けました！${bonusTag}`, "success");
         }
 
+        const btnCoinRepair = document.getElementById('btn-coin-repair');
+        if (btnCoinRepair) {
+            btnCoinRepair.addEventListener('click', () => {
+                sanitizeCoinFields();
+                showNotification("🔧 コインの表示・計算を修復しました。", "success");
+                saveGame();
+                updateUI();
+            });
+        }
+        const btnGiveMeCoins = document.getElementById('btn-give-me-coins');
+        if (btnGiveMeCoins) {
+            btnGiveMeCoins.addEventListener('click', () => {
+                state.coins = Math.min(1e300, (state.coins || 0) + 1e12);
+                showNotification("💰 応急支給として1兆コインを追加しました！", "success");
+                saveGame();
+                updateUI();
+            });
+        }
+
         document.getElementById('btn-vault-deposit-half').addEventListener('click', () => {
             if (state.coins <= 0) {
                 showNotification("❌ 預けるコインがありません。", "error");
@@ -2111,6 +2151,7 @@
             if (modalHarvest) modalHarvest.classList.remove('hidden');
             lucide.createIcons();
             saveGame();
+            updateUI();
         }
 
         // 収穫後にプランターをリセット
@@ -2149,8 +2190,8 @@
                     if (cosmicOn) earnings = earnings * COSMIC_MULT;
 
                     // お金と実績の加算
-                    state.coins += earnings;
-                    state.stats.totalHarvest += yieldedCount;
+                    state.coins = Math.min(1e300, state.coins + earnings);
+                    state.stats.totalHarvest = Math.min(1e300, state.stats.totalHarvest + yieldedCount);
                     if (finalBrix > state.stats.maxSweetness) {
                         state.stats.maxSweetness = finalBrix;
                     }
