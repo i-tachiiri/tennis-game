@@ -720,6 +720,11 @@
                 id: 'omnipotent', name: '🕉 全知全能ミニトマト',
                 desc: '【1株が正・載・極・無量大数コイン】無限多元宇宙のあらゆる可能性を実体化したミニトマト。1回の収穫が桁違いすぎて経済がバグります。',
                 price: 100000000, baseBrix: 500.0, maxBrix: 1000.0, coinMultiplier: 1e46, color: '#fef08a', shape: 'omnipotent'
+            },
+            infinity: {
+                id: 'infinity', name: '♾️ 無限大∞ミニトマト',
+                desc: '【1株=10の300乗コイン】数字の限界そのもの。神々ですら扱えなかった、真に無限に近い最終果実。桁が地球上の全物理量を超越します。',
+                price: 999999999, baseBrix: 9999.0, maxBrix: 99999.0, coinMultiplier: 1e298, color: '#f5f3ff', shape: 'infinity'
             }
         };
 
@@ -763,6 +768,12 @@
             if (!isFinite(n)) return '∞';
             const abs = Math.abs(n);
             if (abs < 10000) return Math.floor(n).toLocaleString();
+            // 無量大数(1e68)を超える桁は「10のN乗」表記
+            if (abs >= 1e72) {
+                const exp = Math.floor(Math.log10(abs));
+                const mant = n / Math.pow(10, exp);
+                return `${mant.toFixed(2)}×10の${exp}乗`;
+            }
             const units = [
                 { v: 1e68, u: '無量大数' },
                 { v: 1e64, u: '不可思議' },
@@ -1011,6 +1022,8 @@
                         tomatoBreedText.className = "font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-300 to-fuchsia-500 text-xs md:text-sm animate-pulse";
                     } else if (breed.id === 'omnipotent') {
                         tomatoBreedText.className = "font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-fuchsia-400 to-indigo-500 text-xs md:text-sm animate-pulse";
+                    } else if (breed.id === 'infinity') {
+                        tomatoBreedText.className = "font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-white text-xs md:text-sm animate-pulse";
                     } else {
                         tomatoBreedText.className = "font-bold text-xs md:text-sm";
                         tomatoBreedText.style.color = breed.color;
@@ -1209,6 +1222,12 @@
                         <stop offset="75%" stop-color="#d946ef" stop-opacity="0.4" />
                         <stop offset="100%" stop-color="#4c1d95" stop-opacity="0" />
                     </radialGradient>
+                    <radialGradient id="infinity-halo" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#ffffff" />
+                        <stop offset="40%" stop-color="#fef3c7" />
+                        <stop offset="75%" stop-color="#e0e7ff" stop-opacity="0.6" />
+                        <stop offset="100%" stop-color="#312e81" stop-opacity="0" />
+                    </radialGradient>
                 </defs>
             `;
 
@@ -1264,6 +1283,19 @@
                             <path d="M -5 7 Q 0 0 5 -7" stroke="#14532d" stroke-width="1.5" fill="none" />
                             <path d="M 0 9 Q 3 5 9 0" stroke="#14532d" stroke-width="1.5" fill="none" />
                             <circle cx="-3" cy="-3" r="1.5" fill="#fff" opacity="0.6" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'infinity') {
+                    return `
+                        <g transform="translate(${cx}, ${cy})">
+                            <!-- 神聖な白光 -->
+                            <circle cx="0" cy="0" r="24" fill="url(#infinity-halo)" opacity="0.9" />
+                            <!-- 白い∞シンボル -->
+                            <path d="M -11 0 C -14 -6 -6 -6 -3 0 C 0 6 3 6 6 0 C 9 -6 15 -6 12 0 C 9 6 3 6 0 0 C -3 -6 -9 -6 -12 0 Z"
+                                  transform="scale(1.2)" fill="#fff" stroke="#fbbf24" stroke-width="1" />
+                            <!-- 中央の光の粒 -->
+                            <circle cx="-6" cy="0" r="1.5" fill="#fef3c7" />
+                            <circle cx="6" cy="0" r="1.5" fill="#fef3c7" />
                         </g>
                     `;
                 } else if (breed.shape === 'omnipotent') {
@@ -1499,11 +1531,12 @@
                 else if (breed.id === 'blackhole') breedColorDisplay = 'background-image: linear-gradient(to right, #fbbf24, #f97316, #0f172a)';
                 else if (breed.id === 'bigbang') breedColorDisplay = 'background-image: linear-gradient(to right, #ffffff, #fbbf24, #d946ef)';
                 else if (breed.id === 'omnipotent') breedColorDisplay = 'background-image: linear-gradient(to right, #fde047, #d946ef, #6366f1)';
+                else if (breed.id === 'infinity') breedColorDisplay = 'background-image: linear-gradient(to right, #ffffff, #fde68a, #ffffff)';
 
                 card.innerHTML = `
                     <div>
                         <div class="flex justify-between items-start">
-                            <span class="font-extrabold text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${ (breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent') ? 'transparent' : 'initial'}">${breed.name}</span>
+                            <span class="font-extrabold text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${ (breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'infinity') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'infinity') ? 'transparent' : 'initial'}">${breed.name}</span>
                             <span class="text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded font-bold">糖度: ~${breed.maxBrix} Brix</span>
                         </div>
                         <p class="text-[10px] text-slate-400 mt-1 leading-tight h-8 overflow-hidden">${breed.desc}</p>
@@ -1567,7 +1600,7 @@
                         <div class="flex items-center gap-1.5">
                             <span class="text-xl">🍅</span>
                             <div>
-                                <h4 class="font-black text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent') ? 'transparent' : 'initial'}">${breed.name}</h4>
+                                <h4 class="font-black text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'infinity') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'infinity') ? 'transparent' : 'initial'}">${breed.name}</h4>
                             </div>
                         </div>
                         <p class="text-[10px] text-slate-500">${breed.desc}</p>
@@ -2024,12 +2057,12 @@
             const yieldedCount = cosmicOn ? count * COSMIC_MULT : count;
             if (cosmicOn) earnings = earnings * COSMIC_MULT;
 
-            state.coins += earnings;
-            state.stats.totalHarvest += yieldedCount;
+            state.coins = Math.min(1e300, state.coins + earnings);
+            state.stats.totalHarvest = Math.min(1e300, state.stats.totalHarvest + yieldedCount);
             if (finalBrix > state.stats.maxSweetness) {
                 state.stats.maxSweetness = finalBrix;
             }
-            state.stats.totalCoins += earnings;
+            state.stats.totalCoins = Math.min(1e300, state.stats.totalCoins + earnings);
 
             // リザルトモーダル
             if (harvestBreed) harvestBreed.textContent = `品種：${breed.name}`;
@@ -2051,6 +2084,9 @@
                 if (cosmicOn && earnings >= 1e15) {
                     harvestComment.textContent = "🌌 宇宙的スケールの収穫！銀河が震えるほどの兆コインを一撃で獲得！";
                     harvestComment.className = "text-xs font-bold text-indigo-700 bg-indigo-50 p-3 rounded-xl border border-indigo-100 animate-pulse";
+                } else if (earnings >= 1e200) {
+                    harvestComment.textContent = "♾️ 数字が桁を諦めました。あなたはもう農家ではなく、宇宙の記述そのものです。";
+                    harvestComment.className = "text-xs font-black text-slate-700 bg-gradient-to-r from-white via-amber-100 to-white p-3 rounded-xl border border-amber-200 animate-pulse";
                 } else if (earnings >= 1e40) {
                     harvestComment.textContent = "🕉 正・載・極を超え、無量大数コインを一撃で獲得！全知全能ミニトマトの前に、経済も物理も跪きました。";
                     harvestComment.className = "text-xs font-black text-indigo-700 bg-gradient-to-r from-yellow-100 via-fuchsia-100 to-indigo-100 p-3 rounded-xl border border-indigo-200 animate-pulse";
@@ -2118,7 +2154,7 @@
                     if (finalBrix > state.stats.maxSweetness) {
                         state.stats.maxSweetness = finalBrix;
                     }
-                    state.stats.totalCoins += earnings;
+                    state.stats.totalCoins = Math.min(1e300, state.stats.totalCoins + earnings);
 
                     // プランターを空っぽにする
                     state.plants[index] = null;
