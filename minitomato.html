@@ -764,11 +764,25 @@
             { id: 'rocketFertilizer', name: '🚀 ロケットブースター肥料', desc: 'ロケット燃料級の推進力！一括施肥での栄養補給量が2倍にアップ！', price: 3000, icon: 'rocket' },
             { id: 'ufoDrone', name: '🛸 UFO集荷ドローン', desc: 'UFOが上空から回収！全収穫コインが×1.5倍にアップします。', price: 5500, icon: 'plane' },
             { id: 'wormholeVault', name: '🕳 ワームホール金庫', desc: '時空を歪めて貯金箱に預ける時、預入額の+10%ボーナスコインがもらえます！', price: 4500, icon: 'landmark' },
-            { id: 'warpEngine', name: '💫 光速栽培エンジン', desc: '光速航行の技術で成長速度が全鉢2倍に！ワープする勢いで完熟へ。', price: 8500, icon: 'zap' }
+            { id: 'warpEngine', name: '💫 光速栽培エンジン', desc: '光速航行の技術で成長速度が全鉢2倍に！ワープする勢いで完熟へ。', price: 8500, icon: 'zap' },
+            // ---- 🌌 宇宙シリーズ Ⅱ ----
+            { id: 'moonlightCan', name: '🌙 月光じょうろ', desc: '月の光を注ぐ神秘の水！一括水やり時、全鉢に栄養も+15補給される。', price: 2200, icon: 'moon' },
+            { id: 'ringPlanter', name: '🪐 リングプランター', desc: '土星の輪を模した神鉢。全鉢の成長速度がさらに×1.5！', price: 5000, icon: 'circle-dot' },
+            { id: 'crystalBall', name: '🔮 予知の水晶', desc: '未来を見通す水晶。天気が常に「晴れ」に固定され、雨や曇りが来なくなる。', price: 6000, icon: 'gem' },
+            { id: 'cometBuff', name: '☄️ 彗星バフ', desc: '空を横切る彗星の恩恵！収穫コインがさらに×2倍にアップ！', price: 7500, icon: 'flame' },
+            { id: 'alienGardener', name: '👽 エイリアン園芸師', desc: '謎の宇宙人が同じ品種を自動再植え！収穫で空いた鉢に元と同じ種を即座に植えてくれる。', price: 10000, icon: 'user-round' },
+            { id: 'galaxyVault', name: '🌀 銀河貯金箱', desc: '銀河スケールの複利効果！貯金箱の中身が1秒ごとに+0.5%ずつ自動で増加する！', price: 15000, icon: 'landmark' }
         ];
 
         // 宇宙農業モードの倍率 (1兆株/鉢)
         const COSMIC_MULT = 1e12;
+
+        function makeSeedling(breedId) {
+            return {
+                breed: breedId, growth: 0, stage: 0, water: 50, nutrition: 50, health: 100,
+                pruningDone: 0, pestRemoved: 0, brixBonus: 0, wakiMeSpawned: false, pestSpawned: false
+            };
+        }
 
         // 大きな数字を日本語単位で読みやすく整形
         function formatBigNumber(n) {
@@ -1916,14 +1930,20 @@
         document.getElementById('btn-bulk-water').addEventListener('click', () => {
             let processed = 0;
             const addAmt = state.upgrades.stardustSprinkler ? 60 : 30;
+            const nutrAdd = state.upgrades.moonlightCan ? 15 : 0;
+            const maxNut = state.upgrades.superNutrition ? 120 : 100;
             state.plants.forEach((plant, index) => {
                 if (plant && plant.health > 0 && plant.water < 90) {
                     plant.water = Math.min(100, plant.water + addAmt);
+                    if (nutrAdd > 0) plant.nutrition = Math.min(maxNut, plant.nutrition + nutrAdd);
                     processed++;
                 }
             });
             if (processed > 0) {
-                const bonusTag = state.upgrades.stardustSprinkler ? ' ⭐星屑パワー2倍!' : '';
+                const tags = [];
+                if (state.upgrades.stardustSprinkler) tags.push('⭐星屑2倍');
+                if (state.upgrades.moonlightCan) tags.push('🌙月光+栄養');
+                const bonusTag = tags.length ? ` (${tags.join(' / ')})` : '';
                 showNotification(`💦 全自動一括スプリンクラー作動！${processed}株の苗に水やりをしました！${bonusTag}`, "success");
                 state.stats.careCount++;
                 saveGame();
@@ -2091,6 +2111,9 @@
             if (state.upgrades.ufoDrone) {
                 earnings = Math.floor(earnings * 1.5);
             }
+            if (state.upgrades.cometBuff) {
+                earnings = Math.floor(earnings * 2);
+            }
 
             // 🌌 宇宙農業モードで×1兆
             const cosmicOn = state.cosmicActive && state.upgrades.cosmicMode;
@@ -2154,15 +2177,21 @@
             updateUI();
         }
 
-        // 収穫後にプランターをリセット
         if (btnNextPlant) {
             btnNextPlant.addEventListener('click', () => {
                 if (modalHarvest) modalHarvest.classList.add('hidden');
-                state.plants[state.activePlantIndex] = null;
+                const prev = state.plants[state.activePlantIndex];
+                const prevBreed = prev && prev.breed;
+                if (state.upgrades.alienGardener && prevBreed) {
+                    state.plants[state.activePlantIndex] = makeSeedling(prevBreed);
+                    showNotification(`👽 エイリアン園芸師が${BREEDS[prevBreed].name}を再植えしました！`, "success");
+                } else {
+                    state.plants[state.activePlantIndex] = null;
+                    showNotification("プランターを整理しました。次の種を植えましょう！", "success");
+                }
                 clearInteractiveLayer();
                 saveGame();
                 updateUI();
-                showNotification("プランターを整理しました。次の種を植えましょう！", "success");
             });
         }
 
@@ -2197,8 +2226,10 @@
                     }
                     state.stats.totalCoins = Math.min(1e300, state.stats.totalCoins + earnings);
 
-                    // プランターを空っぽにする
-                    state.plants[index] = null;
+                    // プランターを空っぽ (エイリアン園芸師があれば同品種を自動再植え)
+                    state.plants[index] = state.upgrades.alienGardener
+                        ? makeSeedling(plant.breed)
+                        : null;
                     harvestedCount += yieldedCount;
                     totalEarnings += earnings;
                 }
@@ -2300,6 +2331,7 @@
                     if (state.upgrades.growthElixir) growthSpeed *= 1.2;
                     if (state.upgrades.beeNest && plant.stage === 3) growthSpeed *= 3.0;
                     if (state.upgrades.warpEngine) growthSpeed *= 2.0;
+                    if (state.upgrades.ringPlanter) growthSpeed *= 1.5;
 
                     plant.growth = Math.min(100, plant.growth + growthSpeed);
                 }
@@ -2331,8 +2363,15 @@
                 }
             });
 
-            // 7. 天気変動
-            if (Math.random() < 0.1) {
+            // 銀河貯金箱 (1秒毎に+0.5%の複利)
+            if (state.upgrades.galaxyVault && state.vaultCoins > 0) {
+                state.vaultCoins = Math.min(1e300, state.vaultCoins * 1.005);
+            }
+
+            // 7. 天気変動 (予知の水晶があれば常時晴れ固定)
+            if (state.upgrades.crystalBall) {
+                state.weather = 'sunny';
+            } else if (Math.random() < 0.1) {
                 const weathers = ['sunny', 'cloudy', 'rainy'];
                 state.weather = weathers[Math.floor(Math.random() * weathers.length)];
                 showNotification(`☁️ 天気が「${WEATHER_SETTINGS[state.weather].name}」に変わりました。`, "info");
