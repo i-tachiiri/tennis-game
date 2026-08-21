@@ -705,6 +705,11 @@
                 id: 'phoenix', name: 'ソルフェニックス（不死鳥）',
                 desc: '【絶対無敵】絶対に枯れない太陽の不死鳥トマト。驚異的な糖度と15倍 of コイン価格！',
                 price: 5000, baseBrix: 30.0, maxBrix: 45.0, coinMultiplier: 15.0, color: '#f97316', shape: 'phoenix'
+            },
+            blackhole: {
+                id: 'blackhole', name: '🕳 ブラックホールミニトマト',
+                desc: '【1株100億円超】事象の地平から採れた究極の1粒。1回の収穫で100億コイン以上を叩き出す銀河至宝級のミニトマト！',
+                price: 500000, baseBrix: 100.0, maxBrix: 180.0, coinMultiplier: 8000000, color: '#0f172a', shape: 'blackhole'
             }
         };
 
@@ -980,6 +985,8 @@
                         tomatoBreedText.className = "font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 text-xs md:text-sm animate-pulse";
                     } else if (breed.id === 'phoenix') {
                         tomatoBreedText.className = "font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-xs md:text-sm";
+                    } else if (breed.id === 'blackhole') {
+                        tomatoBreedText.className = "font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-500 to-slate-900 text-xs md:text-sm animate-pulse";
                     } else {
                         tomatoBreedText.className = "font-bold text-xs md:text-sm";
                         tomatoBreedText.style.color = breed.color;
@@ -1161,6 +1168,11 @@
                         <stop offset="60%" stop-color="#00e1ff" />
                         <stop offset="100%" stop-color="#7000ff" />
                     </linearGradient>
+                    <radialGradient id="blackhole-disk" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#fef08a" />
+                        <stop offset="40%" stop-color="#f97316" />
+                        <stop offset="100%" stop-color="#7c2d12" stop-opacity="0" />
+                    </radialGradient>
                 </defs>
             `;
 
@@ -1216,6 +1228,19 @@
                             <path d="M -5 7 Q 0 0 5 -7" stroke="#14532d" stroke-width="1.5" fill="none" />
                             <path d="M 0 9 Q 3 5 9 0" stroke="#14532d" stroke-width="1.5" fill="none" />
                             <circle cx="-3" cy="-3" r="1.5" fill="#fff" opacity="0.6" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'blackhole') {
+                    return `
+                        <g transform="translate(${cx}, ${cy}) scale(1.15)">
+                            <!-- 降着円盤 (橙-黄グロー) -->
+                            <ellipse cx="0" cy="0" rx="18" ry="6" fill="url(#blackhole-disk)" opacity="0.9" transform="rotate(-15)" />
+                            <ellipse cx="0" cy="0" rx="16" ry="4" fill="url(#blackhole-disk)" opacity="0.7" transform="rotate(-15)" />
+                            <!-- 事象の地平 -->
+                            <circle cx="0" cy="0" r="8" fill="#000" />
+                            <circle cx="0" cy="0" r="9.5" fill="none" stroke="#f97316" stroke-width="0.6" opacity="0.8" />
+                            <!-- 光の環 -->
+                            <circle cx="0" cy="0" r="11" fill="none" stroke="#fbbf24" stroke-width="0.4" opacity="0.6" />
                         </g>
                     `;
                 } else if (breed.shape === 'phoenix') {
@@ -1391,11 +1416,12 @@
                 if (breed.id === 'rainbow') breedColorDisplay = 'background-image: linear-gradient(to right, #ff007f, #ffae00, #00e1ff)';
                 else if (breed.id === 'diamond') breedColorDisplay = 'background-image: linear-gradient(to right, #38bdf8, #3b82f6, #6366f1)';
                 else if (breed.id === 'phoenix') breedColorDisplay = 'background-image: linear-gradient(to right, #f97316, #ef4444, #facc15)';
+                else if (breed.id === 'blackhole') breedColorDisplay = 'background-image: linear-gradient(to right, #fbbf24, #f97316, #0f172a)';
 
                 card.innerHTML = `
                     <div>
                         <div class="flex justify-between items-start">
-                            <span class="font-extrabold text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${ (breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix') ? 'transparent' : 'initial'}">${breed.name}</span>
+                            <span class="font-extrabold text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${ (breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole') ? 'transparent' : 'initial'}">${breed.name}</span>
                             <span class="text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded font-bold">糖度: ~${breed.maxBrix} Brix</span>
                         </div>
                         <p class="text-[10px] text-slate-400 mt-1 leading-tight h-8 overflow-hidden">${breed.desc}</p>
@@ -1459,7 +1485,7 @@
                         <div class="flex items-center gap-1.5">
                             <span class="text-xl">🍅</span>
                             <div>
-                                <h4 class="font-black text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix') ? 'transparent' : 'initial'}">${breed.name}</h4>
+                                <h4 class="font-black text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole') ? 'transparent' : 'initial'}">${breed.name}</h4>
                             </div>
                         </div>
                         <p class="text-[10px] text-slate-500">${breed.desc}</p>
@@ -1943,6 +1969,9 @@
                 if (cosmicOn && earnings >= 1e15) {
                     harvestComment.textContent = "🌌 宇宙的スケールの収穫！銀河が震えるほどの兆コインを一撃で獲得！";
                     harvestComment.className = "text-xs font-bold text-indigo-700 bg-indigo-50 p-3 rounded-xl border border-indigo-100 animate-pulse";
+                } else if (earnings >= 1e10) {
+                    harvestComment.textContent = "🕳 100億円超！事象の地平の向こう側から降ってきた奇跡の1粒。もはや農園の枠を超越！";
+                    harvestComment.className = "text-xs font-bold text-amber-700 bg-slate-900/10 p-3 rounded-xl border border-amber-200 animate-pulse";
                 } else if (earnings >= 10000) {
                     harvestComment.textContent = "💎 1万円（1万コイン）以上の超・ウルトラダイヤモンド収穫達成！大農園の新しい伝説がここに誕生しました！";
                     harvestComment.className = "text-xs font-bold text-sky-700 bg-sky-50 p-3 rounded-xl border border-sky-100 animate-pulse";
