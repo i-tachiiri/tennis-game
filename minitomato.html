@@ -771,7 +771,8 @@
             { id: 'crystalBall', name: '🔮 予知の水晶', desc: '未来を見通す水晶。天気が常に「晴れ」に固定され、雨や曇りが来なくなる。', price: 6000, icon: 'gem' },
             { id: 'cometBuff', name: '☄️ 彗星バフ', desc: '空を横切る彗星の恩恵！収穫コインがさらに×2倍にアップ！', price: 7500, icon: 'flame' },
             { id: 'alienGardener', name: '👽 エイリアン園芸師', desc: '謎の宇宙人が同じ品種を自動再植え！収穫で空いた鉢に元と同じ種を即座に植えてくれる。', price: 10000, icon: 'user-round' },
-            { id: 'galaxyVault', name: '🌀 銀河貯金箱', desc: '銀河スケールの複利効果！貯金箱の中身が1秒ごとに+0.5%ずつ自動で増加する！', price: 15000, icon: 'landmark' }
+            { id: 'galaxyVault', name: '🌀 銀河貯金箱', desc: '銀河スケールの複利効果！貯金箱の中身が1秒ごとに+0.5%ずつ自動で増加する！', price: 15000, icon: 'landmark' },
+            { id: 'autoVaultBot', name: '🏦 自動貯金ロボ', desc: '1秒毎に手持ちコインから1,000コイン残して自動で貯金箱に預けます！(ワームホール+10%ボーナス対応)', price: 6000, icon: 'landmark' }
         ];
 
         // 宇宙農業モードの倍率 (1兆株/鉢)
@@ -925,6 +926,16 @@
             // 銀河貯金箱の複利をオフライン中にもまとめて適用
             if (state.upgrades.galaxyVault && state.vaultCoins > 0) {
                 state.vaultCoins = Math.min(1e300, state.vaultCoins * Math.pow(1.005, seconds));
+            }
+
+            // 🏦 自動貯金ロボはオフライン明けにも一度掃引しておく
+            if (state.upgrades.autoVaultBot) {
+                const excess = state.coins - 1000;
+                if (excess > 0) {
+                    const bonus = state.upgrades.wormholeVault ? excess * 0.1 : 0;
+                    state.coins = 1000;
+                    state.vaultCoins = Math.min(1e300, state.vaultCoins + excess + bonus);
+                }
             }
 
             const min = Math.floor(seconds / 60);
@@ -2427,6 +2438,17 @@
             // 銀河貯金箱 (1秒毎に+0.5%の複利)
             if (state.upgrades.galaxyVault && state.vaultCoins > 0) {
                 state.vaultCoins = Math.min(1e300, state.vaultCoins * 1.005);
+            }
+
+            // 🏦 自動貯金ロボ (1秒毎に手持ちの余剰を金庫へ)
+            if (state.upgrades.autoVaultBot) {
+                const AUTO_VAULT_BUFFER = 1000;
+                const excess = state.coins - AUTO_VAULT_BUFFER;
+                if (excess > 0) {
+                    const bonus = state.upgrades.wormholeVault ? excess * 0.1 : 0;
+                    state.coins = AUTO_VAULT_BUFFER;
+                    state.vaultCoins = Math.min(1e300, state.vaultCoins + excess + bonus);
+                }
             }
 
             // 7. 天気変動 (予知の水晶があれば常時晴れ固定)
