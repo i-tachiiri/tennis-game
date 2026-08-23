@@ -875,8 +875,69 @@
         }
 
         function saveGame() {
+            state.lastSaveTime = Date.now();
             localStorage.setItem('tomato_grower_save_ultimate_v1', JSON.stringify(state));
         }
+
+        // 💤 オフライン成長：ページを閉じていた間の進行をまとめて反映
+        function applyOfflineProgress() {
+            if (!state.lastSaveTime) return;
+            const now = Date.now();
+            const elapsedSec = Math.floor((now - state.lastSaveTime) / 1000);
+            if (elapsedSec < 10) return;
+            // 上限24時間で丸める（コインインフレ暴走防止）
+            const seconds = Math.min(86400, elapsedSec);
+
+            // 各種倍率を1回だけ計算
+            let growthPerSec = 0.8;
+            if (state.upgrades.greenhouse) growthPerSec *= 1.5;
+            if (state.upgrades.growthElixir) growthPerSec *= 1.2;
+            if (state.upgrades.warpEngine) growthPerSec *= 2.0;
+            if (state.upgrades.ringPlanter) growthPerSec *= 1.5;
+            if (state.upgrades.ledLight) growthPerSec *= 1.2;
+
+            const waterDrain = state.upgrades.autoWater ? 0.4 : 1.0;
+            const nutrDrain = state.upgrades.autoFertilizer ? 0.2 : (state.upgrades.nutritionShield ? 0.56 : 0.8);
+            const maxNut = state.upgrades.superNutrition ? 120 : 100;
+
+            let awakenedCount = 0;
+            state.plants.forEach(plant => {
+                if (!plant || plant.health <= 0) return;
+                // 水分・栄養の減少（自動補給アイテムがあれば減りにくく）
+                plant.water = Math.max(state.upgrades.autoWater ? 40 : 0, plant.water - seconds * waterDrain * 0.05);
+                plant.nutrition = Math.max(state.upgrades.autoFertilizer ? 40 : 0, plant.nutrition - seconds * nutrDrain * 0.05);
+                // 平均条件で成長
+                if (plant.growth < 100) {
+                    let s = growthPerSec;
+                    if (plant.nutrition >= 50) s *= 1.3;
+                    plant.growth = Math.min(100, plant.growth + s * seconds);
+                    // ステージ更新
+                    for (let i = STAGES.length - 1; i >= 0; i--) {
+                        if (plant.growth >= STAGES[i].minGrowth) { plant.stage = i; break; }
+                    }
+                }
+                awakenedCount++;
+            });
+
+            // 自動収穫ロボが有効なら完熟済みを全部収穫
+            if (state.upgrades.autoHarvestBot) runAutoHarvestBot();
+
+            // 銀河貯金箱の複利をオフライン中にもまとめて適用
+            if (state.upgrades.galaxyVault && state.vaultCoins > 0) {
+                state.vaultCoins = Math.min(1e300, state.vaultCoins * Math.pow(1.005, seconds));
+            }
+
+            const min = Math.floor(seconds / 60);
+            const hr = Math.floor(min / 60);
+            const label = hr > 0 ? `${hr}時間${min % 60}分` : `${min}分`;
+            showNotification(`💤 留守中に${label}経過！${awakenedCount}株のトマトが成長しました。`, "success");
+        }
+
+        // ページ離脱前にも保存しておく（時刻計算の基準用）
+        window.addEventListener('beforeunload', () => { try { saveGame(); } catch(e) {} });
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') { try { saveGame(); } catch(e) {} }
+        });
 
         // 選択中のトマト
         function getActivePlant() {
@@ -2392,6 +2453,10 @@
             while (state.plants.length < MAX_PLANTS) {
                 state.plants.push(null);
             }
+
+            // 💤 オフライン中の進行を反映
+            applyOfflineProgress();
+            saveGame();
 
             updateUI();
 
