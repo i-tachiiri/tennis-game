@@ -739,6 +739,21 @@
                 desc: '虹の粒とパステルのグラデ！ユニコーンの魔法でつくられた奇跡の1粒。',
                 price: 100000, baseBrix: 25.0, maxBrix: 35.0, coinMultiplier: 22.0, color: '#c4b5fd', shape: 'unicorn'
             },
+            comet: {
+                id: 'comet', name: '🌠 コメットミニトマト',
+                desc: '尾を引くコメット型！夜空を横切る煌めきをそのまま実にしました。',
+                price: 8000, baseBrix: 15.0, maxBrix: 22.0, coinMultiplier: 20.0, color: '#67e8f9', shape: 'comet'
+            },
+            nebula: {
+                id: 'nebula', name: '🌌 ネビュラミニトマト',
+                desc: '星雲の色そのもの。ピンク・紫・青が渦巻くガス雲の1粒。',
+                price: 30000, baseBrix: 22.0, maxBrix: 32.0, coinMultiplier: 45.0, color: '#a855f7', shape: 'nebula'
+            },
+            galaxy: {
+                id: 'galaxy', name: '🌌 銀河スパイラルミニトマト',
+                desc: '渦巻銀河の姿を宿した神秘の1粒。中心から億の星が生まれる。',
+                price: 150000, baseBrix: 40.0, maxBrix: 70.0, coinMultiplier: 250.0, color: '#f0abfc', shape: 'galaxy'
+            },
             blackhole: {
                 id: 'blackhole', name: '🕳 ブラックホールミニトマト',
                 desc: '【1株100億円超】事象の地平から採れた究極の1粒。1回の収穫で100億コイン以上を叩き出す銀河至宝級のミニトマト！',
@@ -801,7 +816,11 @@
             // ---- ⚡ 高速成長シリーズ ----
             { id: 'timewarpFert', name: '🚄 タイムワープ肥料', desc: '時間を歪めるSF肥料。全鉢の成長速度がさらに×3倍！', price: 9000, icon: 'fast-forward' },
             { id: 'prismLight', name: '🌈 プリズム光合成器', desc: '全波長を7色に分光して超光合成！成長速度がさらに×5倍！', price: 20000, icon: 'rainbow' },
-            { id: 'thunderBolt', name: '⚡ カミナリ育成ボルト', desc: '雷を苗に直撃！成長速度がさらに×10倍！(合計ワープ効果大)', price: 40000, icon: 'zap' }
+            { id: 'thunderBolt', name: '⚡ カミナリ育成ボルト', desc: '雷を苗に直撃！成長速度がさらに×10倍！(合計ワープ効果大)', price: 40000, icon: 'zap' },
+            // ---- 🌌 宇宙シリーズ Ⅲ ----
+            { id: 'spaceSuit', name: '🚀 スペーススーツプランター', desc: '真空対応のスペーススーツで苗を包む！体力が絶対に0にならず、枯れなくなります。', price: 12000, icon: 'shield-check' },
+            { id: 'cosmicWater', name: '🌊 コスモウォーターパック', desc: '無重力貯水タンクで水分の減少スピードが80%カット！', price: 14000, icon: 'droplet' },
+            { id: 'motherShip', name: '🛸 マザーシップ', desc: '常駐する巨大母艦から全鉢に補給！全鉢の水分・栄養が毎秒+1ずつ自動回復！', price: 30000, icon: 'plane' }
         ];
 
         // 宇宙農業モードの倍率 (1兆株/鉢)
@@ -1373,6 +1392,18 @@
                         <stop offset="65%" stop-color="#bae6fd" />
                         <stop offset="100%" stop-color="#fef08a" />
                     </linearGradient>
+                    <radialGradient id="nebula-grad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#f0abfc" />
+                        <stop offset="45%" stop-color="#a855f7" />
+                        <stop offset="80%" stop-color="#312e81" />
+                        <stop offset="100%" stop-color="#0f172a" />
+                    </radialGradient>
+                    <radialGradient id="galaxy-grad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#fef3c7" />
+                        <stop offset="25%" stop-color="#fbbf24" />
+                        <stop offset="55%" stop-color="#c084fc" />
+                        <stop offset="100%" stop-color="#0f172a" />
+                    </radialGradient>
                 </defs>
             `;
 
@@ -1428,6 +1459,37 @@
                             <path d="M -5 7 Q 0 0 5 -7" stroke="#14532d" stroke-width="1.5" fill="none" />
                             <path d="M 0 9 Q 3 5 9 0" stroke="#14532d" stroke-width="1.5" fill="none" />
                             <circle cx="-3" cy="-3" r="1.5" fill="#fff" opacity="0.6" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'comet') {
+                    return `
+                        <g transform="translate(${cx}, ${cy})">
+                            <!-- 尾 -->
+                            <path d="M -20 4 Q -10 2 -2 -2" stroke="#bae6fd" stroke-width="3" fill="none" opacity="0.9" />
+                            <path d="M -14 6 Q -6 4 0 0" stroke="#67e8f9" stroke-width="1.5" fill="none" opacity="0.7" />
+                            <!-- 核 -->
+                            <circle cx="0" cy="0" r="7" fill="${color}" />
+                            <circle cx="-1.5" cy="-1.5" r="2" fill="#fff" opacity="0.9" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'nebula') {
+                    return `
+                        <g transform="translate(${cx}, ${cy})">
+                            <circle cx="0" cy="0" r="11" fill="url(#nebula-grad)" />
+                            <circle cx="-2" cy="-2" r="1.5" fill="#fff" opacity="0.9" />
+                            <circle cx="4" cy="3" r="1" fill="#fef3c7" opacity="0.9" />
+                            <circle cx="-3" cy="4" r="0.8" fill="#fff" opacity="0.7" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'galaxy') {
+                    return `
+                        <g transform="translate(${cx}, ${cy})">
+                            <circle cx="0" cy="0" r="11" fill="url(#galaxy-grad)" />
+                            <!-- 渦のスパイラル -->
+                            <path d="M 0 0 Q 7 -1 8 -5 M 0 0 Q -7 1 -8 5" stroke="#fff" stroke-width="0.8" fill="none" opacity="0.6" />
+                            <path d="M 0 0 Q 5 4 9 3 M 0 0 Q -5 -4 -9 -3" stroke="#fef08a" stroke-width="0.6" fill="none" opacity="0.55" />
+                            <!-- 中央コア -->
+                            <circle cx="0" cy="0" r="2.5" fill="#fef3c7" />
                         </g>
                     `;
                 } else if (breed.shape === 'strawberry') {
@@ -2424,7 +2486,15 @@
                 // 1. 水分減少 (お天気ドーム補正)
                 let drain = weatherConf.waterDrain;
                 if (state.upgrades.weatherShield) drain *= 0.7;
+                if (state.upgrades.cosmicWater) drain *= 0.2;
                 plant.water = Math.max(0, Math.min(100, plant.water - drain));
+
+                // マザーシップの自動補給
+                if (state.upgrades.motherShip) {
+                    plant.water = Math.min(100, plant.water + 1);
+                    const maxNutMs = state.upgrades.superNutrition ? 120 : 100;
+                    plant.nutrition = Math.min(maxNutMs, plant.nutrition + 1);
+                }
 
                 // 自動水やり
                 if (state.upgrades.autoWater && plant.water <= 30) {
@@ -2443,8 +2513,13 @@
                     plant.nutrition = Math.min(maxNut, plant.nutrition + 15);
                 }
 
+                // スペーススーツ着用時は絶対無敵
+                if (state.upgrades.spaceSuit) {
+                    plant.health = 100;
+                }
+
                 // 3. 健康度の変動 (おやすみ自動セーフバリア機能の実装)
-                if (breed.id !== 'phoenix') {
+                if (breed.id !== 'phoenix' && !state.upgrades.spaceSuit) {
                     let healthDelta = 0;
                     if (plant.water <= 0 || plant.water >= 95) healthDelta -= 4;
                     else if (plant.water < 30 || plant.water > 80) healthDelta -= 1;
