@@ -772,7 +772,11 @@
             { id: 'cometBuff', name: '☄️ 彗星バフ', desc: '空を横切る彗星の恩恵！収穫コインがさらに×2倍にアップ！', price: 7500, icon: 'flame' },
             { id: 'alienGardener', name: '👽 エイリアン園芸師', desc: '謎の宇宙人が同じ品種を自動再植え！収穫で空いた鉢に元と同じ種を即座に植えてくれる。', price: 10000, icon: 'user-round' },
             { id: 'galaxyVault', name: '🌀 銀河貯金箱', desc: '銀河スケールの複利効果！貯金箱の中身が1秒ごとに+0.5%ずつ自動で増加する！', price: 15000, icon: 'landmark' },
-            { id: 'autoVaultBot', name: '🏦 自動貯金ロボ', desc: '1秒毎に手持ちコインから1,000コイン残して自動で貯金箱に預けます！(ワームホール+10%ボーナス対応)', price: 6000, icon: 'landmark' }
+            { id: 'autoVaultBot', name: '🏦 自動貯金ロボ', desc: '1秒毎に手持ちコインから1,000コイン残して自動で貯金箱に預けます！(ワームホール+10%ボーナス対応)', price: 6000, icon: 'landmark' },
+            // ---- ⚡ 高速成長シリーズ ----
+            { id: 'timewarpFert', name: '🚄 タイムワープ肥料', desc: '時間を歪めるSF肥料。全鉢の成長速度がさらに×3倍！', price: 9000, icon: 'fast-forward' },
+            { id: 'prismLight', name: '🌈 プリズム光合成器', desc: '全波長を7色に分光して超光合成！成長速度がさらに×5倍！', price: 20000, icon: 'rainbow' },
+            { id: 'thunderBolt', name: '⚡ カミナリ育成ボルト', desc: '雷を苗に直撃！成長速度がさらに×10倍！(合計ワープ効果大)', price: 40000, icon: 'zap' }
         ];
 
         // 宇宙農業モードの倍率 (1兆株/鉢)
@@ -896,6 +900,9 @@
             if (state.upgrades.warpEngine) growthPerSec *= 2.0;
             if (state.upgrades.ringPlanter) growthPerSec *= 1.5;
             if (state.upgrades.ledLight) growthPerSec *= 1.2;
+            if (state.upgrades.timewarpFert) growthPerSec *= 3.0;
+            if (state.upgrades.prismLight) growthPerSec *= 5.0;
+            if (state.upgrades.thunderBolt) growthPerSec *= 10.0;
 
             const waterDrain = state.upgrades.autoWater ? 0.4 : 1.0;
             const nutrDrain = state.upgrades.autoFertilizer ? 0.2 : (state.upgrades.nutritionShield ? 0.56 : 0.8);
@@ -2404,6 +2411,9 @@
                     if (state.upgrades.beeNest && plant.stage === 3) growthSpeed *= 3.0;
                     if (state.upgrades.warpEngine) growthSpeed *= 2.0;
                     if (state.upgrades.ringPlanter) growthSpeed *= 1.5;
+                    if (state.upgrades.timewarpFert) growthSpeed *= 3.0;
+                    if (state.upgrades.prismLight) growthSpeed *= 5.0;
+                    if (state.upgrades.thunderBolt) growthSpeed *= 10.0;
 
                     plant.growth = Math.min(100, plant.growth + growthSpeed);
                 }
