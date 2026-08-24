@@ -714,6 +714,31 @@
                 desc: '【絶対無敵】絶対に枯れない太陽の不死鳥トマト。驚異的な糖度と15倍 of コイン価格！',
                 price: 5000, baseBrix: 30.0, maxBrix: 45.0, coinMultiplier: 15.0, color: '#f97316', shape: 'phoenix'
             },
+            strawberry: {
+                id: 'strawberry', name: '🍓 いちごミニトマト',
+                desc: 'いちごそっくりの可愛らしいトマト。プチプチ食感でスイーツ級の甘さ。',
+                price: 2500, baseBrix: 12.0, maxBrix: 17.0, coinMultiplier: 4.0, color: '#ec4899', shape: 'strawberry'
+            },
+            sakura: {
+                id: 'sakura', name: '🌸 さくらミニトマト',
+                desc: '桜の花びらのようなピンクグラデーション。春だけしか採れないと言われる幻の品種。',
+                price: 4500, baseBrix: 13.0, maxBrix: 18.0, coinMultiplier: 5.0, color: '#f9a8d4', shape: 'sakura'
+            },
+            honey: {
+                id: 'honey', name: '🍯 ハニーゴールドトマト',
+                desc: '蜂蜜のようにとろける黄金色。まさに液体の宝石。',
+                price: 6500, baseBrix: 14.0, maxBrix: 19.0, coinMultiplier: 6.0, color: '#fbbf24', shape: 'circle'
+            },
+            magma: {
+                id: 'magma', name: '🔥 マグマミニトマト',
+                desc: '火山地帯の高地栽培！溶岩のような赤とオレンジのマーブル。舌がとろける激辛級の熱量。',
+                price: 25000, baseBrix: 20.0, maxBrix: 28.0, coinMultiplier: 10.0, color: '#dc2626', shape: 'magma'
+            },
+            unicorn: {
+                id: 'unicorn', name: '🦄 ユニコーンミニトマト',
+                desc: '虹の粒とパステルのグラデ！ユニコーンの魔法でつくられた奇跡の1粒。',
+                price: 100000, baseBrix: 25.0, maxBrix: 35.0, coinMultiplier: 22.0, color: '#c4b5fd', shape: 'unicorn'
+            },
             blackhole: {
                 id: 'blackhole', name: '🕳 ブラックホールミニトマト',
                 desc: '【1株100億円超】事象の地平から採れた究極の1粒。1回の収穫で100億コイン以上を叩き出す銀河至宝級のミニトマト！',
@@ -1342,6 +1367,12 @@
                         <stop offset="75%" stop-color="#e0e7ff" stop-opacity="0.6" />
                         <stop offset="100%" stop-color="#312e81" stop-opacity="0" />
                     </radialGradient>
+                    <linearGradient id="unicorn-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#fbcfe8" />
+                        <stop offset="35%" stop-color="#c4b5fd" />
+                        <stop offset="65%" stop-color="#bae6fd" />
+                        <stop offset="100%" stop-color="#fef08a" />
+                    </linearGradient>
                 </defs>
             `;
 
@@ -1397,6 +1428,55 @@
                             <path d="M -5 7 Q 0 0 5 -7" stroke="#14532d" stroke-width="1.5" fill="none" />
                             <path d="M 0 9 Q 3 5 9 0" stroke="#14532d" stroke-width="1.5" fill="none" />
                             <circle cx="-3" cy="-3" r="1.5" fill="#fff" opacity="0.6" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'strawberry') {
+                    return `
+                        <g transform="translate(${cx}, ${cy})">
+                            <!-- いちご本体 -->
+                            <path d="M -10 -8 Q -12 -2 -8 6 Q 0 14 8 6 Q 12 -2 10 -8 Q 0 -12 -10 -8 Z" fill="${color}" />
+                            <!-- 種の粒 -->
+                            <circle cx="-4" cy="-2" r="0.9" fill="#fef3c7" />
+                            <circle cx="3" cy="-4" r="0.9" fill="#fef3c7" />
+                            <circle cx="-2" cy="3" r="0.9" fill="#fef3c7" />
+                            <circle cx="5" cy="2" r="0.9" fill="#fef3c7" />
+                            <circle cx="0" cy="8" r="0.9" fill="#fef3c7" />
+                            <!-- ヘタ -->
+                            <path d="M -6 -9 Q 0 -13 6 -9 Q 3 -11 0 -10 Q -3 -11 -6 -9 Z" fill="#22c55e" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'sakura') {
+                    return `
+                        <g transform="translate(${cx}, ${cy}) scale(1.05)">
+                            <!-- 5枚花びら -->
+                            ${Array.from({length: 5}).map((_, i) => {
+                                const a = i * 72 - 90;
+                                return `<ellipse cx="0" cy="-6" rx="3.5" ry="6" fill="${color}" transform="rotate(${a})" />`;
+                            }).join('')}
+                            <!-- 中心 -->
+                            <circle cx="0" cy="0" r="3" fill="#fef3c7" />
+                            <circle cx="0" cy="0" r="1.5" fill="#f472b6" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'magma') {
+                    return `
+                        <g transform="translate(${cx}, ${cy})">
+                            <circle cx="0" cy="0" r="9.5" fill="${color}" />
+                            <!-- 溶岩マーブル -->
+                            <path d="M -7 -3 Q 0 -1 6 -5" stroke="#fbbf24" stroke-width="1.5" fill="none" />
+                            <path d="M -5 3 Q 2 6 7 2" stroke="#f97316" stroke-width="1.5" fill="none" />
+                            <circle cx="-3" cy="-2" r="1.5" fill="#fbbf24" opacity="0.9" />
+                            <circle cx="4" cy="3" r="1" fill="#fef08a" opacity="0.9" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'unicorn') {
+                    return `
+                        <g transform="translate(${cx}, ${cy})">
+                            <!-- パステル球体 -->
+                            <circle cx="0" cy="0" r="9.5" fill="url(#unicorn-grad)" />
+                            <!-- ユニコーンホーン -->
+                            <path d="M -1 -14 L 0 -22 L 1 -14 Z" fill="#fbbf24" />
+                            <circle cx="-3" cy="-3" r="1.8" fill="#fff" opacity="0.7" />
                         </g>
                     `;
                 } else if (breed.shape === 'infinity') {
