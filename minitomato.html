@@ -407,6 +407,9 @@
                             <span class="text-xs">肥料やり</span>
                         </button>
                     </div>
+                    <button id="btn-uproot" class="w-full mt-1 bg-rose-100 hover:bg-rose-200 text-rose-600 font-bold py-1.5 rounded-lg text-[11px] transition" title="今の鉢の苗を抜いて空にする（別の種を植えたい時に）">
+                        🗑 この鉢の苗を抜く（別の種に植え替える）
+                    </button>
 
                 </div>
 
@@ -1934,28 +1937,18 @@
             });
         }
 
-        // --- 空スロットへ種を植える ---
+        // --- 選択中の鉢に種を植える (occupied なら置き換え確認) ---
         window.plantSeedHere = function(breedId) {
-            if (state.plants[state.activePlantIndex]) {
-                showNotification("❌ 現在のプランターにはすでにトマトが植えられています。空き鉢を選択してください！", "error");
-                return;
+            const existing = state.plants[state.activePlantIndex];
+            if (existing) {
+                const existingBreed = BREEDS[existing.breed] || BREEDS.standard;
+                const ok = confirm(`${state.activePlantIndex + 1}号鉢には既に「${existingBreed.name}」が植わっています。抜いて「${BREEDS[breedId].name}」に植え替えますか？`);
+                if (!ok) return;
             }
 
-            state.plants[state.activePlantIndex] = {
-                breed: breedId,
-                growth: 0,
-                stage: 0,
-                water: 50,
-                nutrition: 50,
-                health: 100,
-                pruningDone: 0,
-                pestRemoved: 0,
-                brixBonus: 0,
-                wakiMeSpawned: false,
-                pestSpawned: false
-            };
+            state.plants[state.activePlantIndex] = makeSeedling(breedId);
 
-            showNotification(`🌱 ${BREEDS[breedId].name}の種を${state.activePlantIndex + 1}号鉢に植えました！`, "success");
+            showNotification(`🌱 ${BREEDS[breedId].name}の種を${state.activePlantIndex + 1}号鉢に${existing ? '植え替えました' : '植えました'}！`, "success");
             saveGame();
             updateUI();
         };
@@ -2121,6 +2114,24 @@
                 updateUI();
             });
         }
+        const btnUproot = document.getElementById('btn-uproot');
+        if (btnUproot) {
+            btnUproot.addEventListener('click', () => {
+                const plant = getActivePlant();
+                if (!plant) {
+                    showNotification("この鉢は既に空です！", "info");
+                    return;
+                }
+                const breed = BREEDS[plant.breed] || BREEDS.standard;
+                if (!confirm(`${state.activePlantIndex + 1}号鉢の「${breed.name}」を抜きますか？`)) return;
+                state.plants[state.activePlantIndex] = null;
+                clearInteractiveLayer();
+                showNotification("🗑 苗を抜きました。別の種を選んで植えられます。", "success");
+                saveGame();
+                updateUI();
+            });
+        }
+
         const btnAutoVaultToggle = document.getElementById('btn-autovault-toggle');
         if (btnAutoVaultToggle) {
             btnAutoVaultToggle.addEventListener('click', () => {
