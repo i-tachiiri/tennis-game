@@ -232,6 +232,9 @@
                         💰 応急コイン+1兆
                     </button>
                 </div>
+                <button id="btn-autovault-toggle" class="hidden mt-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 px-3 rounded-lg text-[11px] transition" title="購入した自動貯金ロボをON/OFF切替">
+                    🏦 自動貯金ロボ: ON (手持ち10,000コイン超えを金庫へ)
+                </button>
             </div>
 
             <!-- 100プランターグリッド -->
@@ -576,6 +579,7 @@
             coins: 500, // 100株拡張に合わせて、初期種を植えやすいように初期コインを500に
             vaultCoins: 0, // ★ 新機能：絶対に減らない金庫コイン
             cosmicActive: false, // ★ 宇宙農業モードON/OFF (upgrades.cosmicModeを購入するとトグル可能)
+            autoVaultActive: true, // 🏦 自動貯金ロボのON/OFF (購入後にトグル可能)
             weather: 'sunny',
             activePlantIndex: 0, // 選択中プランターのインデックス (0~99)
 
@@ -909,6 +913,7 @@
 
                     if (state.vaultCoins === undefined) state.vaultCoins = 0;
                     if (state.cosmicActive === undefined) state.cosmicActive = false;
+                    if (state.autoVaultActive === undefined) state.autoVaultActive = true;
                     sanitizeCoinFields();
 
                     if (!state.plants || !Array.isArray(state.plants)) {
@@ -986,11 +991,11 @@
             }
 
             // 🏦 自動貯金ロボはオフライン明けにも一度掃引しておく
-            if (state.upgrades.autoVaultBot) {
-                const excess = state.coins - 1000;
+            if (state.upgrades.autoVaultBot && state.autoVaultActive) {
+                const excess = state.coins - 10000;
                 if (excess > 0) {
                     const bonus = state.upgrades.wormholeVault ? excess * 0.1 : 0;
-                    state.coins = 1000;
+                    state.coins = 10000;
                     state.vaultCoins = Math.min(1e300, state.vaultCoins + excess + bonus);
                 }
             }
@@ -1151,6 +1156,22 @@
 
             // 宇宙モードの背景切替
             document.body.classList.toggle('cosmic-mode', !!(state.cosmicActive && state.upgrades.cosmicMode));
+
+            // 自動貯金ロボのトグル表示
+            const btnAutoVault = document.getElementById('btn-autovault-toggle');
+            if (btnAutoVault) {
+                if (state.upgrades.autoVaultBot) {
+                    btnAutoVault.classList.remove('hidden');
+                    btnAutoVault.textContent = state.autoVaultActive
+                        ? '🏦 自動貯金ロボ: ON (手持ち10,000超を金庫へ) — クリックでOFF'
+                        : '⏸ 自動貯金ロボ: OFF — クリックでON';
+                    btnAutoVault.className = state.autoVaultActive
+                        ? 'mt-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 px-3 rounded-lg text-[11px] transition'
+                        : 'mt-2 w-full bg-slate-400 hover:bg-slate-500 text-white font-bold py-1.5 px-3 rounded-lg text-[11px] transition';
+                } else {
+                    btnAutoVault.classList.add('hidden');
+                }
+            }
 
             // 宇宙モードトグルボタンの表示制御
             const btnCosmic = document.getElementById('btn-cosmic-toggle');
@@ -2067,6 +2088,17 @@
                 updateUI();
             });
         }
+        const btnAutoVaultToggle = document.getElementById('btn-autovault-toggle');
+        if (btnAutoVaultToggle) {
+            btnAutoVaultToggle.addEventListener('click', () => {
+                state.autoVaultActive = !state.autoVaultActive;
+                showNotification(state.autoVaultActive
+                    ? "🏦 自動貯金ロボをONにしました。手持ちの余剰を金庫へ自動移動します。"
+                    : "⏸ 自動貯金ロボをOFFにしました。手持ちコインは金庫に移動しません。", "info");
+                saveGame();
+                updateUI();
+            });
+        }
 
         document.getElementById('btn-vault-deposit-half').addEventListener('click', () => {
             if (state.coins <= 0) {
@@ -2629,9 +2661,9 @@
                 state.vaultCoins = Math.min(1e300, state.vaultCoins * 1.005);
             }
 
-            // 🏦 自動貯金ロボ (1秒毎に手持ちの余剰を金庫へ)
-            if (state.upgrades.autoVaultBot) {
-                const AUTO_VAULT_BUFFER = 1000;
+            // 🏦 自動貯金ロボ (手持ちの余剰を金庫へ。トグルOFFなら待機)
+            if (state.upgrades.autoVaultBot && state.autoVaultActive) {
+                const AUTO_VAULT_BUFFER = 10000;
                 const excess = state.coins - AUTO_VAULT_BUFFER;
                 if (excess > 0) {
                     const bonus = state.upgrades.wormholeVault ? excess * 0.1 : 0;
