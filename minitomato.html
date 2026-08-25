@@ -820,7 +820,13 @@
             // ---- 🌌 宇宙シリーズ Ⅲ ----
             { id: 'spaceSuit', name: '🚀 スペーススーツプランター', desc: '真空対応のスペーススーツで苗を包む！体力が絶対に0にならず、枯れなくなります。', price: 12000, icon: 'shield-check' },
             { id: 'cosmicWater', name: '🌊 コスモウォーターパック', desc: '無重力貯水タンクで水分の減少スピードが80%カット！', price: 14000, icon: 'droplet' },
-            { id: 'motherShip', name: '🛸 マザーシップ', desc: '常駐する巨大母艦から全鉢に補給！全鉢の水分・栄養が毎秒+1ずつ自動回復！', price: 30000, icon: 'plane' }
+            { id: 'motherShip', name: '🛸 マザーシップ', desc: '常駐する巨大母艦から全鉢に補給！全鉢の水分・栄養が毎秒+1ずつ自動回復！', price: 30000, icon: 'plane' },
+            // ---- 🎁 ボーナス&特殊効果シリーズ ----
+            { id: 'symphonyPlayer', name: '🎼 交響曲プレイヤー', desc: 'BGMスピーカーの上位機種！体力減少速度をさらに50%カット！', price: 7000, icon: 'music' },
+            { id: 'supplementPill', name: '💊 万能サプリメント', desc: '全鉢の水分・栄養・体力が毎秒+1ずつ自動微回復。じわじわ健やかに。', price: 9000, icon: 'pill' },
+            { id: 'luckyPack', name: '🎁 ラッキーパック', desc: '収穫時に30%の確率でコインが×3倍になる幸運パック！', price: 12000, icon: 'gift' },
+            { id: 'dnaBooster', name: '🧬 遺伝子ブースター', desc: '品種の糖度上限を+15%引き上げる！同じ種でもより甘く高品質に。', price: 18000, icon: 'flask-round' },
+            { id: 'farmFestival', name: '🎪 農場フェスティバル', desc: '毎日お祭り騒ぎ！全収穫コインが×1.5倍にアップ！', price: 25000, icon: 'party-popper' }
         ];
 
         // 宇宙農業モードの倍率 (1兆株/鉢)
@@ -1019,7 +1025,8 @@
             }
             
             let finalBrix = breed.baseBrix + bonus + plant.brixBonus;
-            if (finalBrix > breed.maxBrix) finalBrix = breed.maxBrix;
+            const capMax = state.upgrades.dnaBooster ? breed.maxBrix * 1.15 : breed.maxBrix;
+            if (finalBrix > capMax) finalBrix = capMax;
             return finalBrix;
         }
 
@@ -2335,6 +2342,12 @@
             if (state.upgrades.cometBuff) {
                 earnings = Math.floor(earnings * 2);
             }
+            if (state.upgrades.farmFestival) {
+                earnings = Math.floor(earnings * 1.5);
+            }
+            if (state.upgrades.luckyPack && Math.random() < 0.3) {
+                earnings = Math.floor(earnings * 3);
+            }
 
             // 🌌 宇宙農業モードで×1兆
             const cosmicOn = state.cosmicActive && state.upgrades.cosmicMode;
@@ -2496,6 +2509,14 @@
                     plant.nutrition = Math.min(maxNutMs, plant.nutrition + 1);
                 }
 
+                // 万能サプリメント: 水分・栄養・体力を毎秒+1微回復
+                if (state.upgrades.supplementPill) {
+                    plant.water = Math.min(100, plant.water + 1);
+                    const maxNutSp = state.upgrades.superNutrition ? 120 : 100;
+                    plant.nutrition = Math.min(maxNutSp, plant.nutrition + 1);
+                    plant.health = Math.min(100, plant.health + 1);
+                }
+
                 // 自動水やり
                 if (state.upgrades.autoWater && plant.water <= 30) {
                     plant.water = Math.min(100, plant.water + 20);
@@ -2534,6 +2555,9 @@
 
                     if (state.upgrades.bgmSpeaker && healthDelta < 0) {
                         healthDelta = Math.floor(healthDelta * 0.7);
+                    }
+                    if (state.upgrades.symphonyPlayer && healthDelta < 0) {
+                        healthDelta = Math.floor(healthDelta * 0.5);
                     }
 
                     // ★「おやすみ自動セーフバリア」：体力が10以下に減らないように強制保護！絶対に枯れなくする
