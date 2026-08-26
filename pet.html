@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>もふもふペット育成記</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    body {
+        margin: 0;
+        background: linear-gradient(#1e3a8a, #0f172a);
+        font-family: 'Hiragino Maru Gothic ProN', 'Arial Rounded MT Bold', 'Arial', sans-serif;
+        color: #1f2937;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: manipulation;
+        min-height: 100vh;
+    }
+    #app {
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 8px 10px 24px;
+    }
+    .panel {
+        background: #fffdf7;
+        border: 4px solid #78350f;
+        border-radius: 18px;
+        box-shadow: 0 8px 0 rgba(0,0,0,0.35);
+    }
+    canvas {
+        display: block;
+        width: 100%;
+        border-radius: 12px;
+        background: #bae6fd;
+    }
+    .bar-outer {
+        background: #e5e7eb;
+        border: 2px solid #6b7280;
+        border-radius: 999px;
+        height: 14px;
+        overflow: hidden;
+    }
+    .bar-inner {
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s linear;
+    }
+    .game-btn {
+        background-color: #f59e0b;
+        color: #fff;
+        padding: 0.6rem 0.2rem;
+        border-bottom: 4px solid #b45309;
+        border-radius: 0.75rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.1s;
+        text-align: center;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    .game-btn:active {
+        transform: translateY(2px);
+        border-bottom-width: 2px;
+    }
+    .game-btn.blue { background-color: #3b82f6; border-bottom-color: #1d4ed8; }
+    .game-btn.green { background-color: #10b981; border-bottom-color: #047857; }
+    .game-btn.purple { background-color: #8b5cf6; border-bottom-color: #6d28d9; }
+    .game-btn.pink { background-color: #ec4899; border-bottom-color: #be185d; }
+    .game-btn.gray { background-color: #64748b; border-bottom-color: #334155; }
+    .game-btn.disabled {
+        opacity: 0.45;
+        pointer-events: none;
+    }
+    #log {
+        height: 74px;
+        overflow: hidden;
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+    #modal-back {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.65);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        padding: 16px;
+    }
+    #modal {
+        background: #fffdf7;
+        border: 5px solid #78350f;
+        border-radius: 20px;
+        padding: 18px;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    #mini-track {
+        position: relative;
+        height: 34px;
+        background: #e2e8f0;
+        border: 3px solid #334155;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    #mini-zone {
+        position: absolute;
+        top: 0; bottom: 0;
+        left: 40%;
+        width: 20%;
+        background: #fde68a;
+        border-left: 2px dashed #f59e0b;
+        border-right: 2px dashed #f59e0b;
+    }
+    #mini-perfect {
+        position: absolute;
+        top: 0; bottom: 0;
+        left: 47%;
+        width: 6%;
+        background: #fca5a5;
+    }
+    #mini-marker {
+        position: absolute;
+        top: -3px;
+        width: 6px;
+        height: 40px;
+        background: #dc2626;
+        margin-left: -3px;
+    }
+    .stat-label { font-size: 0.7rem; font-weight: bold; }
+</style>
+</head>
+<body>
+<div id="app">
+    <div class="panel p-3 mb-2">
+        <div class="flex justify-between items-center mb-2">
+            <div class="font-bold text-lg" id="pet-name">たまご</div>
+            <div class="text-sm font-bold text-amber-700" id="coin-view">🪙 0</div>
+        </div>
+        <canvas id="stage"></canvas>
+        <div class="flex justify-between text-xs font-bold mt-2 text-gray-600">
+            <span id="stage-view">たまご</span>
+            <span id="age-view">0日目</span>
+            <span id="power-view">ちから 0</span>
+        </div>
+    </div>
+
+    <div class="panel p-3 mb-2">
+        <div class="grid grid-cols-2 gap-x-3 gap-y-1">
+            <div>
+                <div class="stat-label">🍖 おなか <span id="hunger-num"></span></div>
+                <div class="bar-outer"><div class="bar-inner" id="hunger-bar" style="background:#f97316"></div></div>
+            </div>
+            <div>
+                <div class="stat-label">💛 きげん <span id="happy-num"></span></div>
+                <div class="bar-outer"><div class="bar-inner" id="happy-bar" style="background:#eab308"></div></div>
+            </div>
+            <div>
+                <div class="stat-label">🫧 きれい <span id="clean-num"></span></div>
+                <div class="bar-outer"><div class="bar-inner" id="clean-bar" style="background:#38bdf8"></div></div>
+            </div>
+            <div>
+                <div class="stat-label">⚡ げんき <span id="energy-num"></span></div>
+                <div class="bar-outer"><div class="bar-inner" id="energy-bar" style="background:#22c55e"></div></div>
+            </div>
+            <div>
+                <div class="stat-label">❤️ たいりょく <span id="hp-num"></span></div>
+                <div class="bar-outer"><div class="bar-inner" id="hp-bar" style="background:#ef4444"></div></div>
+            </div>
+            <div>
+                <div class="stat-label">⭐ Lv <span id="level-num">1</span></div>
+                <div class="bar-outer"><div class="bar-inner" id="exp-bar" style="background:#a855f7"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel p-2 mb-2">
+        <div id="log" class="px-1"></div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-2">
+        <div class="game-btn" id="btn-feed" onclick="openFoodMenu()">🍚 ごはん</div>
+        <div class="game-btn blue" id="btn-play" onclick="startPlay()">🎾 あそぶ</div>
+        <div class="game-btn purple" id="btn-train" onclick="doTrain()">💪 トレーニング</div>
+        <div class="game-btn green" id="btn-bath" onclick="doBath()">🛁 おふろ</div>
+        <div class="game-btn pink" id="btn-clean" onclick="doCleanPoop()">🧹 そうじ</div>
+        <div class="game-btn gray" id="btn-sleep" onclick="toggleSleep()">💤 ねる</div>
+        <div class="game-btn" id="btn-med" style="background:#14b8a6;border-bottom-color:#0f766e" onclick="useMedicine()">💊 おくすり</div>
+        <div class="game-btn gray" id="btn-status" onclick="openStatus()">📖 ずかん</div>
+        <div class="game-btn gray" id="btn-reset" onclick="confirmReset()">🔄 さいしょから</div>
+    </div>
+</div>
+
+<div id="modal-back"><div id="modal"></div></div>
+
+<script>
+"use strict";
+
+const SAVE_KEY = 'pet_raising_save_v1';
+const DAY_SEC = 180;          // ゲーム内1日 = 実時間3分
+const OFFLINE_CAP = 6 * 3600; // 放置は最大6時間ぶんまで反映
+
+const SPECIES = {
+    baby:    { name: 'ベビモフ',   body: '#a7f3d0', accent: '#34d399', ear: 'round',  acc: 'none'  },
+    child:   { name: 'モフっこ',   body: '#93c5fd', accent: '#3b82f6', ear: 'long',   acc: 'none'  },
+    power:   { name: 'マッチョン', body: '#fca5a5', accent: '#ef4444', ear: 'horn',   acc: 'band'  },
+    cheer:   { name: 'ゲンキー',   body: '#fde68a', accent: '#f59e0b', ear: 'star',   acc: 'none'  },
+    gourmet: { name: 'モグモン',   body: '#f9a8d4', accent: '#ec4899', ear: 'round',  acc: 'bib'   },
+    royal:   { name: 'プリンセア', body: '#c4b5fd', accent: '#8b5cf6', ear: 'long',   acc: 'crown' }
+};
+
+const FOODS = {
+    rice:  { label: '🍚 ふつうのごはん', cost: 5,  hunger: 25, happy: 4,  exp: 3, eat: 1 },
+    feast: { label: '🍖 ごうかディナー', cost: 25, hunger: 50, happy: 14, exp: 8, eat: 2 },
+    cake:  { label: '🍰 おやつのケーキ', cost: 12, hunger: 10, happy: 24, exp: 3, eat: 1 }
+};
+
+const MEDICINE_COST = 30;
+
+let state = null;
+let particles = [];
+let action = { type: null, until: 0 };
+let mini = { active: false, pos: 0, dir: 1, speed: 0.8 };
+let offlineMode = false;   // 放置ぶんの計算中は倒れないようにするフラグ
+let canvas, ctx, lastFrame = 0, saveTimer = 0;
+
+/* ---------------- utility ---------------- */
+
+const now = () => Date.now() / 1000;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const el = (id) => document.getElementById(id);
+
+function expNeeded(level) { return 20 + level * 15; }
+
+function currentSpecies() {
+    if (state.stage === 'baby') return SPECIES.baby;
+    if (state.stage === 'child') return SPECIES.child;
+    if (state.stage === 'adult') return SPECIES[state.species] || SPECIES.cheer;
+    return SPECIES.baby;
+}
+
+function petScale() {
+    if (state.stage === 'baby') return 0.62;
+    if (state.stage === 'child') return 0.85;
+    if (state.stage === 'adult') return 1.1;
+    return 1;
+}
+
+function addLog(text) {
+    state.log.unshift(text);
+    if (state.log.length > 5) state.log.length = 5;
+    renderLog();
+}
+
+function renderLog() {
+    el('log').innerHTML = state.log
+        .map((m, i) => `<div style="opacity:${1 - i * 0.18}">${m}</div>`)
+        .join('');
+}
+
+function burst(type, count) {
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x: canvas.width / 2 + (Math.random() - 0.5) * 90,
+            y: canvas.height * 0.62 - Math.random() * 40,
+            vx: (Math.random() - 0.5) * 30,
+            vy: -30 - Math.random() * 40,
+            life: 1.2,
+            type: type
+        });
+    }
+}
+
+function setAction(type, sec) {
+    action.type = type;
+    action.until = now() + sec;
+}
+
+/* ---------------- state ---------------- */
+
+function newState() {
+    const t = now();
+    return {
+        version: 1,
+        name: 'たまご',
+        stage: 'egg',
+        species: null,
+        tap: 0,
+        lastTick: t,
+        ageSec: 0,
+        hunger: 80, happy: 80, clean: 100, energy: 100, hp: 100,
+        level: 1, exp: 0, coins: 60, power: 0,
+        sleeping: false, sick: false, sickTimer: 0,
+        poops: [], poopTimer: 90,
+        care: { eat: 0, play: 0, train: 0, clean: 0 },
+        log: ['たまごが とどいた！ タップして あたためよう。'],
+        dead: false
+    };
+}
+
+function save() {
+    try {
+        state.lastTick = now();
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    } catch (e) { /* 保存できない環境でも遊べるようにする */ }
+}
+
+function load() {
+    try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return null;
+        const s = JSON.parse(raw);
+        if (!s || s.version !== 1) return null;
+        return s;
+    } catch (e) {
+        return null;
+    }
+}
+
+/* ---------------- time progression ---------------- */
+
+function applyTime(dt) {
+    if (state.dead) return;
+    state.ageSec += dt;
+
+    if (state.stage === 'egg') return;
+
+    const m = dt / 60;
+
+    if (state.sleeping) {
+        state.energy = clamp(state.energy + 16 * m, 0, 100);
+        state.hunger = clamp(state.hunger - 2 * m, 0, 100);
+        state.happy = clamp(state.happy - 0.5 * m, 0, 100);
+        if (state.energy >= 100) {
+            state.sleeping = false;
+            addLog(`${state.name} は ぐっすり ねて めをさました！`);
+        }
+    } else {
+        state.hunger = clamp(state.hunger - 3.2 * m, 0, 100);
+        state.happy = clamp(state.happy - 2.5 * m, 0, 100);
+        state.energy = clamp(state.energy - 1.6 * m, 0, 100);
+        state.clean = clamp(state.clean - (2 + state.poops.length * 3) * m, 0, 100);
+
+        state.poopTimer -= dt;
+        if (state.poopTimer <= 0) {
+            state.poopTimer = 90 + Math.random() * 70;
+            if (state.poops.length < 5) {
+                state.poops.push({ x: 0.15 + Math.random() * 0.7 });
+            }
+        }
+    }
+
+    // 病気の判定
+    const bad = state.clean < 12 || state.hunger < 12 || state.poops.length >= 4;
+    if (!state.sick) {
+        state.sickTimer = bad ? state.sickTimer + dt : Math.max(0, state.sickTimer - dt);
+        if (state.sickTimer > 40) {
+            state.sick = true;
+            state.sickTimer = 0;
+            addLog(`⚠ ${state.name} が びょうきに なってしまった…！`);
+        }
+    }
+
+    if (state.sick) {
+        state.hp = clamp(state.hp - 3 * m, 0, 100);
+        state.happy = clamp(state.happy - 4 * m, 0, 100);
+    } else if (state.hunger < 8 || state.happy < 5) {
+        state.hp = clamp(state.hp - 2 * m, 0, 100);
+    } else if (state.hunger > 40 && state.happy > 40 && state.clean > 40) {
+        state.hp = clamp(state.hp + 2.5 * m, 0, 100);
+    }
+
+    if (state.hp <= 0) {
+        if (offlineMode) {
+            // 留守のあいだに おわかれには ならない（ぐったりした状態で まっている）
+            state.hp = 15;
+            state.sick = true;
+        } else {
+            gameOver();
+        }
+    }
+}
+
+/* ---------------- growth ---------------- */
+
+function gainExp(n) {
+    state.exp += n;
+    let need = expNeeded(state.level);
+    while (state.exp >= need) {
+        state.exp -= need;
+        state.level++;
+        state.coins += 20;
+        addLog(`🎉 レベル ${state.level} に あがった！ (+20🪙)`);
+        need = expNeeded(state.level);
+    }
+    checkEvolve();
+}
+
+function checkEvolve() {
+    if (state.stage === 'baby' && state.level >= 4) {
+        state.stage = 'child';
+        addLog(`✨ ${state.name} は こどもに せいちょうした！`);
+        burst('star', 18);
+        setAction('happy', 2);
+    } else if (state.stage === 'child' && state.level >= 9) {
+        const c = state.care;
+        const pairs = [
+            ['train', c.train, 'power'],
+            ['play', c.play, 'cheer'],
+            ['eat', c.eat, 'gourmet'],
+            ['clean', c.clean, 'royal']
+        ];
+        pairs.sort((a, b) => b[1] - a[1]);
+        state.species = pairs[0][2];
+        state.stage = 'adult';
+        addLog(`✨ ${state.name} は 「${SPECIES[state.species].name}」に しんかした！`);
+        burst('star', 30);
+        setAction('happy', 3);
+    }
+}
+
+function gameOver() {
+    state.dead = true;
+    state.sleeping = false;
+    save();
+    showModal(`
+        <div class="text-2xl font-bold mb-2">おわかれ…</div>
+        <div class="text-sm mb-4">${state.name} は げんきが なくなって<br>おそらに かえってしまった…<br>
+        <span class="text-xs text-gray-500">レベル ${state.level} / ${Math.floor(state.ageSec / DAY_SEC)}日目</span></div>
+        <div class="game-btn" onclick="hardReset()">あたらしい たまごを もらう</div>
+    `, false);
+}
+
+/* ---------------- actions ---------------- */
+
+function busy() {
+    if (state.dead) return true;
+    if (state.stage === 'egg') { addLog('たまごを タップして あたためよう！'); return true; }
+    if (state.sleeping) { addLog(`${state.name} は ぐっすり ねむっている…`); return true; }
+    return false;
+}
+
+function openFoodMenu() {
+    if (busy()) return;
+    const rows = Object.keys(FOODS).map((k) => {
+        const f = FOODS[k];
+        const poor = state.coins < f.cost;
+        return `<div class="game-btn ${poor ? 'disabled' : ''} mb-2" onclick="feed('${k}')">
+            ${f.label}<span class="text-xs"> / ${f.cost}🪙</span></div>`;
+    }).join('');
+    showModal(`<div class="font-bold text-lg mb-3">なにを たべる？</div>${rows}
+        <div class="game-btn gray mt-1" onclick="hideModal()">やめる</div>`);
+}
+
+function feed(key) {
+    hideModal();
+    if (busy()) return;
+    const f = FOODS[key];
+    if (state.coins < f.cost) { addLog('コインが たりない…'); return; }
+    if (state.hunger > 95) { addLog(`${state.name}「おなか いっぱいだよ〜」`); return; }
+
+    state.coins -= f.cost;
+    state.hunger = clamp(state.hunger + f.hunger, 0, 100);
+    state.happy = clamp(state.happy + f.happy, 0, 100);
+    state.care.eat += f.eat;
+    state.poopTimer = Math.min(state.poopTimer, 45);
+    setAction('eat', 2);
+    burst('heart', 5);
+    addLog(`${f.label} を たべた！ おいしそう。`);
+    gainExp(f.exp);
+    save();
+}
+
+function startPlay() {
+    if (busy()) return;
+    if (state.energy < 10) { addLog(`${state.name} は つかれている… ねかせてあげよう。`); return; }
+    if (state.hunger < 10) { addLog(`${state.name} は おなかが ぺこぺこだ…`); return; }
+    mini.active = true;
+    mini.pos = 0;
+    mini.dir = 1;
+    mini.speed = 0.75 + Math.min(0.9, state.level * 0.05);
+    showModal(`
+        <div class="font-bold text-lg mb-1">🎾 ボールキャッチ</div>
+        <div class="text-xs mb-3 text-gray-600">まんなかで ストップ！</div>
+        <div id="mini-track">
+            <div id="mini-zone"></div>
+            <div id="mini-perfect"></div>
+            <div id="mini-marker" style="left:0%"></div>
+        </div>
+        <div class="game-btn blue mt-4" onclick="stopMini()">ストップ！</div>
+    `, false);
+}
+
+function stopMini() {
+    if (!mini.active) return;
+    mini.active = false;
+    hideModal();
+
+    const d = Math.abs(mini.pos - 0.5);
+    let coins, happy, label;
+    if (d < 0.03) { coins = 30; happy = 26; label = 'パーフェクト！！'; }
+    else if (d < 0.10) { coins = 18; happy = 18; label = 'グッド！'; }
+    else if (d < 0.22) { coins = 10; happy = 12; label = 'まあまあ…'; }
+    else { coins = 3; happy = 6; label = 'ざんねん…'; }
+
+    state.coins += coins;
+    state.happy = clamp(state.happy + happy, 0, 100);
+    state.energy = clamp(state.energy - 12, 0, 100);
+    state.hunger = clamp(state.hunger - 8, 0, 100);
+    state.clean = clamp(state.clean - 6, 0, 100);
+    state.care.play += 1;
+    setAction('play', 2);
+    burst('heart', 8);
+    addLog(`${label} いっしょに あそんだ！ (+${coins}🪙)`);
+    gainExp(8);
+    save();
+}
+
+function doTrain() {
+    if (busy()) return;
+    if (state.energy < 20) { addLog(`げんきが たりない… やすませてあげよう。`); return; }
+    if (state.hunger < 15) { addLog(`おなかが すいて トレーニングできない…`); return; }
+
+    state.energy = clamp(state.energy - 20, 0, 100);
+    state.hunger = clamp(state.hunger - 12, 0, 100);
+    state.happy = clamp(state.happy - 5, 0, 100);
+    state.clean = clamp(state.clean - 10, 0, 100);
+    state.power += 1;
+    state.coins += 8;
+    state.care.train += 1;
+    setAction('train', 2);
+    burst('sweat', 6);
+    addLog(`💪 トレーニング！ ちからが ${state.power} に なった (+8🪙)`);
+    gainExp(15);
+    save();
+}
+
+function doBath() {
+    if (busy()) return;
+    if (state.clean > 95) { addLog(`${state.name} は ぴかぴかだ！`); return; }
+    state.clean = 100;
+    state.happy = clamp(state.happy + 6, 0, 100);
+    state.care.clean += 1;
+    setAction('bath', 2);
+    burst('bubble', 12);
+    addLog(`🛁 おふろで ごしごし！ ぴかぴかに なった。`);
+    gainExp(4);
+    save();
+}
+
+function doCleanPoop() {
+    if (busy()) return;
+    if (state.poops.length === 0) { addLog('そうじする ところは なさそうだ。'); return; }
+    const n = state.poops.length;
+    state.poops = [];
+    state.clean = clamp(state.clean + 18 * n, 0, 100);
+    state.happy = clamp(state.happy + 4, 0, 100);
+    state.care.clean += 1;
+    burst('bubble', 8);
+    addLog(`🧹 うんちを ${n}こ かたづけた！`);
+    gainExp(3);
+    save();
+}
+
+function toggleSleep() {
+    if (state.dead || state.stage === 'egg') return;
+    if (state.sleeping) {
+        state.sleeping = false;
+        addLog(`${state.name} は めを さました。`);
+    } else {
+        state.sleeping = true;
+        addLog(`💤 でんきを けした。 ${state.name} は ねむりについた…`);
+    }
+    save();
+    updateUI();
+}
+
+function useMedicine() {
+    if (busy()) return;
+    if (!state.sick) { addLog(`${state.name} は げんきだ！ おくすりは いらない。`); return; }
+    if (state.coins < MEDICINE_COST) { addLog(`コインが たりない…（おくすりは ${MEDICINE_COST}🪙）`); return; }
+    state.coins -= MEDICINE_COST;
+    state.sick = false;
+    state.sickTimer = 0;
+    state.hp = clamp(state.hp + 20, 0, 100);
+    state.happy = clamp(state.happy + 8, 0, 100);
+    burst('star', 8);
+    addLog(`💊 おくすりを のんだ。 びょうきが なおった！`);
+    save();
+}
+
+function openStatus() {
+    const c = state.care;
+    const sp = currentSpecies();
+    showModal(`
+        <div class="font-bold text-lg mb-2">📖 ${state.name} の ずかん</div>
+        <div class="text-sm text-left leading-6">
+            すがた：${sp.name}<br>
+            レベル：${state.level}（つぎまで ${expNeeded(state.level) - state.exp}）<br>
+            ねんれい：${Math.floor(state.ageSec / DAY_SEC)}日目<br>
+            ちから：${state.power}<br>
+            コイン：${state.coins}🪙<br>
+            <hr class="my-2">
+            <span class="text-xs text-gray-600">おせわの きろく</span><br>
+            🍚 ごはん ${c.eat} / 🎾 あそび ${c.play}<br>
+            💪 トレーニング ${c.train} / 🫧 おそうじ ${c.clean}
+        </div>
+        <div class="text-xs text-gray-500 mt-3">Lv9で いちばん おおい おせわの すがたに しんかするよ</div>
+        <div class="game-btn gray mt-3" onclick="hideModal()">とじる</div>
+    `);
+}
+
+function confirmReset() {
+    showModal(`
+        <div class="font-bold text-lg mb-3">さいしょから はじめる？</div>
+        <div class="text-sm mb-4 text-gray-600">いまの ペットの きろくは きえてしまうよ。</div>
+        <div class="game-btn pink mb-2" onclick="hardReset()">はじめる</div>
+        <div class="game-btn gray" onclick="hideModal()">やめる</div>
+    `);
+}
+
+function hardReset() {
+    hideModal();
+    state = newState();
+    particles = [];
+    action = { type: null, until: 0 };
+    save();
+    renderLog();
+    updateUI();
+}
+
+/* ---------------- egg / naming ---------------- */
+
+function tapCanvas() {
+    if (state.dead) return;
+    if (state.stage === 'egg') {
+        state.tap++;
+        setAction('shake', 0.4);
+        if (state.tap >= 8) {
+            hatch();
+        } else if (state.tap % 3 === 0) {
+            addLog('たまごが ぴくぴく うごいている…！');
+        }
+        return;
+    }
+    if (state.sleeping) return;
+    state.happy = clamp(state.happy + 1, 0, 100);
+    setAction('happy', 0.8);
+    burst('heart', 2);
+}
+
+function hatch() {
+    state.stage = 'baby';
+    state.name = 'ベビモフ';
+    burst('star', 24);
+    setAction('happy', 2);
+    addLog('🥚 たまごが われた！ ペットが うまれた！');
+    save();
+    showModal(`
+        <div class="font-bold text-lg mb-2">たまごが かえった！</div>
+        <div class="text-sm mb-3">なまえを つけてあげよう</div>
+        <input id="name-input" maxlength="8" value="モフ" class="border-2 border-amber-700 rounded-lg px-3 py-2 text-center w-full mb-3">
+        <div class="game-btn" onclick="decideName()">けってい</div>
+    `, false);
+    setTimeout(() => { const i = el('name-input'); if (i) i.focus(); }, 50);
+}
+
+function decideName() {
+    const input = el('name-input');
+    const v = input && input.value.trim() ? input.value.trim().slice(0, 8) : 'モフ';
+    state.name = v;
+    hideModal();
+    addLog(`なまえは 「${v}」に きまった！ よろしくね。`);
+    save();
+    updateUI();
+}
+
+/* ---------------- modal ---------------- */
+
+function showModal(html, closable) {
+    el('modal').innerHTML = html;
+    el('modal-back').style.display = 'flex';
+    el('modal-back').dataset.closable = closable === false ? '0' : '1';
+}
+
+function hideModal() {
+    el('modal-back').style.display = 'none';
+}
+
+/* ---------------- drawing ---------------- */
+
+function resize() {
+    const w = canvas.clientWidth;
+    const h = Math.round(w * 0.62);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function cw() { return canvas.width / (window.devicePixelRatio || 1); }
+function ch() { return canvas.height / (window.devicePixelRatio || 1); }
+
+function mood() {
+    if (state.dead) return 'dead';
+    if (state.sleeping) return 'sleep';
+    if (action.type === 'eat') return 'eat';
+    if (action.type === 'happy' || action.type === 'play') return 'joy';
+    if (action.type === 'train') return 'train';
+    if (state.sick) return 'sick';
+    if (state.hunger < 20 || state.happy < 20 || state.clean < 20) return 'sad';
+    if (state.happy > 70) return 'joy';
+    return 'normal';
+}
+
+function ellipse(x, y, rx, ry) {
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawBackground(t) {
+    const W = cw(), H = ch();
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    if (state.sleeping) { g.addColorStop(0, '#1e293b'); g.addColorStop(1, '#334155'); }
+    else { g.addColorStop(0, '#bae6fd'); g.addColorStop(1, '#e0f2fe'); }
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    if (state.sleeping) {
+        ctx.fillStyle = '#fef9c3';
+        ellipse(W * 0.82, H * 0.2, 16, 16);
+        ctx.fillStyle = state.sleeping ? '#334155' : '#fef9c3';
+        ellipse(W * 0.87, H * 0.17, 14, 14);
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        for (let i = 0; i < 12; i++) {
+            const x = (i * 97 % Math.round(W));
+            const y = (i * 53 % Math.round(H * 0.55));
+            ctx.fillRect(x, y, 2, 2);
+        }
+    } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        const cx = (t * 12) % (W + 120) - 60;
+        ellipse(cx, H * 0.2, 26, 14);
+        ellipse(cx + 22, H * 0.2, 18, 11);
+        ellipse(cx - 20, H * 0.22, 16, 10);
+    }
+
+    // 床
+    ctx.fillStyle = state.sleeping ? '#4c1d95' : '#86efac';
+    ctx.fillRect(0, H * 0.76, W, H * 0.24);
+    ctx.fillStyle = state.sleeping ? '#5b21b6' : '#4ade80';
+    ctx.fillRect(0, H * 0.76, W, 6);
+}
+
+function drawPoops() {
+    const W = cw(), H = ch();
+    ctx.save();
+    state.poops.forEach((p) => {
+        const x = p.x * W, y = H * 0.86;
+        ctx.fillStyle = '#78350f';
+        ellipse(x, y, 12, 6);
+        ellipse(x, y - 6, 9, 5);
+        ellipse(x, y - 11, 5, 4);
+    });
+    ctx.restore();
+}
+
+function drawEgg(t) {
+    const W = cw(), H = ch();
+    const shake = action.type === 'shake' ? Math.sin(t * 40) * 0.12 : Math.sin(t * 1.6) * 0.04;
+    ctx.save();
+    ctx.translate(W / 2, H * 0.66);
+    ctx.rotate(shake);
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ellipse(0, 46, 40, 9);
+    ctx.fillStyle = '#fffbeb';
+    ellipse(0, 0, 42, 52);
+    ctx.strokeStyle = 'rgba(120,53,15,0.5)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 42, 52, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#fbcfe8';
+    ellipse(-14, -8, 9, 7);
+    ellipse(12, 10, 11, 8);
+    ellipse(6, -24, 6, 5);
+    if (state.tap >= 4) {
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-22, -12); ctx.lineTo(-8, -2); ctx.lineTo(2, -16); ctx.lineTo(16, -4);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('タップして あたためよう！ (' + state.tap + '/8)', W / 2, H * 0.94);
+    ctx.textAlign = 'left';
+}
+
+function drawEyes(m, t) {
+    const blink = (Math.sin(t * 1.3) > 0.985);
+    ctx.strokeStyle = '#1f2937';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+
+    if (m === 'sleep' || blink || m === 'dead') {
+        [-16, 16].forEach((x) => {
+            ctx.beginPath();
+            ctx.arc(x, -8, 7, Math.PI * 0.15, Math.PI * 0.85);
+            ctx.stroke();
+        });
+        return;
+    }
+    if (m === 'joy') {
+        [-16, 16].forEach((x) => {
+            ctx.beginPath();
+            ctx.arc(x, -4, 7, Math.PI * 1.15, Math.PI * 1.85);
+            ctx.stroke();
+        });
+        return;
+    }
+    if (m === 'sick') {
+        [-16, 16].forEach((x) => {
+            ctx.beginPath();
+            ctx.moveTo(x - 6, -12); ctx.lineTo(x + 6, -3);
+            ctx.moveTo(x + 6, -12); ctx.lineTo(x - 6, -3);
+            ctx.stroke();
+        });
+        return;
+    }
+    [-16, 16].forEach((x) => {
+        ctx.fillStyle = '#1f2937';
+        ellipse(x, -8, 6, m === 'sad' ? 5 : 7);
+        ctx.fillStyle = '#fff';
+        ellipse(x + 2, -10, 2.2, 2.2);
+    });
+    if (m === 'sad') {
+        ctx.fillStyle = '#38bdf8';
+        ellipse(-22, 0, 3, 5);
+    }
+}
+
+function drawMouth(m, t) {
+    ctx.strokeStyle = '#1f2937';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    if (m === 'eat') {
+        ctx.fillStyle = '#be123c';
+        ellipse(0, 10, 9, 7 + Math.sin(t * 18) * 3);
+        return;
+    }
+    if (m === 'sad' || m === 'sick') {
+        ctx.beginPath();
+        ctx.arc(0, 16, 8, Math.PI * 1.2, Math.PI * 1.8);
+        ctx.stroke();
+        return;
+    }
+    if (m === 'sleep') {
+        ctx.beginPath();
+        ctx.arc(0, 8, 4, 0, Math.PI);
+        ctx.stroke();
+        return;
+    }
+    ctx.beginPath();
+    ctx.arc(0, 6, m === 'joy' ? 11 : 8, Math.PI * 0.15, Math.PI * 0.85);
+    ctx.stroke();
+}
+
+function drawEars(sp) {
+    ctx.fillStyle = sp.accent;
+    if (sp.ear === 'round') {
+        ellipse(-34, -34, 13, 13);
+        ellipse(34, -34, 13, 13);
+    } else if (sp.ear === 'long') {
+        ctx.save();
+        ctx.rotate(-0.25); ellipse(-24, -48, 9, 22); ctx.restore();
+        ctx.save();
+        ctx.rotate(0.25); ellipse(24, -48, 9, 22); ctx.restore();
+    } else if (sp.ear === 'horn') {
+        [-26, 26].forEach((x) => {
+            ctx.beginPath();
+            ctx.moveTo(x - 10, -34);
+            ctx.lineTo(x, -60);
+            ctx.lineTo(x + 10, -34);
+            ctx.closePath();
+            ctx.fill();
+        });
+    } else if (sp.ear === 'star') {
+        ctx.strokeStyle = sp.accent;
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(0, -40); ctx.lineTo(0, -60); ctx.stroke();
+        ctx.fillStyle = '#facc15';
+        star(0, -66, 5, 10, 5);
+    }
+}
+
+function star(x, y, spikes, outer, inner) {
+    let rot = -Math.PI / 2;
+    const step = Math.PI / spikes;
+    ctx.beginPath();
+    ctx.moveTo(x, y - outer);
+    for (let i = 0; i < spikes; i++) {
+        ctx.lineTo(x + Math.cos(rot) * outer, y + Math.sin(rot) * outer);
+        rot += step;
+        ctx.lineTo(x + Math.cos(rot) * inner, y + Math.sin(rot) * inner);
+        rot += step;
+    }
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawAccessory(sp) {
+    if (sp.acc === 'crown') {
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.moveTo(-20, -44);
+        ctx.lineTo(-20, -62); ctx.lineTo(-8, -52); ctx.lineTo(0, -66);
+        ctx.lineTo(8, -52); ctx.lineTo(20, -62); ctx.lineTo(20, -44);
+        ctx.closePath();
+        ctx.fill();
+    } else if (sp.acc === 'band') {
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(-40, -34, 80, 10);
+        ctx.fillStyle = '#fff';
+        ellipse(0, -29, 4, 4);
+    } else if (sp.acc === 'bib') {
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.moveTo(-22, 12); ctx.lineTo(22, 12); ctx.lineTo(14, 44); ctx.lineTo(-14, 44);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ef4444';
+        ellipse(0, 26, 6, 6);
+    }
+}
+
+function drawCreature(t) {
+    const W = cw(), H = ch();
+    const sp = currentSpecies();
+    const m = mood();
+    const s = petScale() * (W / 380);
+    let bob = Math.sin(t * 2.4) * 4;
+    if (m === 'joy') bob = Math.abs(Math.sin(t * 6)) * -14;
+    if (m === 'train') bob = Math.abs(Math.sin(t * 9)) * -10;
+    if (m === 'sad' || m === 'sick') bob = Math.sin(t * 1.2) * 2;
+
+    const baseY = H * 0.70;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
+    ctx.beginPath();
+    ctx.ellipse(W / 2, baseY + 52 * s, 44 * s, 10 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(W / 2, baseY + bob * s);
+    ctx.scale(s, s);
+    if (m === 'dead') ctx.globalAlpha = 0.45;
+
+    drawEars(sp);
+
+    // 足
+    ctx.fillStyle = sp.accent;
+    ellipse(-22, 46, 15, 9);
+    ellipse(22, 46, 15, 9);
+
+    // 手
+    const arm = m === 'joy' ? -18 : (m === 'train' ? -22 + Math.sin(t * 9) * 10 : 6);
+    ctx.fillStyle = sp.accent;
+    ellipse(-44, 12 + arm, 11, 11);
+    ellipse(44, 12 + arm, 11, 11);
+
+    // からだ
+    ctx.fillStyle = sp.body;
+    ellipse(0, 6, 44, 44);
+    ctx.strokeStyle = 'rgba(31,41,55,0.35)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 6, 44, 44, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // おなか
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ellipse(0, 18, 26, 24);
+
+    drawAccessory(sp);
+
+    // ほっぺ
+    if (m !== 'sick' && m !== 'sad') {
+        ctx.fillStyle = 'rgba(248,113,113,0.55)';
+        ellipse(-28, 4, 8, 5);
+        ellipse(28, 4, 8, 5);
+    }
+
+    drawEyes(m, t);
+    drawMouth(m, t);
+
+    // よごれ
+    if (state.clean < 40) {
+        ctx.fillStyle = 'rgba(120,53,15,0.45)';
+        ellipse(-18, 30, 6, 4);
+        ellipse(14, 36, 5, 3);
+        if (state.clean < 20) ellipse(24, 18, 5, 4);
+    }
+    ctx.restore();
+
+    // 状態アイコン
+    ctx.font = 'bold 22px sans-serif';
+    ctx.textAlign = 'center';
+    if (state.sleeping) {
+        for (let i = 0; i < 3; i++) {
+            const p = (t * 0.6 + i * 0.33) % 1;
+            ctx.globalAlpha = 1 - p;
+            ctx.fillStyle = '#fff';
+            ctx.fillText('Z', W / 2 + 46 * s + p * 26, baseY - 40 * s - p * 40);
+        }
+        ctx.globalAlpha = 1;
+    }
+    if (state.sick) {
+        ctx.fillStyle = '#16a34a';
+        ctx.fillText('🤒', W / 2 + 46 * s, baseY - 44 * s);
+    }
+    if (!state.sleeping && !state.sick && state.hunger < 25) {
+        ctx.fillText('🍖', W / 2 - 52 * s, baseY - 44 * s + Math.sin(t * 3) * 4);
+    }
+    ctx.textAlign = 'left';
+}
+
+function drawParticles(dt, t) {
+    ctx.font = '18px sans-serif';
+    ctx.textAlign = 'center';
+    particles = particles.filter((p) => {
+        p.life -= dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 30 * dt;
+        if (p.life <= 0) return false;
+        ctx.globalAlpha = clamp(p.life, 0, 1);
+        const icon = p.type === 'heart' ? '💛' : p.type === 'star' ? '⭐' :
+                     p.type === 'bubble' ? '🫧' : '💦';
+        ctx.fillText(icon, p.x, p.y);
+        ctx.globalAlpha = 1;
+        return true;
+    });
+    ctx.textAlign = 'left';
+}
+
+/* ---------------- UI ---------------- */
+
+function setBar(id, numId, value) {
+    el(id).style.width = clamp(value, 0, 100) + '%';
+    if (numId) el(numId).textContent = Math.round(value);
+}
+
+function updateUI() {
+    el('pet-name').textContent = state.stage === 'egg' ? 'たまご' : state.name;
+    el('coin-view').textContent = '🪙 ' + state.coins;
+    el('stage-view').textContent = state.stage === 'egg' ? 'たまご' : currentSpecies().name;
+    el('age-view').textContent = Math.floor(state.ageSec / DAY_SEC) + '日目';
+    el('power-view').textContent = 'ちから ' + state.power;
+
+    setBar('hunger-bar', 'hunger-num', state.hunger);
+    setBar('happy-bar', 'happy-num', state.happy);
+    setBar('clean-bar', 'clean-num', state.clean);
+    setBar('energy-bar', 'energy-num', state.energy);
+    setBar('hp-bar', 'hp-num', state.hp);
+    setBar('exp-bar', null, state.exp / expNeeded(state.level) * 100);
+    el('level-num').textContent = state.level;
+
+    el('btn-sleep').textContent = state.sleeping ? '☀ おこす' : '💤 ねる';
+
+    const locked = state.stage === 'egg' || state.dead || state.sleeping;
+    ['btn-feed', 'btn-play', 'btn-train', 'btn-bath', 'btn-clean', 'btn-med'].forEach((id) => {
+        el(id).classList.toggle('disabled', locked);
+    });
+    el('btn-med').classList.toggle('disabled', locked || !state.sick);
+}
+
+/* ---------------- main loop ---------------- */
+
+function frame(ts) {
+    const t = ts / 1000;
+    let dt = lastFrame ? t - lastFrame : 0;
+    lastFrame = t;
+    dt = clamp(dt, 0, 0.5);
+
+    if (action.type && now() > action.until) action.type = null;
+
+    applyTime(dt);
+
+    if (mini.active) {
+        mini.pos += mini.dir * mini.speed * dt;
+        if (mini.pos >= 1) { mini.pos = 1; mini.dir = -1; }
+        if (mini.pos <= 0) { mini.pos = 0; mini.dir = 1; }
+        const marker = el('mini-marker');
+        if (marker) marker.style.left = (mini.pos * 100) + '%';
+    }
+
+    drawBackground(t);
+    if (state.stage === 'egg') {
+        drawEgg(t);
+    } else {
+        drawPoops();
+        drawCreature(t);
+    }
+    drawParticles(dt, t);
+    updateUI();
+
+    saveTimer += dt;
+    if (saveTimer > 5) { saveTimer = 0; save(); }
+
+    requestAnimationFrame(frame);
+}
+
+function init() {
+    canvas = el('stage');
+    ctx = canvas.getContext('2d');
+    resize();
+    window.addEventListener('resize', resize);
+
+    const loaded = load();
+    if (loaded) {
+        state = loaded;
+        const away = clamp(now() - state.lastTick, 0, OFFLINE_CAP);
+        if (away > 60 && !state.dead) {
+            offlineMode = true;
+            applyTime(away);
+            offlineMode = false;
+            addLog(`（${Math.floor(away / 60)}分ぶん じかんが すすんだ）`);
+            if (state.hp < 40 || state.sick) {
+                addLog(`${state.name} が ぐったりしている… はやく おせわしよう！`);
+            }
+        }
+    } else {
+        state = newState();
+    }
+
+    canvas.addEventListener('click', tapCanvas);
+    el('modal-back').addEventListener('click', (e) => {
+        if (e.target === el('modal-back') && el('modal-back').dataset.closable !== '0') hideModal();
+    });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+    window.addEventListener('beforeunload', save);
+
+    renderLog();
+    updateUI();
+    requestAnimationFrame(frame);
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
