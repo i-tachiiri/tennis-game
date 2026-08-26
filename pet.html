@@ -224,7 +224,6 @@ let state = null;
 let particles = [];
 let action = { type: null, until: 0 };
 let mini = { active: false, pos: 0, dir: 1, speed: 0.8 };
-let offlineMode = false;   // 放置ぶんの計算中は倒れないようにするフラグ
 let canvas, ctx, lastFrame = 0, saveTimer = 0;
 
 /* ---------------- utility ---------------- */
@@ -297,7 +296,7 @@ function newState() {
         poops: [], poopTimer: 90,
         care: { eat: 0, play: 0, train: 0, clean: 0 },
         log: ['たまごが とどいた！ タップして あたためよう。'],
-        dead: false
+        exhausted: false
     };
 }
 
@@ -323,7 +322,6 @@ function load() {
 /* ---------------- time progression ---------------- */
 
 function applyTime(dt) {
-    if (state.dead) return;
     state.ageSec += dt;
 
     if (state.stage === 'egg') return;
@@ -373,14 +371,15 @@ function applyTime(dt) {
         state.hp = clamp(state.hp + 2.5 * m, 0, 100);
     }
 
-    if (state.hp <= 0) {
-        if (offlineMode) {
-            // 留守のあいだに おわかれには ならない（ぐったりした状態で まっている）
-            state.hp = 15;
-            state.sick = true;
-        } else {
-            gameOver();
+    // どんなに ほうっておかれても たいりょくは 1 で ふみとどまる（おわかれは しない）
+    if (state.hp < 1) state.hp = 1;
+    if (state.hp <= 1) {
+        if (!state.exhausted) {
+            state.exhausted = true;
+            addLog(`${state.name} が ぐったりしている… おせわして あげよう！`);
         }
+    } else if (state.hp > 30) {
+        state.exhausted = false;
     }
 }
 
@@ -422,22 +421,9 @@ function checkEvolve() {
     }
 }
 
-function gameOver() {
-    state.dead = true;
-    state.sleeping = false;
-    save();
-    showModal(`
-        <div class="text-2xl font-bold mb-2">おわかれ…</div>
-        <div class="text-sm mb-4">${state.name} は げんきが なくなって<br>おそらに かえってしまった…<br>
-        <span class="text-xs text-gray-500">レベル ${state.level} / ${Math.floor(state.ageSec / DAY_SEC)}日目</span></div>
-        <div class="game-btn" onclick="hardReset()">あたらしい たまごを もらう</div>
-    `, false);
-}
-
 /* ---------------- actions ---------------- */
 
 function busy() {
-    if (state.dead) return true;
     if (state.stage === 'egg') { addLog('たまごを タップして あたためよう！'); return true; }
     if (state.sleeping) { addLog(`${state.name} は ぐっすり ねむっている…`); return true; }
     return false;
@@ -566,7 +552,7 @@ function doCleanPoop() {
 }
 
 function toggleSleep() {
-    if (state.dead || state.stage === 'egg') return;
+    if (state.stage === 'egg') return;
     if (state.sleeping) {
         state.sleeping = false;
         addLog(`${state.name} は めを さました。`);
@@ -635,7 +621,6 @@ function hardReset() {
 /* ---------------- egg / naming ---------------- */
 
 function tapCanvas() {
-    if (state.dead) return;
     if (state.stage === 'egg') {
         state.tap++;
         setAction('shake', 0.4);
@@ -706,13 +691,12 @@ function cw() { return canvas.width / (window.devicePixelRatio || 1); }
 function ch() { return canvas.height / (window.devicePixelRatio || 1); }
 
 function mood() {
-    if (state.dead) return 'dead';
     if (state.sleeping) return 'sleep';
     if (action.type === 'eat') return 'eat';
     if (action.type === 'happy' || action.type === 'play') return 'joy';
     if (action.type === 'train') return 'train';
     if (state.sick) return 'sick';
-    if (state.hunger < 20 || state.happy < 20 || state.clean < 20) return 'sad';
+    if (state.hp < 25 || state.hunger < 20 || state.happy < 20 || state.clean < 20) return 'sad';
     if (state.happy > 70) return 'joy';
     return 'normal';
 }
@@ -811,7 +795,7 @@ function drawEyes(m, t) {
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
 
-    if (m === 'sleep' || blink || m === 'dead') {
+    if (m === 'sleep' || blink) {
         [-16, 16].forEach((x) => {
             ctx.beginPath();
             ctx.arc(x, -8, 7, Math.PI * 0.15, Math.PI * 0.85);
@@ -964,7 +948,6 @@ function drawCreature(t) {
     ctx.save();
     ctx.translate(W / 2, baseY + bob * s);
     ctx.scale(s, s);
-    if (m === 'dead') ctx.globalAlpha = 0.45;
 
     drawEars(sp);
 
@@ -1078,7 +1061,7 @@ function updateUI() {
 
     el('btn-sleep').textContent = state.sleeping ? '☀ おこす' : '💤 ねる';
 
-    const locked = state.stage === 'egg' || state.dead || state.sleeping;
+    const locked = state.stage === 'egg' || state.sleeping;
     ['btn-feed', 'btn-play', 'btn-train', 'btn-bath', 'btn-clean', 'btn-med'].forEach((id) => {
         el(id).classList.toggle('disabled', locked);
     });
@@ -1131,12 +1114,10 @@ function init() {
     if (loaded) {
         state = loaded;
         const away = clamp(now() - state.lastTick, 0, OFFLINE_CAP);
-        if (away > 60 && !state.dead) {
-            offlineMode = true;
+        if (away > 60) {
             applyTime(away);
-            offlineMode = false;
             addLog(`（${Math.floor(away / 60)}分ぶん じかんが すすんだ）`);
-            if (state.hp < 40 || state.sick) {
+            if (!state.exhausted && (state.hp < 40 || state.sick)) {
                 addLog(`${state.name} が ぐったりしている… はやく おせわしよう！`);
             }
         }
