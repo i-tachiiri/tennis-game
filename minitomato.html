@@ -190,6 +190,10 @@
                     <i data-lucide="landmark" class="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse"></i>
                     <span id="vault-display">0</span> <span class="text-[10px] md:text-xs text-amber-300">金庫</span>
                 </div>
+                <!-- 超越コイン (超越ミニトマトを収穫すると解放) -->
+                <div id="transcend-display-wrap" class="hidden bg-yellow-500/20 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs md:text-base font-black text-yellow-100 border border-yellow-300/50" title="10^Nで数える超越コイン (概念上の通貨)">
+                    ☯ <span id="transcend-display">10^0</span> <span class="text-[10px] md:text-xs">超越</span>
+                </div>
                 <button id="btn-how-to" class="hover:bg-white/10 p-2 rounded-full transition" title="遊び方">
                     <i data-lucide="help-circle" class="w-6 h-6"></i>
                 </button>
@@ -583,6 +587,7 @@
             vaultCoins: 0, // ★ 新機能：絶対に減らない金庫コイン
             cosmicActive: false, // ★ 宇宙農業モードON/OFF (upgrades.cosmicModeを購入するとトグル可能)
             autoVaultActive: true, // 🏦 自動貯金ロボのON/OFF (購入後にトグル可能)
+            transcendLog: 0, // ☯ 超越コインの log10 表現 (10^N)
             weather: 'sunny',
             activePlantIndex: 0, // 選択中プランターのインデックス (0~99)
 
@@ -785,6 +790,11 @@
                 id: 'infinity', name: '♾️ 無限大∞ミニトマト',
                 desc: '【1株=10の300乗コイン】数字の限界そのもの。神々ですら扱えなかった、真に無限に近い最終果実。桁が地球上の全物理量を超越します。',
                 price: 999999999, baseBrix: 9999.0, maxBrix: 99999.0, coinMultiplier: 1e298, color: '#f5f3ff', shape: 'infinity'
+            },
+            transcend: {
+                id: 'transcend', name: '☯ 超越ミニトマト',
+                desc: '【超越コイン獲得】JavaScriptの数字の限界(10の300乗)を超えた収穫を実現。収穫するたび「超越コイン10のN乗」の記録が+500乗ずつ増えます。',
+                price: 2000000000, baseBrix: 99999.0, maxBrix: 999999.0, coinMultiplier: 1e290, color: '#facc15', shape: 'transcend'
             }
         };
 
@@ -1162,6 +1172,18 @@
             if (coinDisplay) coinDisplay.textContent = formatBigNumber(state.coins);
             if (vaultDisplay) vaultDisplay.textContent = formatBigNumber(state.vaultCoins);
 
+            // ☯ 超越コインの表示
+            const transWrap = document.getElementById('transcend-display-wrap');
+            const transDisp = document.getElementById('transcend-display');
+            if (transWrap && transDisp) {
+                if ((state.transcendLog || 0) > 0) {
+                    transWrap.classList.remove('hidden');
+                    transDisp.textContent = `10^${Math.floor(state.transcendLog).toLocaleString()}`;
+                } else {
+                    transWrap.classList.add('hidden');
+                }
+            }
+
             // 宇宙モードの背景切替
             document.body.classList.toggle('cosmic-mode', !!(state.cosmicActive && state.upgrades.cosmicMode));
 
@@ -1220,6 +1242,8 @@
                         tomatoBreedText.className = "font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-violet-500 text-xs md:text-sm animate-pulse";
                     } else if (breed.id === 'infinity') {
                         tomatoBreedText.className = "font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-white text-xs md:text-sm animate-pulse";
+                    } else if (breed.id === 'transcend') {
+                        tomatoBreedText.className = "font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-500 to-slate-900 text-xs md:text-sm animate-pulse";
                     } else {
                         tomatoBreedText.className = "font-bold text-xs md:text-sm";
                         tomatoBreedText.style.color = breed.color;
@@ -1454,6 +1478,11 @@
                         <stop offset="0%" stop-color="#a78bfa" />
                         <stop offset="100%" stop-color="#312e81" stop-opacity="0" />
                     </radialGradient>
+                    <radialGradient id="transcend-halo" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#fef3c7" />
+                        <stop offset="60%" stop-color="#facc15" />
+                        <stop offset="100%" stop-color="#78350f" stop-opacity="0" />
+                    </radialGradient>
                 </defs>
             `;
 
@@ -1589,6 +1618,23 @@
                             <!-- ユニコーンホーン -->
                             <path d="M -1 -14 L 0 -22 L 1 -14 Z" fill="#fbbf24" />
                             <circle cx="-3" cy="-3" r="1.8" fill="#fff" opacity="0.7" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'transcend') {
+                    return `
+                        <g transform="translate(${cx}, ${cy})">
+                            <!-- 陰陽の輪 -->
+                            <circle cx="0" cy="0" r="11" fill="url(#transcend-halo)" />
+                            <circle cx="0" cy="0" r="10" fill="#fef3c7" />
+                            <!-- 太極図風 -->
+                            <path d="M 0 -10 A 10 10 0 0 1 0 10 A 5 5 0 0 1 0 0 A 5 5 0 0 0 0 -10 Z" fill="#0f172a" />
+                            <circle cx="0" cy="-5" r="1.5" fill="#fef3c7" />
+                            <circle cx="0" cy="5" r="1.5" fill="#0f172a" />
+                            <!-- 神聖な光条 -->
+                            <g opacity="0.85">
+                                <line x1="-15" y1="0" x2="15" y2="0" stroke="#fef08a" stroke-width="0.6" />
+                                <line x1="0" y1="-15" x2="0" y2="15" stroke="#fef08a" stroke-width="0.6" />
+                            </g>
                         </g>
                     `;
                 } else if (breed.shape === 'multiverse') {
@@ -1852,11 +1898,12 @@
                 else if (breed.id === 'omnipotent') breedColorDisplay = 'background-image: linear-gradient(to right, #fde047, #d946ef, #6366f1)';
                 else if (breed.id === 'multiverse') breedColorDisplay = 'background-image: linear-gradient(to right, #22d3ee, #ec4899, #8b5cf6)';
                 else if (breed.id === 'infinity') breedColorDisplay = 'background-image: linear-gradient(to right, #ffffff, #fde68a, #ffffff)';
+                else if (breed.id === 'transcend') breedColorDisplay = 'background-image: linear-gradient(to right, #fef08a, #f59e0b, #0f172a)';
 
                 card.innerHTML = `
                     <div>
                         <div class="flex justify-between items-start">
-                            <span class="font-extrabold text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${ (breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'infinity') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'infinity') ? 'transparent' : 'initial'}">${breed.name}</span>
+                            <span class="font-extrabold text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${ (breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'infinity' || breed.id === 'transcend') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'infinity' || breed.id === 'transcend') ? 'transparent' : 'initial'}">${breed.name}</span>
                             <span class="text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded font-bold">糖度: ~${breed.maxBrix} Brix</span>
                         </div>
                         <p class="text-[10px] text-slate-400 mt-1 leading-tight h-8 overflow-hidden">${breed.desc}</p>
@@ -1920,7 +1967,7 @@
                         <div class="flex items-center gap-1.5">
                             <span class="text-xl">🍅</span>
                             <div>
-                                <h4 class="font-black text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'infinity') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'infinity') ? 'transparent' : 'initial'}">${breed.name}</h4>
+                                <h4 class="font-black text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'infinity' || breed.id === 'transcend') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'infinity' || breed.id === 'transcend') ? 'transparent' : 'initial'}">${breed.name}</h4>
                             </div>
                         </div>
                         <p class="text-[10px] text-slate-500">${breed.desc}</p>
@@ -2472,6 +2519,13 @@
             }
             state.stats.totalCoins = Math.min(1e300, state.stats.totalCoins + earnings);
 
+            // ☯ 超越コイン: 超越ミニトマトを収穫すると+500乗ずつ加算
+            let transcendGained = 0;
+            if (breed.id === 'transcend') {
+                transcendGained = 500;
+                state.transcendLog = (state.transcendLog || 0) + transcendGained;
+            }
+
             // リザルトモーダル
             if (harvestBreed) harvestBreed.textContent = `品種：${breed.name}`;
             if (harvestQty) harvestQty.textContent = cosmicOn ? `${formatBigNumber(yieldedCount)} 株 (1鉢×1兆株)` : `${count} 個`;
@@ -2484,6 +2538,9 @@
                 }
                 if (cosmicOn) {
                     coinDisplayHtml += ` <span class="text-[10px] text-indigo-500 font-black">🌌 宇宙×1兆</span>`;
+                }
+                if (transcendGained > 0) {
+                    coinDisplayHtml += `<br><span class="text-[12px] text-amber-700 font-black">☯ 超越コイン +10^${transcendGained}乗！ 現在 10^${Math.floor(state.transcendLog)} 超越コイン到達！</span>`;
                 }
                 harvestEarnings.innerHTML = coinDisplayHtml;
             }
@@ -2573,6 +2630,10 @@
                         state.stats.maxSweetness = finalBrix;
                     }
                     state.stats.totalCoins = Math.min(1e300, state.stats.totalCoins + earnings);
+                    // ☯ 超越コインは自動収穫でも加算
+                    if (plant.breed === 'transcend') {
+                        state.transcendLog = (state.transcendLog || 0) + 500;
+                    }
 
                     // プランターを空っぽ (エイリアン園芸師があれば同品種を自動再植え)
                     state.plants[index] = state.upgrades.alienGardener
