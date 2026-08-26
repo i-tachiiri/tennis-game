@@ -800,6 +800,11 @@
                 id: 'transcend', name: '☯ 超越ミニトマト',
                 desc: '【超越コイン獲得】JavaScriptの数字の限界(10の300乗)を超えた収穫を実現。収穫するたび「超越コイン10のN乗」の記録が+500乗ずつ増えます。',
                 price: 2000000000, baseBrix: 99999.0, maxBrix: 999999.0, coinMultiplier: 1e290, color: '#facc15', shape: 'transcend'
+            },
+            creator: {
+                id: 'creator', name: '🕊 創造神ミニトマト',
+                desc: '【1株で超越コイン+10000乗】神々をも超えた「創造主」の御業。1回の収穫で桁が10000ずつ伸びる、真の農園王の証。',
+                price: 9000000000, baseBrix: 999999.0, maxBrix: 9999999.0, coinMultiplier: 1e299, color: '#fff7ed', shape: 'creator'
             }
         };
 
@@ -1251,6 +1256,8 @@
                         tomatoBreedText.className = "font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-white text-xs md:text-sm animate-pulse";
                     } else if (breed.id === 'transcend') {
                         tomatoBreedText.className = "font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-500 to-slate-900 text-xs md:text-sm animate-pulse";
+                    } else if (breed.id === 'creator') {
+                        tomatoBreedText.className = "font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-amber-400 text-xs md:text-sm animate-pulse";
                     } else {
                         tomatoBreedText.className = "font-bold text-xs md:text-sm";
                         tomatoBreedText.style.color = breed.color;
@@ -1490,6 +1497,12 @@
                         <stop offset="60%" stop-color="#facc15" />
                         <stop offset="100%" stop-color="#78350f" stop-opacity="0" />
                     </radialGradient>
+                    <radialGradient id="creator-halo" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#ffffff" />
+                        <stop offset="45%" stop-color="#fde68a" stop-opacity="0.85" />
+                        <stop offset="80%" stop-color="#f59e0b" stop-opacity="0.35" />
+                        <stop offset="100%" stop-color="#fef3c7" stop-opacity="0" />
+                    </radialGradient>
                     <linearGradient id="darkenergy-halo" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stop-color="#a78bfa" />
                         <stop offset="50%" stop-color="#7c3aed" />
@@ -1649,6 +1662,24 @@
                             <!-- 微かな星屑 -->
                             <circle cx="-3" cy="-3" r="0.8" fill="#e0e7ff" opacity="0.85" />
                             <circle cx="4" cy="2" r="0.6" fill="#c4b5fd" opacity="0.8" />
+                        </g>
+                    `;
+                } else if (breed.shape === 'creator') {
+                    return `
+                        <g transform="translate(${cx}, ${cy})">
+                            <!-- 光背 -->
+                            <circle cx="0" cy="0" r="14" fill="url(#creator-halo)" opacity="0.85" />
+                            <!-- 天使の翼 (左右) -->
+                            <path d="M -6 -2 Q -18 -8 -14 4 Q -12 6 -6 4 Z" fill="#ffffff" stroke="#fde68a" stroke-width="0.5" />
+                            <path d="M 6 -2 Q 18 -8 14 4 Q 12 6 6 4 Z" fill="#ffffff" stroke="#fde68a" stroke-width="0.5" />
+                            <!-- 中央の白玉 -->
+                            <circle cx="0" cy="0" r="7" fill="#fef3c7" />
+                            <circle cx="0" cy="0" r="4" fill="#ffffff" />
+                            <!-- 天冠のリング -->
+                            <ellipse cx="0" cy="-10" rx="7" ry="2" fill="none" stroke="#facc15" stroke-width="1.5" />
+                            <!-- 十字光 -->
+                            <line x1="0" y1="-16" x2="0" y2="16" stroke="#fef08a" stroke-width="0.5" opacity="0.7" />
+                            <line x1="-16" y1="0" x2="16" y2="0" stroke="#fef08a" stroke-width="0.5" opacity="0.7" />
                         </g>
                     `;
                 } else if (breed.shape === 'transcend') {
@@ -1931,11 +1962,12 @@
                 else if (breed.id === 'darkenergy') breedColorDisplay = 'background-image: linear-gradient(to right, #a78bfa, #4338ca, #0f172a)';
                 else if (breed.id === 'infinity') breedColorDisplay = 'background-image: linear-gradient(to right, #ffffff, #fde68a, #ffffff)';
                 else if (breed.id === 'transcend') breedColorDisplay = 'background-image: linear-gradient(to right, #fef08a, #f59e0b, #0f172a)';
+                else if (breed.id === 'creator') breedColorDisplay = 'background-image: linear-gradient(to right, #ffffff, #fde68a, #f59e0b)';
 
                 card.innerHTML = `
                     <div>
                         <div class="flex justify-between items-start">
-                            <span class="font-extrabold text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${ (breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'darkenergy' || breed.id === 'infinity' || breed.id === 'transcend') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'darkenergy' || breed.id === 'infinity' || breed.id === 'transcend') ? 'transparent' : 'initial'}">${breed.name}</span>
+                            <span class="font-extrabold text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${ (breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'darkenergy' || breed.id === 'infinity' || breed.id === 'transcend' || breed.id === 'creator') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'darkenergy' || breed.id === 'infinity' || breed.id === 'transcend' || breed.id === 'creator') ? 'transparent' : 'initial'}">${breed.name}</span>
                             <span class="text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded font-bold">糖度: ~${breed.maxBrix} Brix</span>
                         </div>
                         <p class="text-[10px] text-slate-400 mt-1 leading-tight h-8 overflow-hidden">${breed.desc}</p>
@@ -1999,7 +2031,7 @@
                         <div class="flex items-center gap-1.5">
                             <span class="text-xl">🍅</span>
                             <div>
-                                <h4 class="font-black text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'darkenergy' || breed.id === 'infinity' || breed.id === 'transcend') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'darkenergy' || breed.id === 'infinity' || breed.id === 'transcend') ? 'transparent' : 'initial'}">${breed.name}</h4>
+                                <h4 class="font-black text-xs" style="${breedColorDisplay}; -webkit-background-clip: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'darkenergy' || breed.id === 'infinity' || breed.id === 'transcend' || breed.id === 'creator') ? 'text' : 'none'}; -webkit-text-fill-color: ${(breed.id === 'rainbow' || breed.id === 'diamond' || breed.id === 'phoenix' || breed.id === 'blackhole' || breed.id === 'bigbang' || breed.id === 'omnipotent' || breed.id === 'multiverse' || breed.id === 'darkenergy' || breed.id === 'infinity' || breed.id === 'transcend' || breed.id === 'creator') ? 'transparent' : 'initial'}">${breed.name}</h4>
                             </div>
                         </div>
                         <p class="text-[10px] text-slate-500">${breed.desc}</p>
@@ -2551,10 +2583,11 @@
             }
             state.stats.totalCoins = Math.min(1e300, state.stats.totalCoins + earnings);
 
-            // ☯ 超越コイン: 超越ミニトマトを収穫すると+500乗ずつ加算
+            // ☯ 超越コイン: 特殊品種で加算
             let transcendGained = 0;
-            if (breed.id === 'transcend') {
-                transcendGained = 500;
+            if (breed.id === 'transcend') transcendGained = 500;
+            else if (breed.id === 'creator') transcendGained = 10000;
+            if (transcendGained > 0) {
                 state.transcendLog = (state.transcendLog || 0) + transcendGained;
             }
 
@@ -2668,6 +2701,8 @@
                     // ☯ 超越コインは自動収穫でも加算
                     if (plant.breed === 'transcend') {
                         state.transcendLog = (state.transcendLog || 0) + 500;
+                    } else if (plant.breed === 'creator') {
+                        state.transcendLog = (state.transcendLog || 0) + 10000;
                     }
 
                     // プランターを空っぽ (エイリアン園芸師があれば同品種を自動再植え)
