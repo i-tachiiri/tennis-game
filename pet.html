@@ -93,6 +93,8 @@
         padding: 16px;
     }
     #modal {
+        max-height: 84vh;
+        overflow-y: auto;
         background: #fffdf7;
         border: 5px solid #78350f;
         border-radius: 20px;
@@ -198,7 +200,7 @@
         <div class="game-btn gray" id="btn-sleep" onclick="toggleSleep()">💤 ねる</div>
         <div class="game-btn" id="btn-med" style="background:#14b8a6;border-bottom-color:#0f766e" onclick="useMedicine()">💊 おくすり</div>
         <div class="game-btn gray" id="btn-status" onclick="openStatus()">📖 ずかん</div>
-        <div class="game-btn gray" id="btn-reset" onclick="confirmReset()">🔄 さいしょから</div>
+        <div class="game-btn" id="btn-shop" style="background:#0ea5e9;border-bottom-color:#0369a1" onclick="openShop()">🛒 ショップ</div>
     </div>
 </div>
 
@@ -228,6 +230,25 @@ const FOODS = {
 
 const MEDICINE_COST = 30;
 
+const SHOP = [
+    { id: 'doll',    cat: 'room', label: '🧸 ぬいぐるみ',         cost: 60,  note: 'きげんが へりにくくなる' },
+    { id: 'plant',   cat: 'room', label: '🪴 かんようしょくぶつ', cost: 90,  note: 'きれいが へりにくくなる' },
+    { id: 'shelf',   cat: 'room', label: '📚 ほんだな',           cost: 120, note: 'トレーニングの けいけんちアップ' },
+    { id: 'tv',      cat: 'room', label: '📺 テレビ',             cost: 180, note: 'あそびの きげんアップ' },
+    { id: 'tree',    cat: 'yard', label: '🌳 おおきな き',        cost: 100, note: 'げんきが へりにくくなる' },
+    { id: 'flower',  cat: 'yard', label: '🌷 はなだん',           cost: 70,  note: 'きげんが すこし へりにくくなる' },
+    { id: 'rainbow', cat: 'yard', label: '🌈 にじ',               cost: 150, note: 'みため だけ' },
+    { id: 'ribbon',  cat: 'wear', label: '🎀 リボン',             cost: 80,  note: 'みため だけ' },
+    { id: 'hat',     cat: 'wear', label: '👒 むぎわらぼうし',     cost: 110, note: 'みため だけ' },
+    { id: 'glasses', cat: 'wear', label: '👓 めがね',             cost: 130, note: 'みため だけ' }
+];
+
+const SHOP_CAT = [
+    ['room', '🏠 おうちのなか'],
+    ['yard', '🌳 そと'],
+    ['wear', '✨ みにつける']
+];
+
 let state = null;
 let particles = [];
 let action = { type: null, until: 0, dur: 1, food: null };
@@ -249,6 +270,9 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const el = (id) => document.getElementById(id);
 
 function expNeeded(level) { return 20 + level * 15; }
+
+// ショップで かったか どうか
+function has(id) { return !!(state.owned && state.owned[id]); }
 
 function currentSpecies() {
     if (state.stage === 'baby') return SPECIES.baby;
@@ -319,6 +343,8 @@ function newState() {
         sleeping: false, sick: false, sickTimer: 0,
         poops: [], poopTimer: 90,
         view: 'out',
+        owned: {},
+        wearing: null,
         care: { eat: 0, play: 0, train: 0, clean: 0 },
         log: ['たまごが とどいた！ タップして あたためよう。'],
         exhausted: false
@@ -338,6 +364,8 @@ function load() {
         if (!raw) return null;
         const s = JSON.parse(raw);
         if (!s || s.version !== 1) return null;
+        if (!s.owned) s.owned = {};        // ショップより まえの セーブ
+        if (!('wearing' in s)) s.wearing = null;
         return s;
     } catch (e) {
         return null;
@@ -362,17 +390,21 @@ function applyTime(dt) {
             addLog(`${state.name} は ぐっすり ねて めをさました！`);
         }
     } else {
+        // ショップで かったものは へる はやさを ゆるめる
+        const happyRate = 2.5 * (has('doll') ? 0.85 : 1) * (has('flower') ? 0.9 : 1);
+        const energyRate = 1.6 * (has('tree') ? 0.85 : 1);
+        const cleanRate = (2 + state.poops.length * 3) * (has('plant') ? 0.85 : 1);
         state.hunger = clamp(state.hunger - 3.2 * m, 0, 100);
-        state.happy = clamp(state.happy - 2.5 * m, 0, 100);
-        state.energy = clamp(state.energy - 1.6 * m, 0, 100);
-        state.clean = clamp(state.clean - (2 + state.poops.length * 3) * m, 0, 100);
+        state.happy = clamp(state.happy - happyRate * m, 0, 100);
+        state.energy = clamp(state.energy - energyRate * m, 0, 100);
+        state.clean = clamp(state.clean - cleanRate * m, 0, 100);
 
         state.poopTimer -= dt;
         if (state.poopTimer <= 0) {
             state.poopTimer = 90 + Math.random() * 70;
             if (state.poops.length < 5) {
                 // ペットや おうちに かぶらないよう ひだり手前に ならべる
-                state.poops.push({ x: 0.10 + state.poops.length * 0.055 + Math.random() * 0.02 });
+                state.poops.push({ x: 0.06 + state.poops.length * 0.05 + Math.random() * 0.02 });
             }
         }
     }
@@ -519,7 +551,7 @@ function stopMini() {
     else { coins = 3; happy = 6; label = 'ざんねん…'; }
 
     state.coins += coins;
-    state.happy = clamp(state.happy + happy, 0, 100);
+    state.happy = clamp(state.happy + happy * (has('tv') ? 1.3 : 1), 0, 100);
     state.energy = clamp(state.energy - 12, 0, 100);
     state.hunger = clamp(state.hunger - 8, 0, 100);
     state.clean = clamp(state.clean - 6, 0, 100);
@@ -546,7 +578,7 @@ function doTrain() {
     setAction('train', 2.5);
     burst('sweat', 6);
     addLog(`💪 トレーニング！ ちからが ${state.power} に なった (+8🪙)`);
-    gainExp(15);
+    gainExp(has('shelf') ? 20 : 15);
     save();
 }
 
@@ -627,6 +659,59 @@ function useMedicine() {
     save();
 }
 
+function openShop() {
+    let html = `<div class="font-bold text-lg mb-1">🛒 ショップ</div>
+        <div class="text-sm font-bold text-amber-700 mb-3">もっているコイン ${state.coins}🪙</div>`;
+    SHOP_CAT.forEach(function (pair) {
+        const cat = pair[0];
+        html += `<div class="text-xs font-bold text-gray-600 text-left mt-3 mb-1">${pair[1]}</div>`;
+        SHOP.filter(function (it) { return it.cat === cat; }).forEach(function (it) {
+            const owned = has(it.id);
+            let btn;
+            if (!owned) {
+                const poor = state.coins < it.cost;
+                btn = `<div class="game-btn ${poor ? 'disabled' : ''}" onclick="buyItem('${it.id}')">${it.cost}🪙 で かう</div>`;
+            } else if (it.cat === 'wear') {
+                const on = state.wearing === it.id;
+                btn = `<div class="game-btn ${on ? 'pink' : 'gray'}" onclick="wearItem('${it.id}')">${on ? 'はずす' : 'つける'}</div>`;
+            } else {
+                btn = `<div class="game-btn gray disabled">かざってある</div>`;
+            }
+            html += `<div class="flex items-center gap-2 mb-2">
+                <div class="text-left text-sm" style="flex:1">
+                    <div class="font-bold">${it.label}</div>
+                    <div class="text-xs text-gray-500">${it.note}</div>
+                </div>
+                <div style="width:38%">${btn}</div>
+            </div>`;
+        });
+    });
+    html += `<div class="game-btn gray mt-3" onclick="hideModal()">とじる</div>`;
+    showModal(html);
+}
+
+function buyItem(id) {
+    const it = SHOP.filter(function (x) { return x.id === id; })[0];
+    if (!it || has(id)) return;
+    if (state.coins < it.cost) { addLog('コインが たりない…'); return; }
+    state.coins -= it.cost;
+    state.owned[id] = true;
+    if (it.cat === 'wear') state.wearing = id;
+    burst('star', 10);
+    addLog(`🛒 ${it.label} を かった！`);
+    save();
+    updateUI();
+    openShop();
+}
+
+function wearItem(id) {
+    if (!has(id)) return;
+    state.wearing = state.wearing === id ? null : id;
+    addLog(state.wearing ? `${state.name} は ${SHOP.filter(function (x) { return x.id === id; })[0].label} を つけた！` : `${state.name} は みにつけていたものを はずした。`);
+    save();
+    openShop();
+}
+
 function openStatus() {
     const c = state.care;
     const sp = currentSpecies();
@@ -645,6 +730,7 @@ function openStatus() {
         </div>
         <div class="text-xs text-gray-500 mt-3">Lv9で いちばん おおい おせわの すがたに しんかするよ</div>
         <div class="game-btn gray mt-3" onclick="hideModal()">とじる</div>
+        <div class="game-btn pink mt-2" onclick="confirmReset()">🔄 さいしょから</div>
     `);
 }
 
@@ -895,6 +981,132 @@ function drawHouse(t) {
     }
 }
 
+function drawYard(t) {
+    const W = cw(), H = ch(), s = W / 380;
+    const night = state.sleeping;
+
+    if (has('rainbow') && !night) {
+        const cols = ['#ef4444', '#f97316', '#facc15', '#4ade80', '#38bdf8', '#a78bfa'];
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, W, H * 0.76);       // じめんより 下には えがかない
+        ctx.clip();
+        ctx.lineWidth = 7 * s;
+        ctx.globalAlpha = 0.7;
+        cols.forEach(function (c, i) {
+            ctx.strokeStyle = c;
+            ctx.beginPath();
+            ctx.arc(W * 0.45, H * 0.86, W * 0.30 - i * 7 * s, Math.PI, Math.PI * 2);
+            ctx.stroke();
+        });
+        ctx.restore();
+    }
+
+    if (has('tree')) {
+        const x = W * 0.12, y = H * 0.80;
+        ctx.fillStyle = night ? '#4a2c10' : '#78350f';
+        ctx.fillRect(x - 7 * s, y - 48 * s, 14 * s, 48 * s);
+        ctx.fillStyle = night ? '#14532d' : '#22c55e';
+        ellipse(x, y - 66 * s, 34 * s, 27 * s);
+        ellipse(x - 23 * s, y - 52 * s, 21 * s, 17 * s);
+        ellipse(x + 23 * s, y - 54 * s, 23 * s, 18 * s);
+        ctx.fillStyle = night ? '#166534' : '#4ade80';
+        ellipse(x - 8 * s, y - 74 * s, 14 * s, 11 * s);
+    }
+
+    if (has('flower')) {
+        const fx = W * 0.30, fy = H * 0.81;
+        ctx.fillStyle = night ? '#4a2c10' : '#78350f';
+        ctx.fillRect(fx - 30 * s, fy - 7 * s, 60 * s, 8 * s);
+        [[-21, '#f472b6'], [-7, '#facc15'], [7, '#fb7185'], [21, '#a78bfa']].forEach(function (f) {
+            ctx.strokeStyle = night ? '#14532d' : '#16a34a';
+            ctx.lineWidth = 2.5 * s;
+            ctx.beginPath();
+            ctx.moveTo(fx + f[0] * s, fy - 7 * s);
+            ctx.lineTo(fx + f[0] * s, fy - 21 * s);
+            ctx.stroke();
+            ctx.fillStyle = f[1];
+            for (let k = 0; k < 5; k++) {
+                const a = k / 5 * Math.PI * 2;
+                ellipse(fx + f[0] * s + Math.cos(a) * 5 * s, fy - 21 * s + Math.sin(a) * 5 * s, 3.5 * s, 3.5 * s);
+            }
+            ctx.fillStyle = '#fff';
+            ellipse(fx + f[0] * s, fy - 21 * s, 2.5 * s, 2.5 * s);
+        });
+    }
+}
+
+// へやに かざるもの
+function drawRoomStuff(t) {
+    const W = cw(), H = ch(), s = W / 380;
+    const night = state.sleeping;
+
+    if (has('tv')) {
+        const x = W * 0.08, y = H * 0.83;
+        ctx.fillStyle = '#57534e';
+        ctx.fillRect(x - 5 * s, y - 11 * s, 10 * s, 11 * s);
+        ctx.fillRect(x - 20 * s, y - 2 * s, 40 * s, 4 * s);
+        ctx.fillStyle = '#1f2937';
+        ctx.fillRect(x - 28 * s, y - 45 * s, 56 * s, 35 * s);
+        ctx.fillStyle = night ? '#334155' : '#7dd3fc';
+        ctx.fillRect(x - 24 * s, y - 41 * s, 48 * s, 27 * s);
+        if (!night) {
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.fillRect(x - 20 * s, y - 37 * s, 16 * s, 3 * s);
+            ctx.fillStyle = '#fde68a';
+            ellipse(x + 10 * s, y - 30 * s, 7 * s, 7 * s);
+        }
+    }
+
+    if (has('shelf')) {
+        const x = W * 0.55, y = H * 0.81;
+        ctx.fillStyle = night ? '#6b4a2a' : '#a16207';
+        ctx.fillRect(x - 25 * s, y - 66 * s, 50 * s, 66 * s);
+        const books = [['#ef4444', '#facc15', '#38bdf8'], ['#4ade80', '#f472b6'], ['#a78bfa', '#fb923c', '#22d3ee']];
+        for (let i = 0; i < 3; i++) {
+            const sy = y - (62 - i * 21) * s;
+            ctx.fillStyle = night ? '#3b2f4f' : '#fde8c8';
+            ctx.fillRect(x - 21 * s, sy, 42 * s, 17 * s);
+            books[i].forEach(function (c, k) {
+                ctx.fillStyle = night ? 'rgba(0,0,0,0.35)' : c;
+                ctx.fillRect(x - 18 * s + k * 9 * s, sy + 3 * s, 6 * s, 13 * s);
+            });
+        }
+    }
+
+    if (has('plant')) {
+        const x = W * 0.93, y = H * 0.87;
+        ctx.fillStyle = night ? '#7c2d12' : '#c2410c';
+        ctx.beginPath();
+        ctx.moveTo(x - 14 * s, y - 20 * s);
+        ctx.lineTo(x + 14 * s, y - 20 * s);
+        ctx.lineTo(x + 9 * s, y);
+        ctx.lineTo(x - 9 * s, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = night ? '#166534' : '#22c55e';
+        ellipse(x, y - 34 * s, 9 * s, 16 * s);
+        ellipse(x - 13 * s, y - 28 * s, 13 * s, 8 * s);
+        ellipse(x + 13 * s, y - 30 * s, 13 * s, 8 * s);
+    }
+
+    if (has('doll')) {
+        const x = W * 0.20, y = H * 0.91;
+        ctx.fillStyle = 'rgba(0,0,0,0.14)';
+        ellipse(x, y + 1 * s, 14 * s, 4 * s);
+        ctx.fillStyle = night ? '#7c5a3a' : '#b45309';
+        ellipse(x, y - 11 * s, 13 * s, 11 * s);
+        ellipse(x, y - 27 * s, 11 * s, 10 * s);
+        ellipse(x - 9 * s, y - 34 * s, 5 * s, 5 * s);
+        ellipse(x + 9 * s, y - 34 * s, 5 * s, 5 * s);
+        ctx.fillStyle = '#fde68a';
+        ellipse(x, y - 25 * s, 5 * s, 4 * s);
+        ctx.fillStyle = '#1f2937';
+        ellipse(x - 4 * s, y - 29 * s, 1.6 * s, 1.6 * s);
+        ellipse(x + 4 * s, y - 29 * s, 1.6 * s, 1.6 * s);
+    }
+}
+
 function drawRoom(t) {
     const W = cw(), H = ch();
     const night = state.sleeping;
@@ -989,6 +1201,8 @@ function drawRoom(t) {
     ellipse(W * IN_X, H * 0.90, W * 0.20, H * 0.055);
     ctx.fillStyle = night ? '#584a73' : '#fecdd3';
     ellipse(W * IN_X, H * 0.90, W * 0.13, H * 0.035);
+
+    drawRoomStuff(t);
 }
 
 function drawBedBack(t) {
@@ -1285,6 +1499,41 @@ function drawCreature(t) {
 
     drawEyes(m, t);
     drawMouth(m, t);
+
+    if (state.wearing === 'hat') {                       // むぎわらぼうし
+        ctx.fillStyle = '#fcd34d';
+        ellipse(0, -38, 54, 13);
+        ctx.fillStyle = '#fbbf24';
+        ellipse(0, -50, 26, 17);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-26, -47, 52, 7);
+    } else if (state.wearing === 'ribbon') {             // リボン
+        ctx.fillStyle = '#f472b6';
+        ctx.beginPath();
+        ctx.moveTo(-30, -34); ctx.lineTo(-50, -45); ctx.lineTo(-50, -23);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-30, -34); ctx.lineTo(-10, -45); ctx.lineTo(-10, -23);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ec4899';
+        ellipse(-30, -34, 6, 6);
+    } else if (state.wearing === 'glasses') {            // めがね
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ellipse(-16, -8, 13, 13);
+        ellipse(16, -8, 13, 13);
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(-16, -8, 13, 0, Math.PI * 2);
+        ctx.moveTo(29, -8);
+        ctx.arc(16, -8, 13, 0, Math.PI * 2);
+        ctx.moveTo(-3, -10); ctx.lineTo(3, -10);
+        ctx.moveTo(-29, -11); ctx.lineTo(-42, -15);
+        ctx.moveTo(29, -11); ctx.lineTo(42, -15);
+        ctx.stroke();
+    }
 
     // よごれ
     if (state.clean < 40) {
@@ -1590,6 +1839,7 @@ function frame(ts) {
 
     if (outside) {
         drawBackground(t);
+        drawYard(t);
         drawHouse(t);
     } else {
         drawRoom(t);
