@@ -210,6 +210,7 @@
     </div>
     <div class="grid grid-cols-3 gap-2" id="row-extra">
         <div class="game-btn blue" id="btn-talk" style="display:none" onclick="openTalk()">🤖 ロボット</div>
+        <div class="game-btn pink" id="btn-bank" style="display:none" onclick="openBank()">🐷 ちょきん</div>
         <div class="game-btn gray" id="btn-status" onclick="openStatus()">📖 ずかん</div>
         <div class="game-btn" id="btn-report" style="background:#7c3aed;border-bottom-color:#5b21b6" onclick="openReport()">📊 レポート</div>
         <div class="game-btn" id="btn-shop" style="background:#0ea5e9;border-bottom-color:#0369a1" onclick="openShop()">🛒 ショップ</div>
@@ -378,7 +379,9 @@ const SHOP = [
     { id: 'curtain', cat: 'room', label: '🪟 カーテン',             cost: 70,  note: 'よるは しまって ぐっすり ねむれる' },
     { id: 'toilet',  cat: 'room', label: '🚽 ペットトイレ',         cost: 140, note: 'うんちが トイレに はいる' },
     { id: 'aircon',  cat: 'room', label: '❄️ エアコン',             cost: 200, note: 'げんきが へりにくくなる' },
-    { id: 'bank',    cat: 'room', label: '🐷 ちょきんばこ',         cost: 250, note: 'おしごとの おだちんが 2わり アップ' },
+    { id: 'bank',    cat: 'room', label: '🐷 ちょきんばこ',         cost: 250, note: 'コインを ちょきん できる／おだちん 2わり アップ' },
+    { id: 'safe',    cat: 'room', label: '🔐 きんこ',               cost: 1200, note: 'ちょきんできる かずが 1000ばいに' },
+    { id: 'vault',   cat: 'room', label: '🏦 ぎんこうの こうざ',     cost: 20000, note: 'いくらでも ちょきんできる／りそくも アップ' },
     { id: 'garland', cat: 'room', label: '🎏 ガーランド',           cost: 60,  note: 'みため だけ' },
     { id: 'poster',  cat: 'room', label: '🖼 ポスター',             cost: 80,  note: 'みため だけ' },
     { id: 'guitar',  cat: 'room', label: '🎸 ギター',               cost: 160, note: 'きげんが へりにくくなる' },
@@ -840,8 +843,8 @@ function newState() {
         level: 1, exp: 0, coins: 60, power: 0,
         sleeping: false, sick: false, sickTimer: 0,
         poops: [], poopTimer: 90, postTimer: 180, robotTimer: 45, chatTimer: 20, jobs: 0,
-        helps: 0, lastTalk: 0,
-        stats: { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0 },
+        helps: 0, lastTalk: 0, savings: 0, bankTimer: 180,
+        stats: { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0, interest: 0 },
         view: 'out',
         owned: {},
         worn: {},
@@ -884,6 +887,9 @@ function load() {
         if (typeof s.lastTalk !== 'number') s.lastTalk = 0;
         if (typeof s.stats.talks !== 'number') s.stats.talks = 0;
         if (typeof s.stats.orders !== 'number') s.stats.orders = 0;
+        if (typeof s.stats.interest !== 'number') s.stats.interest = 0;
+        if (typeof s.savings !== 'number') s.savings = 0;         // ちょきんばこが なかった ころの セーブ
+        if (typeof s.bankTimer !== 'number') s.bankTimer = 180;
         return s;
     } catch (e) {
         return null;
@@ -943,6 +949,23 @@ function applyTime(dt) {
         if (state.chatTimer <= 0) {
             state.chatTimer = 22 + Math.random() * 16;
             robotSay(robotLine());
+        }
+    }
+
+    if (has('bank') && state.savings > 0) {  // ちょきんに りそくが つく（1日 = 180びょう ごと）
+        state.bankTimer = (typeof state.bankTimer === 'number' ? state.bankTimer : DAY_SEC) - dt;
+        if (state.bankTimer <= 0) {
+            const times = Math.min(20, 1 + Math.floor(-state.bankTimer / DAY_SEC));
+            state.bankTimer = DAY_SEC;
+            let gain = 0;
+            for (let i = 0; i < times; i++) gain += Math.floor((state.savings + gain) * bankRate());
+            gain = Math.max(0, Math.min(gain, bankCap() - state.savings));
+            if (gain > 0) {
+                state.savings += gain;
+                state.stats.interest = Math.min(MAX_COINS, (state.stats.interest || 0) + gain);
+                addLog(`🐷 ちょきんに りそくが ついた！ +${coinText(gain)}🪙`);
+                robotSay('ちょきん、ふえてるよ！');
+            }
         }
     }
 
@@ -1158,6 +1181,7 @@ const ORDER_CHIPS = [
     ['💼 おしごと して', 'おしごと して'],
     ['🏞 こうえんに いこう', 'こうえんに いこう'],
     ['📚 べんきょうして', 'べんきょうして'],
+    ['🐷 ちょきんしたい', 'ちょきんしたい'],
     ['🏪 おみせに いこう', 'おみせに いこう'],
     ['💊 なおして', 'なおして'],
     ['💤 ねかせて', 'ねかせて'],
@@ -1225,6 +1249,7 @@ const ORDERS = [
     { key: 'play',    words: ['あそ', '遊', 'たのし', 'ゲーム', 'あいて'] },
     { key: 'train',   words: ['きたえ', '鍛え', 'トレーニング', 'ちから', 'きんとれ', '筋トレ', 'うんどう', '運動'] },
     { key: 'job',     words: ['しごと', '仕事', 'はたら', '働', 'かせ', '稼', 'コイン', 'おかね', 'お金', 'バイト'] },
+    { key: 'bank',    words: ['ちょきん', '貯金', 'ためて', 'ちょきんばこ', 'ためる'] },
     { key: 'shop',    words: ['ショップ', 'かいもの', '買い物', 'おみせ', 'みせ', 'かって', '買って'] },
     { key: 'report',  words: ['レポート', 'せいせき', 'きろく', '記録'] },
     { key: 'status',  words: ['ずかん', '図鑑', 'ステータス'] },
@@ -1390,6 +1415,12 @@ function runOrder(key, txt) {
         if (!j) { addLog('🤖「いま できる おしごとが ないよ。げんきを ためよう」'); robotSay('いま できる おしごとが ないよ'); return; }
         robotSay(`${j.label} が よさそう！`);
         doJob(j.id);
+        return;
+    }
+    if (key === 'bank') {
+        if (!has('bank')) { addLog('🤖「ちょきんばこが まだ ないよ。ショップで かおう」'); robotSay('ちょきんばこが まだ ないよ'); return; }
+        robotSay('ちょきんばこを もってきたよ！');
+        openBank();
         return;
     }
     if (key === 'shop') { robotSay('ショップを ひらくね'); openShop(); return; }
@@ -1920,6 +1951,124 @@ function takeOffAll() {
     openShop();
 }
 
+/* ---------------- ちょきんばこ ---------------- */
+
+// いれられる かず（ショップで おおきく できる）
+function bankCap() {
+    if (has('vault')) return MAX_COINS;
+    if (has('safe')) return 10000000;
+    if (has('bank')) return 10000;
+    return 0;
+}
+
+// 1日（180びょう）ごとに つく りそく
+function bankRate() { return has('vault') ? 0.05 : has('safe') ? 0.04 : 0.03; }
+
+let bankDraft = '';
+
+function setBankDraft(v) { bankDraft = v; }
+
+function bankAmount(kind, which) {
+    const have = kind === 'in' ? state.coins : state.savings;
+    if (which === 'all') return have;
+    if (which === 'half') return Math.floor(have / 2);
+    return which;
+}
+
+function bankPut(which) {
+    const room = bankCap() - state.savings;
+    const amt = Math.min(bankAmount('in', which), state.coins, room);
+    if (amt <= 0) {
+        addLog(room <= 0 ? '🐷 ちょきんばこは もう いっぱい！' : 'いれる コインが たりない…');
+        renderBank();
+        return;
+    }
+    state.coins -= amt;
+    state.savings += amt;
+    burst('star', 4);
+    addLog(`🐷 ${coinText(amt)}🪙 を ちょきんばこに いれた！`);
+    robotSay('しっかり ためようね！');
+    save();
+    renderBank();
+}
+
+function bankTake(which) {
+    const amt = Math.min(bankAmount('out', which), state.savings);
+    if (amt <= 0) { addLog('ちょきんばこは からっぽ…'); renderBank(); return; }
+    state.savings -= amt;
+    state.coins = Math.min(MAX_COINS, state.coins + amt);
+    burst('heart', 3);
+    addLog(`🐷 ちょきんばこから ${coinText(amt)}🪙 だした。`);
+    save();
+    renderBank();
+}
+
+// にゅうりょくらんの かずを つかう
+function bankTyped(dir) {
+    const box = el('bank-input');
+    const raw = (box ? box.value : bankDraft).replace(/[^0-9]/g, '');
+    const n = parseInt(raw, 10);
+    if (!raw || !isFinite(n) || n <= 0) { addLog('かずを いれてね（れい: 500）'); return; }
+    bankDraft = '';
+    if (dir === 'in') bankPut(n); else bankTake(n);
+}
+
+function openBank() {
+    if (!has('bank')) {
+        showModal(`<div class="font-bold text-lg mb-2">🐷 ちょきんばこ</div>
+            <div class="text-left text-sm mb-3" style="background:#fef3c7;border-radius:10px;padding:10px;line-height:1.6">
+                ショップ（リビング）の <b>🐷 ちょきんばこ</b>を かうと、コインを ためられるように なるよ！
+            </div>
+            <div class="game-btn gray" onclick="hideModal()">とじる</div>`);
+        return;
+    }
+    renderBank();
+}
+
+function renderBank() {
+    const cap = bankCap();
+    const pct = cap > 0 ? Math.min(100, state.savings / cap * 100) : 0;
+    const nextUp = !has('safe') ? '🔐 きんこ を かうと 1000ばい ためられる！'
+        : !has('vault') ? '🏦 ぎんこうの こうざ を かうと いくらでも ためられる！'
+        : 'いちばん おおきな ちょきんばこ だよ！';
+    const puts = [['+100', 100], ['+1000', 1000], ['はんぶん', 'half'], ['ぜんぶ', 'all']]
+        .map(function (b) { return `<div class="game-btn" onclick="bankPut(${typeof b[1] === 'number' ? b[1] : `'${b[1]}'`})">${b[0]}</div>`; }).join('');
+    const takes = [['-100', 100], ['-1000', 1000], ['はんぶん', 'half'], ['ぜんぶ', 'all']]
+        .map(function (b) { return `<div class="game-btn gray" onclick="bankTake(${typeof b[1] === 'number' ? b[1] : `'${b[1]}'`})">${b[0]}</div>`; }).join('');
+
+    showModal(`
+        <div class="font-bold text-lg mb-1">🐷 ちょきんばこ</div>
+        <div class="text-xs text-gray-600 mb-2">1日ごとに りそくが ${Math.round(bankRate() * 100)}% つくよ</div>
+
+        <div style="background:#fce7f3;border-radius:14px;padding:10px" class="mb-3">
+            <div class="text-2xl font-bold" style="color:#be185d">${coinText(state.savings)}🪙</div>
+            <div class="bar-outer mt-1"><div class="bar-inner" style="width:${pct}%;background:#ec4899"></div></div>
+            <div class="text-xs text-gray-600 mt-1">いれられる かず ${coinText(cap)}🪙 まで</div>
+        </div>
+
+        <div class="text-sm font-bold text-amber-700 mb-2">もっているコイン ${coinText(state.coins)}🪙</div>
+
+        <div class="text-xs font-bold text-gray-600 text-left mb-1">🐷 ちょきんばこに いれる</div>
+        <div class="grid grid-cols-4 gap-1 mb-2">${puts}</div>
+        <div class="text-xs font-bold text-gray-600 text-left mb-1">💰 ちょきんばこから だす</div>
+        <div class="grid grid-cols-4 gap-1 mb-3">${takes}</div>
+
+        <div class="text-xs font-bold text-gray-600 text-left mb-1">すきな かずだけ</div>
+        <input id="bank-input" value="${escAttr(bankDraft)}" placeholder="れい: 500" inputmode="numeric"
+            oninput="setBankDraft(this.value)"
+            onkeydown="if(event.key==='Enter'){bankTyped('in');}"
+            style="width:100%;box-sizing:border-box;font-family:inherit;font-size:0.95rem;padding:9px 10px;
+                   border:3px solid #78350f;border-radius:12px;background:#fff;margin-bottom:6px">
+        <div class="grid grid-cols-2 gap-1 mb-3">
+            <div class="game-btn" onclick="bankTyped('in')">いれる</div>
+            <div class="game-btn gray" onclick="bankTyped('out')">だす</div>
+        </div>
+
+        <div class="text-xs text-left" style="background:#fef3c7;border-radius:10px;padding:8px">${nextUp}</div>
+        <div class="game-btn gray mt-3" onclick="hideModal()">とじる</div>
+    `);
+}
+
 function openReport() {
     const c = state.care;
     const st = state.stats || { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0 };
@@ -1974,6 +2123,7 @@ function openReport() {
             🤖 ロボットの おてつだい ${state.helps || 0}かい ／ 💬 おしゃべり ${st.talks || 0}かい<br>
             🎙 ロボットへの おねがい ${st.orders || 0}かい<br>
             🪙 これまでに かせいだ コイン ${coinText(st.earned)}<br>
+            🐷 ちょきん ${coinText(state.savings || 0)}／${coinText(bankCap())}（りそくで +${coinText(st.interest || 0)}）<br>
             🛒 もちもの ${ownedCount}／${SHOP.length}（みにつけ ${wornCount}）<br>
             🎪 できる あそび ${actCount}／${ACTIVITIES.length}
         </div>
@@ -4586,6 +4736,16 @@ function drawRoomFloor(t) {
 
     if (has('bank')) {                                      // ちょきんばこ
         const x = W * 0.66, y = H * 0.96;
+        const fill = bankCap() > 0 ? Math.min(1, (state.savings || 0) / bankCap()) : 0;
+        if (fill > 0) {                                     // ためた ぶんだけ コインが つみあがる
+            const n = 1 + Math.floor(fill * 4.99);
+            for (let i = 0; i < n; i++) {
+                ctx.fillStyle = night ? '#a16207' : '#fbbf24';
+                ellipse(x - 30 * s, y - 3 * s - i * 3.5 * s, 6 * s, 2.6 * s);
+                ctx.fillStyle = night ? '#78350f' : '#f59e0b';
+                ellipse(x - 30 * s, y - 2 * s - i * 3.5 * s, 6 * s, 2.6 * s);
+            }
+        }
         ctx.fillStyle = night ? '#7f3f5f' : '#f472b6';
         ctx.fillRect(x - 15 * s, y - 6 * s, 7 * s, 6 * s);
         ctx.fillRect(x + 6 * s, y - 6 * s, 7 * s, 6 * s);
@@ -6618,8 +6778,10 @@ function updateUI() {
     el('btn-med').classList.toggle('disabled', locked || !state.sick);
 
     const talk = has('robot') && state.stage !== 'egg';   // ロボットが いるときだけ はなせる
+    const bank = has('bank');
     el('btn-talk').style.display = talk ? '' : 'none';
-    el('row-extra').className = 'grid ' + (talk ? 'grid-cols-4' : 'grid-cols-3') + ' gap-2';
+    el('btn-bank').style.display = bank ? '' : 'none';
+    el('row-extra').className = 'grid grid-cols-' + (3 + (talk ? 1 : 0) + (bank ? 1 : 0)) + ' gap-2';
 }
 
 /* ---------------- main loop ---------------- */
