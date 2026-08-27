@@ -147,9 +147,11 @@
             <div class="text-sm font-bold text-amber-700" id="coin-view">🪙 0</div>
         </div>
         <canvas id="stage"></canvas>
-        <div class="grid grid-cols-2 gap-2 mt-2">
+        <div class="grid grid-cols-4 gap-1 mt-2">
             <div class="game-btn green" id="btn-view-out" onclick="setView('out')">🌳 そと</div>
-            <div class="game-btn" id="btn-view-in" style="background:#a16207;border-bottom-color:#713f12" onclick="setView('in')">🏠 おうちのなか</div>
+            <div class="game-btn" id="btn-view-living" style="background:#a16207;border-bottom-color:#713f12" onclick="setView('living')">🛋 リビング</div>
+            <div class="game-btn" id="btn-view-kitchen" style="background:#0d9488;border-bottom-color:#115e59" onclick="setView('kitchen')">🍳 キッチン</div>
+            <div class="game-btn purple" id="btn-view-bed" onclick="setView('bed')">🛏 2かい</div>
         </div>
         <div class="flex justify-between text-xs font-bold mt-2 text-gray-600">
             <span id="stage-view">たまご</span>
@@ -559,6 +561,7 @@ function load() {
             if (s.wearing) s.worn[s.wearing] = true;
         }
         delete s.wearing;
+        if (s.view === 'in') s.view = 'living';          // へやが 1つだった ころの セーブ
         if (!s.theme) s.theme = {};
         Object.keys(s.theme).forEach(function (k) {      // 1まいだけの ころの セーブ
             if (!Array.isArray(s.theme[k])) s.theme[k] = [s.theme[k]];
@@ -879,18 +882,23 @@ function doCleanPoop() {
     save();
 }
 
-function isOutside() { return state.view !== 'in'; }
+function isOutside() { return state.view === 'out' || !state.view; }
+function inBedroom() { return state.view === 'bed'; }
+
+const ROOM_NAME = { living: 'リビング', kitchen: 'キッチン', bed: '2かいの しんしつ' };
 
 function petTarget() {
     if (isOutside()) return state.sleeping ? DOOR_X : 0.5;
-    return state.sleeping ? BED_X : IN_X;
+    if (inBedroom()) return state.sleeping ? BED_X : IN_X;
+    if (state.view === 'kitchen') return 0.74;      // ながしだいの まえは あけておく
+    return IN_X;
 }
 
 function setView(v) {
     if (state.view === v) return;
     state.view = v;
     petPos = petTarget();            // ばしょが かわるので すぐ そこに立たせる
-    addLog(v === 'in' ? `🏠 おうちの なかに はいった。` : `🌳 そとに でた。`);
+    addLog(v === 'out' ? `🌳 そとに でた。` : `🏠 ${ROOM_NAME[v]} に きた。`);
     save();
     updateUI();
 }
@@ -905,6 +913,11 @@ function toggleSleep() {
             // げんきが まんタンだと すぐ おきてしまうので おうちに いれない
             addLog(`${state.name} は げんきいっぱいで ねむくないみたい。`);
             return;
+        }
+        if (!isOutside() && !inBedroom()) {
+            state.view = 'bed';                       // ベッドは 2かいに ある
+            petPos = IN_X;
+            addLog(`🛏 ${state.name} は 2かいへ ねに あがった。`);
         }
         state.sleeping = true;
         addLog(isOutside()
@@ -1235,28 +1248,69 @@ function drawHouse(t) {
 
     // えんとつ
     ctx.fillStyle = night ? '#7c2d12' : '#9a3412';
-    ctx.fillRect(22, -106, 15, 30);
+    ctx.fillRect(22, -156, 15, 30);
 
-    // やね
+    // やね（2かいだて）
     ctx.save();
     ctx.beginPath();
-    ctx.moveTo(-56, -54); ctx.lineTo(0, -98); ctx.lineTo(56, -54);
+    ctx.moveTo(-56, -104); ctx.lineTo(0, -148); ctx.lineTo(56, -104);
     ctx.closePath();
     ctx.clip();
-    paintBands(-56, -98, 112, 46, styleColors('roof', night, '#dc2626', '#7f1d1d'));
+    paintBands(-56, -148, 112, 46, styleColors('roof', night, '#dc2626', '#7f1d1d'));
     ctx.restore();
     ctx.beginPath();
-    ctx.moveTo(-56, -54); ctx.lineTo(0, -98); ctx.lineTo(56, -54);
+    ctx.moveTo(-56, -104); ctx.lineTo(0, -148); ctx.lineTo(56, -104);
     ctx.closePath();
     ctx.strokeStyle = 'rgba(60,20,10,0.5)';
     ctx.lineWidth = 3;
     ctx.stroke();
 
     // かべ
-    paintBands(-44, -54, 88, 58, styleColors('wall2', night, '#e0b884', '#7c5a3a'));
+    paintBands(-44, -104, 88, 108, styleColors('wall2', night, '#e0b884', '#7c5a3a'));
     ctx.strokeStyle = 'rgba(80,45,15,0.45)';
     ctx.lineWidth = 3;
-    ctx.strokeRect(-44, -54, 88, 58);
+    ctx.strokeRect(-44, -104, 88, 108);
+    ctx.beginPath();                                  // 1かいと 2かいの さかいめ
+    ctx.moveTo(-44, -54); ctx.lineTo(44, -54);
+    ctx.stroke();
+
+    // 2かいの まど（ねているときは ここに あかりが つく）
+    ctx.fillStyle = night ? '#fde68a' : '#bae6fd';
+    if (night) { ctx.shadowBlur = 18; ctx.shadowColor = '#fde68a'; }
+    ctx.fillRect(-32, -94, 26, 24);
+    ctx.shadowBlur = 0;
+    if (petHidden) {                                  // まどごしの ねがお
+        const sp2 = currentSpecies();
+        ctx.fillStyle = sp2.body;
+        ellipse(-19, -81, 9.5, 8.5);
+        ctx.fillStyle = 'rgba(248,113,113,0.5)';
+        ellipse(-24, -79, 2.5, 1.8);
+        ellipse(-14, -79, 2.5, 1.8);
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineWidth = 1.8;
+        [-22.5, -15.5].forEach(function (ex) {
+            ctx.beginPath();
+            ctx.arc(ex, -83, 2.6, Math.PI * 0.15, Math.PI * 0.85);
+            ctx.stroke();
+        });
+    }
+    ctx.strokeStyle = night ? '#92400e' : '#78350f';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-32, -94, 26, 24);
+    if (!petHidden) {
+        ctx.beginPath();
+        ctx.moveTo(-19, -94); ctx.lineTo(-19, -70);
+        ctx.moveTo(-32, -82); ctx.lineTo(-6, -82);
+        ctx.stroke();
+    }
+    ctx.fillStyle = night ? '#3f2d1f' : '#bae6fd';    // 2かいの もうひとつの まど
+    ctx.fillRect(10, -94, 24, 22);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillRect(10, -94, 7, 22);
+    ctx.fillRect(27, -94, 7, 22);
+    ctx.strokeStyle = night ? '#92400e' : '#78350f';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(10, -94, 24, 22);
 
     // げんかん
     ctx.fillStyle = night ? '#5b3a1a' : '#8b5e34';
@@ -1292,49 +1346,25 @@ function drawHouse(t) {
     ctx.closePath();
     ctx.fill();
 
-    // まど（よるは あかりが ともる）
-    ctx.fillStyle = night ? '#fde68a' : '#bae6fd';
-    if (night) { ctx.shadowBlur = 18; ctx.shadowColor = '#fde68a'; }
+    // 1かいの まど（ねている よるは あかりを けす）
+    ctx.fillStyle = night ? '#3f2d1f' : '#bae6fd';
     ctx.fillRect(12, -44, 26, 24);
-    ctx.shadowBlur = 0;
-
-    // ねているときは まどごしに ねがおが みえる
-    if (petHidden) {
-        const sp = currentSpecies();
-        ctx.fillStyle = sp.body;
-        ellipse(25, -31, 9.5, 8.5);
-        ctx.fillStyle = 'rgba(248,113,113,0.5)';
-        ellipse(20, -29, 2.5, 1.8);
-        ellipse(30, -29, 2.5, 1.8);
-        ctx.strokeStyle = '#1f2937';
-        ctx.lineWidth = 1.8;
-        [21.5, 28.5].forEach((ex) => {
-            ctx.beginPath();
-            ctx.arc(ex, -33, 2.6, Math.PI * 0.15, Math.PI * 0.85);
-            ctx.stroke();
-        });
-    }
-
-    if (!petHidden) {                         // レースカーテン
-        ctx.fillStyle = 'rgba(255,255,255,0.45)';
-        ctx.fillRect(12, -44, 8, 24);
-        ctx.fillRect(30, -44, 8, 24);
-    }
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';     // レースカーテン
+    ctx.fillRect(12, -44, 8, 24);
+    ctx.fillRect(30, -44, 8, 24);
     ctx.strokeStyle = night ? '#92400e' : '#78350f';
     ctx.lineWidth = 3;
     ctx.strokeRect(12, -44, 26, 24);
-    if (!petHidden) {
-        ctx.beginPath();
-        ctx.moveTo(25, -44); ctx.lineTo(25, -20);
-        ctx.moveTo(12, -32); ctx.lineTo(38, -32);
-        ctx.stroke();
-    }
+    ctx.beginPath();
+    ctx.moveTo(25, -44); ctx.lineTo(25, -20);
+    ctx.moveTo(12, -32); ctx.lineTo(38, -32);
+    ctx.stroke();
 
     ctx.restore();
 
     // ねているあいだは えんとつから けむりと Zzz
     if (night) {
-        const bx = W * HOUSE_X + 29 * s, by = H * 0.79 - 106 * s;
+        const bx = W * HOUSE_X + 29 * s, by = H * 0.79 - 156 * s;
         for (let i = 0; i < 3; i++) {
             const q = (t * 0.35 + i * 0.33) % 1;
             ctx.globalAlpha = (1 - q) * 0.5;
@@ -1786,7 +1816,7 @@ function drawHouseExtras(t) {
     }
 
     if (has('bird')) {                              // ことりが えんとつに とまる
-        const x = W * 0.80 + 29 * s, y = H * 0.79 - 106 * s;
+        const x = W * 0.80 + 29 * s, y = H * 0.79 - 156 * s;
         const hop = Math.abs(Math.sin(t * 2)) * 3 * s;
         ctx.fillStyle = night ? '#7c5a3a' : '#38bdf8';
         ellipse(x, y - 6 * s - hop, 9 * s, 7 * s);
@@ -1960,8 +1990,8 @@ function drawRoomStuff(t) {
 
 }
 
-// へやの てまえに おく もの（ベッドより まえ）
-function drawRoomFloor(t) {
+// キッチンに おく もの
+function drawKitchenStuff(t) {
     const W = cw(), H = ch(), s = W / 380;
     const night = state.sleeping;
 
@@ -2017,6 +2047,37 @@ function drawRoomFloor(t) {
         ctx.fillStyle = night ? '#991b1b' : '#fca5a5';
         ctx.fillRect(x - 19 * s, y - 16 * s, 38 * s, 3 * s);
     }
+
+    if (has('basket')) {                                    // せんたくかご
+        const x = W * 0.40, y = H * 0.94;
+        ctx.fillStyle = night ? '#7c5a3a' : '#d6a15b';
+        ctx.beginPath();
+        ctx.moveTo(x - 15 * s, y - 20 * s);
+        ctx.lineTo(x + 15 * s, y - 20 * s);
+        ctx.lineTo(x + 11 * s, y);
+        ctx.lineTo(x - 11 * s, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+        ctx.lineWidth = 1.5 * s;
+        [-7, 0, 7].forEach(function (q) {
+            ctx.beginPath();
+            ctx.moveTo(x + q * s, y - 19 * s);
+            ctx.lineTo(x + q * s * 0.75, y - 1 * s);
+            ctx.stroke();
+        });
+        ctx.fillStyle = night ? '#5b7fa8' : '#93c5fd';
+        ellipse(x - 4 * s, y - 22 * s, 10 * s, 5 * s);
+        ctx.fillStyle = night ? '#7f5f8f' : '#fbcfe8';
+        ellipse(x + 7 * s, y - 24 * s, 8 * s, 4 * s);
+    }
+
+}
+
+// へやの てまえに おく もの（ベッドより まえ）
+function drawRoomFloor(t) {
+    const W = cw(), H = ch(), s = W / 380;
+    const night = state.sleeping;
 
     if (has('garland')) {                                   // ガーランド
         const y0 = H * 0.045;
@@ -2278,30 +2339,6 @@ function drawRoomFloor(t) {
         ctx.fillRect(x + 16 * s, y - 8 * s, 6 * s, 8 * s);
     }
 
-    if (has('basket')) {                                    // せんたくかご
-        const x = W * 0.21, y = H * 0.88;
-        ctx.fillStyle = night ? '#7c5a3a' : '#d6a15b';
-        ctx.beginPath();
-        ctx.moveTo(x - 15 * s, y - 20 * s);
-        ctx.lineTo(x + 15 * s, y - 20 * s);
-        ctx.lineTo(x + 11 * s, y);
-        ctx.lineTo(x - 11 * s, y);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-        ctx.lineWidth = 1.5 * s;
-        [-7, 0, 7].forEach(function (q) {
-            ctx.beginPath();
-            ctx.moveTo(x + q * s, y - 19 * s);
-            ctx.lineTo(x + q * s * 0.75, y - 1 * s);
-            ctx.stroke();
-        });
-        ctx.fillStyle = night ? '#5b7fa8' : '#93c5fd';
-        ellipse(x - 4 * s, y - 22 * s, 10 * s, 5 * s);
-        ctx.fillStyle = night ? '#7f5f8f' : '#fbcfe8';
-        ellipse(x + 7 * s, y - 24 * s, 8 * s, 4 * s);
-    }
-
     if (has('bank')) {                                      // ちょきんばこ
         const x = W * 0.66, y = H * 0.96;
         ctx.fillStyle = night ? '#7f3f5f' : '#f472b6';
@@ -2345,13 +2382,25 @@ function drawRoom(t) {
     const W = cw(), H = ch();
     const night = state.sleeping;
     const wallH = H * 0.74;
+    const room = state.view;
 
-    // かべ
+    // ---- どの へやも おなじ かべ・ゆか ----
     paintBands(0, 0, W, wallH, styleColors('wall', night, '#fdebd0', '#4b3b63'));
-    ctx.fillStyle = night ? 'rgba(255,255,255,0.05)' : 'rgba(180,120,60,0.10)';
-    for (let x = 0; x < W; x += 30) ctx.fillRect(x, 0, 13, wallH);
+    if (room === 'kitchen') {                       // キッチンは タイルばり
+        ctx.strokeStyle = night ? 'rgba(255,255,255,0.08)' : 'rgba(120,140,150,0.25)';
+        ctx.lineWidth = 1.5;
+        for (let x = 0; x < W; x += 26) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, wallH); ctx.stroke();
+        }
+        for (let y = 0; y < wallH; y += 22) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        }
+    } else {
+        ctx.fillStyle = night ? 'rgba(255,255,255,0.05)' : 'rgba(180,120,60,0.10)';
+        for (let x = 0; x < W; x += 30) ctx.fillRect(x, 0, 13, wallH);
+    }
 
-    // へやの すみ（ひだりの かべが すこし おくに ある）
+    // へやの すみ
     ctx.fillStyle = 'rgba(0,0,0,0.10)';
     ctx.fillRect(0, 0, W * 0.06, wallH);
     ctx.strokeStyle = 'rgba(0,0,0,0.18)';
@@ -2364,49 +2413,21 @@ function drawRoom(t) {
     // てんじょうと まわりぶち
     ctx.fillStyle = night ? '#5b4a73' : '#fff7ea';
     ctx.fillRect(0, 0, W, H * 0.05);
+    if (room === 'bed') {                           // 2かいは やねの かたむき
+        ctx.fillStyle = night ? '#4b3f63' : '#f5e3cc';
+        ctx.beginPath();
+        ctx.moveTo(W, H * 0.05);
+        ctx.lineTo(W, H * 0.30);
+        ctx.lineTo(W * 0.72, H * 0.05);
+        ctx.closePath();
+        ctx.fill();
+    }
     ctx.fillStyle = night ? '#3b2f4f' : '#e7c9a0';
     ctx.fillRect(0, H * 0.05, W, H * 0.014);
-
-    // ドア（ひとりぐらしの げんかん）
-    const dx = W * 0.90, dTop = H * 0.30;
-    ctx.fillStyle = night ? '#4b3418' : '#92400e';
-    ctx.fillRect(dx - W * 0.078, dTop - H * 0.015, W * 0.156, wallH - dTop + H * 0.015);
-    ctx.fillStyle = night ? '#6b4a24' : '#b45309';
-    ctx.fillRect(dx - W * 0.066, dTop, W * 0.132, wallH - dTop);
-    ctx.fillStyle = night ? '#5b3e1e' : '#a1560a';
-    ctx.fillRect(dx - W * 0.048, dTop + H * 0.04, W * 0.096, H * 0.10);
-    ctx.fillRect(dx - W * 0.048, dTop + H * 0.17, W * 0.096, H * 0.14);
-    ctx.fillStyle = '#fbbf24';
-    ellipse(dx + W * 0.044, dTop + H * 0.19, 5 * (W / 380), 5 * (W / 380));
-    ctx.fillStyle = night ? '#292524' : '#78350f';
-    ctx.fillRect(dx - W * 0.078, wallH - H * 0.012, W * 0.156, H * 0.012);
-
-    // でんきの スイッチ
-    ctx.fillStyle = night ? '#cbd5e1' : '#f8fafc';
-    ctx.fillRect(W * 0.795, H * 0.50, W * 0.028, H * 0.045);
-    ctx.fillStyle = night ? '#94a3b8' : '#cbd5e1';
-    ctx.fillRect(W * 0.801, H * 0.512, W * 0.016, H * 0.021);
-
-    // コンセント
-    ctx.fillStyle = night ? '#cbd5e1' : '#f8fafc';
-    ctx.fillRect(W * 0.655, wallH - H * 0.055, W * 0.026, H * 0.036);
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillRect(W * 0.661, wallH - H * 0.047, W * 0.004, H * 0.014);
-    ctx.fillRect(W * 0.671, wallH - H * 0.047, W * 0.004, H * 0.014);
 
     // はばき
     ctx.fillStyle = night ? '#3b2f4f' : '#f3d3a8';
     ctx.fillRect(0, wallH - H * 0.03, W, H * 0.03);
-
-    // げんかんマット
-    ctx.fillStyle = night ? '#4b3418' : '#c2846a';
-    ctx.beginPath();
-    ctx.ellipse(W * 0.905, H * 0.80, W * 0.075, H * 0.028, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = night ? '#5b4023' : '#d9a184';
-    ctx.beginPath();
-    ctx.ellipse(W * 0.905, H * 0.80, W * 0.055, H * 0.018, 0, 0, Math.PI * 2);
-    ctx.fill();
 
     // ゆか
     paintBands(0, wallH, W, H - wallH, styleColors('floor', night, '#c08b5c', '#5a4636'));
@@ -2419,56 +2440,37 @@ function drawRoom(t) {
         ctx.stroke();
     }
 
-    // まど（そとの けしきが みえる）
-    const wx = W * 0.17, wy = H * 0.18, ww = W * 0.21, wh = H * 0.30;
-    ctx.fillStyle = night ? '#16233b' : '#bae6fd';
-    ctx.fillRect(wx, wy, ww, wh);
-    if (night) {
-        ctx.fillStyle = '#fef9c3';
-        ellipse(wx + ww * 0.68, wy + wh * 0.3, ww * 0.13, ww * 0.13);
-        ctx.fillStyle = '#fff';
-        for (let i = 0; i < 6; i++) {
-            ctx.fillRect(wx + (i * 37 % Math.round(ww)), wy + (i * 23 % Math.round(wh)), 2, 2);
+    // ---- まど（リビングと 2かい）----
+    if (room !== 'kitchen') {
+        const wx = W * 0.17, wy = H * 0.18, ww = W * 0.21, wh = H * 0.30;
+        ctx.fillStyle = night ? '#16233b' : '#bae6fd';
+        ctx.fillRect(wx, wy, ww, wh);
+        if (night) {
+            ctx.fillStyle = '#fef9c3';
+            ellipse(wx + ww * 0.68, wy + wh * 0.3, ww * 0.13, ww * 0.13);
+            ctx.fillStyle = '#fff';
+            for (let i = 0; i < 6; i++) {
+                ctx.fillRect(wx + (i * 37 % Math.round(ww)), wy + (i * 23 % Math.round(wh)), 2, 2);
+            }
+        } else {
+            ctx.fillStyle = '#86efac';
+            ctx.fillRect(wx, wy + wh * 0.72, ww, wh * 0.28);
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            const cx2 = wx + ((t * 8) % (ww + 40)) - 20;
+            ellipse(cx2, wy + wh * 0.3, 14, 8);
+            ellipse(cx2 + 12, wy + wh * 0.3, 10, 6);
         }
-    } else {
-        ctx.fillStyle = '#86efac';
-        ctx.fillRect(wx, wy + wh * 0.72, ww, wh * 0.28);
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        const cx2 = wx + ((t * 8) % (ww + 40)) - 20;
-        ellipse(cx2, wy + wh * 0.3, 14, 8);
-        ellipse(cx2 + 12, wy + wh * 0.3, 10, 6);
+        ctx.strokeStyle = night ? '#7c5a3a' : '#a16207';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(wx, wy, ww, wh);
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
+        ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2);
+        ctx.stroke();
     }
-    ctx.strokeStyle = night ? '#7c5a3a' : '#a16207';
-    ctx.lineWidth = 5;
-    ctx.strokeRect(wx, wy, ww, wh);
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
-    ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2);
-    ctx.stroke();
 
-    // かべの カレンダー（ほんとうの つきと ひ）
-    const px = W * 0.45, py = H * 0.14, pw = W * 0.13, ph = H * 0.19;
-    const today = new Date();
-    ctx.fillStyle = night ? '#94a3b8' : '#f8fafc';
-    ctx.fillRect(px, py, pw, ph);
-    ctx.strokeStyle = night ? '#3b2f4f' : '#cbd5e1';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(px, py, pw, ph);
-    ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';
-    ctx.fillRect(px, py, pw, ph * 0.3);
-    ctx.fillStyle = '#fff';
-    ctx.font = `bold ${Math.round(H * 0.045)}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText((today.getMonth() + 1) + 'がつ', px + pw / 2, py + ph * 0.23);
-    ctx.fillStyle = night ? '#475569' : '#1f2937';
-    ctx.font = `bold ${Math.round(H * 0.095)}px sans-serif`;
-    ctx.fillText(String(today.getDate()), px + pw / 2, py + ph * 0.86);
-    ctx.textAlign = 'left';
-    ctx.fillStyle = night ? '#64748b' : '#94a3b8';
-    ctx.fillRect(px + pw * 0.44, py - H * 0.012, pw * 0.12, H * 0.014);
-
-    // てんじょうの ランプ
+    // ---- てんじょうの ランプ ----
     const lx = W * 0.68;
     ctx.strokeStyle = night ? '#57534e' : '#78716c';
     ctx.lineWidth = 3;
@@ -2491,11 +2493,237 @@ function drawRoom(t) {
     ctx.closePath();
     ctx.fill();
 
+    if (room === 'kitchen') { drawKitchen(t, W, H, night, wallH); return; }
+    if (room === 'bed') { drawBedroom(t, W, H, night, wallH); return; }
+    drawLiving(t, W, H, night, wallH);
+}
+
+// ---- リビング ----
+function drawLiving(t, W, H, night, wallH) {
+    const s = W / 380;
+
+    // かべの カレンダー（ほんとうの つきと ひ）
+    const px = W * 0.45, py = H * 0.14, pw = W * 0.13, ph = H * 0.19;
+    const today = new Date();
+    ctx.fillStyle = night ? '#94a3b8' : '#f8fafc';
+    ctx.fillRect(px, py, pw, ph);
+    ctx.strokeStyle = night ? '#3b2f4f' : '#cbd5e1';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px, py, pw, ph);
+    ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';
+    ctx.fillRect(px, py, pw, ph * 0.3);
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.round(H * 0.045)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText((today.getMonth() + 1) + 'がつ', px + pw / 2, py + ph * 0.23);
+    ctx.fillStyle = night ? '#475569' : '#1f2937';
+    ctx.font = `bold ${Math.round(H * 0.095)}px sans-serif`;
+    ctx.fillText(String(today.getDate()), px + pw / 2, py + ph * 0.86);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = night ? '#64748b' : '#94a3b8';
+    ctx.fillRect(px + pw * 0.44, py - H * 0.012, pw * 0.12, H * 0.014);
+
+    // でんきの スイッチ
+    ctx.fillStyle = night ? '#cbd5e1' : '#f8fafc';
+    ctx.fillRect(W * 0.795, H * 0.50, W * 0.028, H * 0.045);
+    ctx.fillStyle = night ? '#94a3b8' : '#cbd5e1';
+    ctx.fillRect(W * 0.801, H * 0.512, W * 0.016, H * 0.021);
+
+    // コンセント
+    ctx.fillStyle = night ? '#cbd5e1' : '#f8fafc';
+    ctx.fillRect(W * 0.655, wallH - H * 0.055, W * 0.026, H * 0.036);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(W * 0.661, wallH - H * 0.047, W * 0.004, H * 0.014);
+    ctx.fillRect(W * 0.671, wallH - H * 0.047, W * 0.004, H * 0.014);
+
+    // 2かいへの かいだん
+    ctx.fillStyle = night ? '#2a1d14' : '#6b4423';
+    ctx.fillRect(W * 0.855, H * 0.28, W * 0.145, H * 0.08);
+    ctx.fillStyle = night ? '#3f2d1f' : '#8b5e34';
+    for (let i = 0; i < 5; i++) {
+        const stepW = W * (0.055 + i * 0.018);
+        const stepH = H * 0.055;
+        ctx.fillRect(W - stepW, H * 0.74 - stepH * (i + 1), stepW, stepH);
+        ctx.fillStyle = night ? '#241a10' : '#5c3a1e';
+        ctx.fillRect(W - stepW, H * 0.74 - stepH * (i + 1), stepW, H * 0.008);
+        ctx.fillStyle = night ? '#3f2d1f' : '#8b5e34';
+    }
+    ctx.strokeStyle = night ? '#6b4a24' : '#a16207';
+    ctx.lineWidth = 4 * s;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.945, H * 0.70);
+    ctx.lineTo(W * 0.86, H * 0.42);
+    ctx.stroke();
+
+    // ソファ
+    const fx = W * 0.62, fy = H * 0.90;
+    ctx.fillStyle = night ? '#3f5b63' : '#38bdf8';          // せもたれ
+    ctx.fillRect(fx - 54 * s, fy - 62 * s, 108 * s, 40 * s);
+    ctx.fillStyle = night ? '#4a6b73' : '#7dd3fc';          // ざめん
+    ctx.fillRect(fx - 54 * s, fy - 26 * s, 108 * s, 20 * s);
+    ctx.strokeStyle = night ? '#2f3f5f' : '#0ea5e9';
+    ctx.lineWidth = 2 * s;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy - 26 * s); ctx.lineTo(fx, fy - 6 * s);
+    ctx.stroke();
+    ctx.fillStyle = night ? '#3f5b63' : '#38bdf8';          // ひじかけ
+    ctx.fillRect(fx - 66 * s, fy - 44 * s, 16 * s, 38 * s);
+    ctx.fillRect(fx + 50 * s, fy - 44 * s, 16 * s, 38 * s);
+    ctx.fillStyle = night ? '#7f5f8f' : '#fbcfe8';          // クッション
+    ellipse(fx - 30 * s, fy - 42 * s, 13 * s, 11 * s);
+    ctx.fillStyle = night ? '#2f3f5f' : '#0ea5e9';          // あし
+    ctx.fillRect(fx - 58 * s, fy - 6 * s, 9 * s, 8 * s);
+    ctx.fillRect(fx + 49 * s, fy - 6 * s, 9 * s, 8 * s);
+
     // ラグ
     ctx.fillStyle = night ? '#4a3f63' : '#fca5a5';
     ellipse(W * IN_X, H * 0.90, W * 0.20, H * 0.055);
     ctx.fillStyle = night ? '#584a73' : '#fecdd3';
     ellipse(W * IN_X, H * 0.90, W * 0.13, H * 0.035);
+
+    drawRoomStuff(t);
+}
+
+// ---- キッチン（げんかんも ここ）----
+function drawKitchen(t, W, H, night, wallH) {
+    const s = W / 380;
+
+    // げんかんの ドア
+    const dx = W * 0.90, dTop = H * 0.30;
+    ctx.fillStyle = night ? '#4b3418' : '#92400e';
+    ctx.fillRect(dx - W * 0.078, dTop - H * 0.015, W * 0.156, wallH - dTop + H * 0.015);
+    ctx.fillStyle = night ? '#6b4a24' : '#b45309';
+    ctx.fillRect(dx - W * 0.066, dTop, W * 0.132, wallH - dTop);
+    ctx.fillStyle = night ? '#5b3e1e' : '#a1560a';
+    ctx.fillRect(dx - W * 0.048, dTop + H * 0.04, W * 0.096, H * 0.10);
+    ctx.fillRect(dx - W * 0.048, dTop + H * 0.17, W * 0.096, H * 0.14);
+    ctx.fillStyle = '#fbbf24';
+    ellipse(dx + W * 0.044, dTop + H * 0.19, 5 * s, 5 * s);
+    ctx.fillStyle = night ? '#292524' : '#78350f';
+    ctx.fillRect(dx - W * 0.078, wallH - H * 0.012, W * 0.156, H * 0.012);
+
+    // げんかんマット
+    ctx.fillStyle = night ? '#4b3418' : '#c2846a';
+    ellipse(W * 0.905, H * 0.80, W * 0.075, H * 0.028);
+    ctx.fillStyle = night ? '#5b4023' : '#d9a184';
+    ellipse(W * 0.905, H * 0.80, W * 0.055, H * 0.018);
+
+    // つりとだな
+    ctx.fillStyle = night ? '#6b4a24' : '#d6a15b';
+    ctx.fillRect(W * 0.05, H * 0.22, W * 0.29, H * 0.20);
+    ctx.fillStyle = night ? '#4b3418' : '#b4813f';
+    ctx.fillRect(W * 0.05, H * 0.22, W * 0.29, H * 0.02);
+    ctx.strokeStyle = night ? '#3f2d1f' : '#8b5e34';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.195, H * 0.24); ctx.lineTo(W * 0.195, H * 0.42);
+    ctx.stroke();
+    ctx.fillStyle = '#fbbf24';
+    ellipse(W * 0.18, H * 0.33, 3 * s, 3 * s);
+    ellipse(W * 0.21, H * 0.33, 3 * s, 3 * s);
+
+    // ながしだい
+    const cy = H * 0.62;
+    ctx.fillStyle = night ? '#64748b' : '#e2e8f0';
+    ctx.fillRect(W * 0.03, cy, W * 0.44, H * 0.05);
+    ctx.fillStyle = night ? '#475569' : '#cbd5e1';
+    ctx.fillRect(W * 0.03, cy + H * 0.05, W * 0.44, H * 0.24);
+    ctx.strokeStyle = night ? '#334155' : '#94a3b8';
+    ctx.lineWidth = 2;
+    [0.17, 0.30, 0.43].forEach(function (q) {
+        ctx.beginPath();
+        ctx.moveTo(W * q, cy + H * 0.05); ctx.lineTo(W * q, cy + H * 0.29);
+        ctx.stroke();
+    });
+    [0.10, 0.23, 0.36].forEach(function (q) {
+        ctx.fillStyle = night ? '#1e293b' : '#64748b';
+        ctx.fillRect(W * q, cy + H * 0.10, W * 0.05, H * 0.012);
+    });
+
+    // シンクと じゃぐち
+    ctx.fillStyle = night ? '#334155' : '#94a3b8';
+    ctx.fillRect(W * 0.06, cy - H * 0.005, W * 0.16, H * 0.055);
+    ctx.fillStyle = night ? '#1e293b' : '#cbd5e1';
+    ctx.fillRect(W * 0.075, cy + H * 0.005, W * 0.13, H * 0.035);
+    ctx.strokeStyle = night ? '#94a3b8' : '#64748b';
+    ctx.lineWidth = 4 * s;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.14, cy - H * 0.005);
+    ctx.lineTo(W * 0.14, cy - H * 0.06);
+    ctx.quadraticCurveTo(W * 0.14, cy - H * 0.085, W * 0.115, cy - H * 0.085);
+    ctx.stroke();
+
+    // コンロと やかん
+    ctx.fillStyle = night ? '#1e293b' : '#334155';
+    ctx.fillRect(W * 0.26, cy - H * 0.005, W * 0.18, H * 0.05);
+    ctx.fillStyle = night ? '#7f1d1d' : '#f97316';
+    ellipse(W * 0.30, cy + H * 0.02, 9 * s, 5 * s);
+    ellipse(W * 0.39, cy + H * 0.02, 9 * s, 5 * s);
+    ctx.fillStyle = night ? '#94a3b8' : '#e2e8f0';
+    ellipse(W * 0.39, cy - H * 0.012, 13 * s, 10 * s);
+    ctx.fillRect(W * 0.39 - 2 * s, cy - H * 0.04, 4 * s, 9 * s);
+    ctx.strokeStyle = night ? '#94a3b8' : '#e2e8f0';
+    ctx.lineWidth = 3 * s;
+    ctx.beginPath();
+    ctx.arc(W * 0.39, cy - H * 0.026, 10 * s, Math.PI, Math.PI * 2);
+    ctx.stroke();
+
+    // れいぞうこ
+    ctx.fillStyle = night ? '#94a3b8' : '#f8fafc';
+    ctx.fillRect(W * 0.49, H * 0.42, W * 0.14, H * 0.45);
+    ctx.strokeStyle = night ? '#475569' : '#cbd5e1';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(W * 0.49, H * 0.42, W * 0.14, H * 0.45);
+    ctx.beginPath();
+    ctx.moveTo(W * 0.49, H * 0.57); ctx.lineTo(W * 0.63, H * 0.57);
+    ctx.stroke();
+    ctx.fillStyle = night ? '#334155' : '#94a3b8';
+    ctx.fillRect(W * 0.605, H * 0.48, W * 0.012, H * 0.06);
+    ctx.fillRect(W * 0.605, H * 0.60, W * 0.012, H * 0.06);
+    ctx.fillStyle = night ? '#7f5f8f' : '#f472b6';
+    ctx.fillRect(W * 0.525, H * 0.46, W * 0.03, H * 0.035);
+
+    drawKitchenStuff(t);
+}
+
+// ---- 2かいの しんしつ ----
+function drawBedroom(t, W, H, night, wallH) {
+    const s = W / 380;
+
+    // クローゼット
+    ctx.fillStyle = night ? '#4b3418' : '#b4813f';
+    ctx.fillRect(W * 0.80, H * 0.30, W * 0.19, wallH - H * 0.30);
+    ctx.strokeStyle = night ? '#2a1d14' : '#8b5e34';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(W * 0.80, H * 0.30, W * 0.19, wallH - H * 0.30);
+    ctx.beginPath();
+    ctx.moveTo(W * 0.895, H * 0.30); ctx.lineTo(W * 0.895, wallH);
+    ctx.stroke();
+    ctx.fillStyle = '#fbbf24';
+    ellipse(W * 0.885, H * 0.52, 3.5 * s, 3.5 * s);
+    ellipse(W * 0.905, H * 0.52, 3.5 * s, 3.5 * s);
+
+    // ベッドサイドの ちいさな テーブルと あかり
+    ctx.fillStyle = night ? '#3f2d1f' : '#a16207';
+    ctx.fillRect(W * 0.43, H * 0.80, W * 0.10, H * 0.02);
+    ctx.fillRect(W * 0.442, H * 0.82, W * 0.014, H * 0.08);
+    ctx.fillRect(W * 0.504, H * 0.82, W * 0.014, H * 0.08);
+    if (night) {
+        ctx.fillStyle = 'rgba(253,230,138,0.30)';
+        ellipse(W * 0.48, H * 0.76, W * 0.07, H * 0.07);
+    }
+    ctx.fillStyle = night ? '#fde68a' : '#fca5a5';
+    ctx.beginPath();
+    ctx.moveTo(W * 0.455, H * 0.795);
+    ctx.lineTo(W * 0.505, H * 0.795);
+    ctx.lineTo(W * 0.495, H * 0.755);
+    ctx.lineTo(W * 0.465, H * 0.755);
+    ctx.closePath();
+    ctx.fill();
+
+    // ゆかの ラグ
+    ctx.fillStyle = night ? '#4a3f63' : '#c4b5fd';
+    ellipse(W * IN_X, H * 0.90, W * 0.18, H * 0.05);
 
     drawRoomStuff(t);
 }
@@ -2549,7 +2777,7 @@ function drawBlanket(t) {
 function drawPoops() {
     const W = cw(), H = ch();
     const s = W / 380;
-    const inTray = !isOutside() && has('toilet');    // トイレが あれば その中に たまる
+    const inTray = state.view === 'kitchen' && has('toilet');   // トイレは キッチンに ある
     ctx.save();
     ctx.fillStyle = '#78350f';
     state.poops.forEach((p, i) => {
@@ -3538,8 +3766,10 @@ function updateUI() {
     el('level-num').textContent = state.level;
 
     el('btn-sleep').textContent = state.sleeping ? '☀ おこす' : '💤 ねる';
-    el('btn-view-out').classList.toggle('view-off', !isOutside());
-    el('btn-view-in').classList.toggle('view-off', isOutside());
+    [['btn-view-out', 'out'], ['btn-view-living', 'living'],
+     ['btn-view-kitchen', 'kitchen'], ['btn-view-bed', 'bed']].forEach(function (pair) {
+        el(pair[0]).classList.toggle('view-off', (state.view || 'out') !== pair[1]);
+    });
 
     const locked = state.stage === 'egg' || state.sleeping;
     ['btn-feed', 'btn-play', 'btn-train', 'btn-job', 'btn-bath', 'btn-clean', 'btn-med'].forEach((id) => {
@@ -3571,8 +3801,10 @@ function frame(ts) {
     // ねるときは げんかん（そと）／ベッド（なか）まで あるいて いく
     const outside = isOutside();
     petPos += (petTarget() - petPos) * Math.min(1, dt * 3.5);
-    petHidden = outside && state.sleeping && Math.abs(petPos - DOOR_X) < 0.012;
-    inBed = !outside && state.sleeping && Math.abs(petPos - BED_X) < 0.02;
+    petHidden = state.sleeping && (outside
+        ? Math.abs(petPos - DOOR_X) < 0.012        // おうちの なかに はいった
+        : !inBedroom());                           // 2かいで ねている
+    inBed = inBedroom() && state.sleeping && Math.abs(petPos - BED_X) < 0.02;
 
     if (outside) {
         drawBackground(t);
@@ -3581,8 +3813,8 @@ function frame(ts) {
         drawHouseExtras(t);
     } else {
         drawRoom(t);
-        drawBedBack(t);
-        drawRoomFloor(t);
+        if (inBedroom()) drawBedBack(t);
+        if (state.view === 'living') drawRoomFloor(t);
     }
     if (state.stage === 'egg') {
         drawEgg(t);
@@ -3630,8 +3862,8 @@ function init() {
     }
 
     petPos = petTarget();
-    petHidden = isOutside() && state.sleeping;
-    inBed = !isOutside() && state.sleeping;
+    petHidden = state.sleeping && (isOutside() || !inBedroom());
+    inBed = inBedroom() && state.sleeping;
 
     canvas.addEventListener('click', tapCanvas);
     el('modal-back').addEventListener('click', (e) => {
