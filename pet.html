@@ -225,6 +225,11 @@ let particles = [];
 let action = { type: null, until: 0 };
 let mini = { active: false, pos: 0, dir: 1, speed: 0.8 };
 let canvas, ctx, lastFrame = 0, saveTimer = 0;
+let petPos = 0.5;          // ペットの立ち位置（キャンバス幅にたいする割合）
+let petInside = false;     // おうちの中で ねているか
+
+const HOUSE_X = 0.80;      // おうちの中心
+const DOOR_X = 0.775;      // げんかんの位置
 
 /* ---------------- utility ---------------- */
 
@@ -346,7 +351,8 @@ function applyTime(dt) {
         if (state.poopTimer <= 0) {
             state.poopTimer = 90 + Math.random() * 70;
             if (state.poops.length < 5) {
-                state.poops.push({ x: 0.15 + Math.random() * 0.7 });
+                // ペットや おうちに かぶらないよう ひだり手前に ならべる
+                state.poops.push({ x: 0.10 + state.poops.length * 0.055 + Math.random() * 0.02 });
             }
         }
     }
@@ -555,10 +561,15 @@ function toggleSleep() {
     if (state.stage === 'egg') return;
     if (state.sleeping) {
         state.sleeping = false;
-        addLog(`${state.name} は めを さました。`);
+        addLog(`${state.name} が おうちから でてきた！`);
     } else {
+        if (state.energy >= 98) {
+            // げんきが まんタンだと すぐ おきてしまうので おうちに いれない
+            addLog(`${state.name} は げんきいっぱいで ねむくないみたい。`);
+            return;
+        }
         state.sleeping = true;
-        addLog(`💤 でんきを けした。 ${state.name} は ねむりについた…`);
+        addLog(`🏠 ${state.name} は おうちに はいって ねむりについた…`);
     }
     save();
     updateUI();
@@ -717,9 +728,11 @@ function drawBackground(t) {
 
     if (state.sleeping) {
         ctx.fillStyle = '#fef9c3';
-        ellipse(W * 0.82, H * 0.2, 16, 16);
-        ctx.fillStyle = state.sleeping ? '#334155' : '#fef9c3';
-        ellipse(W * 0.87, H * 0.17, 14, 14);
+        ellipse(W * 0.18, H * 0.19, 16, 16);
+        ctx.fillStyle = 'rgba(202,191,120,0.55)';
+        ellipse(W * 0.18 - 5, H * 0.19 - 4, 3.5, 3);
+        ellipse(W * 0.18 + 4, H * 0.19 + 3, 4.5, 3.5);
+        ellipse(W * 0.18 + 5, H * 0.19 - 6, 2.5, 2);
         ctx.fillStyle = 'rgba(255,255,255,0.85)';
         for (let i = 0; i < 12; i++) {
             const x = (i * 97 % Math.round(W));
@@ -739,6 +752,109 @@ function drawBackground(t) {
     ctx.fillRect(0, H * 0.76, W, H * 0.24);
     ctx.fillStyle = state.sleeping ? '#5b21b6' : '#4ade80';
     ctx.fillRect(0, H * 0.76, W, 6);
+}
+
+function drawHouse(t) {
+    const W = cw(), H = ch();
+    const s = W / 380;
+    const night = state.sleeping;
+
+    ctx.save();
+    ctx.translate(W * HOUSE_X, H * 0.79);
+    ctx.scale(s, s);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
+    ellipse(0, 8, 54, 8);
+
+    // えんとつ
+    ctx.fillStyle = night ? '#7c2d12' : '#9a3412';
+    ctx.fillRect(22, -106, 15, 30);
+
+    // やね
+    ctx.fillStyle = night ? '#7f1d1d' : '#dc2626';
+    ctx.beginPath();
+    ctx.moveTo(-56, -54); ctx.lineTo(0, -98); ctx.lineTo(56, -54);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(60,20,10,0.5)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // かべ
+    ctx.fillStyle = night ? '#7c5a3a' : '#e0b884';
+    ctx.fillRect(-44, -54, 88, 58);
+    ctx.strokeStyle = 'rgba(80,45,15,0.45)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-44, -54, 88, 58);
+
+    // げんかん
+    ctx.fillStyle = night ? '#5b3a1a' : '#8b5e34';
+    ctx.beginPath();
+    ctx.moveTo(-18, 4);
+    ctx.lineTo(-18, -20);
+    ctx.arc(-6, -20, 12, Math.PI, 0);
+    ctx.lineTo(6, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#fbbf24';
+    ellipse(1, -14, 2.5, 2.5);
+
+    // まど（よるは あかりが ともる）
+    ctx.fillStyle = night ? '#fde68a' : '#bae6fd';
+    if (night) { ctx.shadowBlur = 18; ctx.shadowColor = '#fde68a'; }
+    ctx.fillRect(12, -44, 26, 24);
+    ctx.shadowBlur = 0;
+
+    // ねているときは まどごしに ねがおが みえる
+    if (petInside) {
+        const sp = currentSpecies();
+        ctx.fillStyle = sp.body;
+        ellipse(25, -31, 9.5, 8.5);
+        ctx.fillStyle = 'rgba(248,113,113,0.5)';
+        ellipse(20, -29, 2.5, 1.8);
+        ellipse(30, -29, 2.5, 1.8);
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineWidth = 1.8;
+        [21.5, 28.5].forEach((ex) => {
+            ctx.beginPath();
+            ctx.arc(ex, -33, 2.6, Math.PI * 0.15, Math.PI * 0.85);
+            ctx.stroke();
+        });
+    }
+
+    ctx.strokeStyle = night ? '#92400e' : '#78350f';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(12, -44, 26, 24);
+    if (!petInside) {
+        ctx.beginPath();
+        ctx.moveTo(25, -44); ctx.lineTo(25, -20);
+        ctx.moveTo(12, -32); ctx.lineTo(38, -32);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // ねているあいだは えんとつから けむりと Zzz
+    if (night) {
+        const bx = W * HOUSE_X + 29 * s, by = H * 0.79 - 106 * s;
+        for (let i = 0; i < 3; i++) {
+            const q = (t * 0.35 + i * 0.33) % 1;
+            ctx.globalAlpha = (1 - q) * 0.5;
+            ctx.fillStyle = '#e2e8f0';
+            ellipse(bx + Math.sin(q * 5) * 8 * s, by - q * 46 * s, (5 + q * 9) * s, (4 + q * 7) * s);
+        }
+        ctx.globalAlpha = 1;
+        ctx.font = 'bold 22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff';
+        for (let i = 0; i < 3; i++) {
+            const q = (t * 0.6 + i * 0.33) % 1;
+            ctx.globalAlpha = 1 - q;
+            ctx.fillText('Z', bx + 14 * s + q * 24, by - 6 * s - q * 40);
+        }
+        ctx.globalAlpha = 1;
+        ctx.textAlign = 'left';
+    }
 }
 
 function drawPoops() {
@@ -937,16 +1053,17 @@ function drawCreature(t) {
     if (m === 'sad' || m === 'sick') bob = Math.sin(t * 1.2) * 2;
 
     const baseY = H * 0.70;
+    const cx = petPos * W;
 
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.16)';
     ctx.beginPath();
-    ctx.ellipse(W / 2, baseY + 52 * s, 44 * s, 10 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, baseY + 52 * s, 44 * s, 10 * s, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
     ctx.save();
-    ctx.translate(W / 2, baseY + bob * s);
+    ctx.translate(cx, baseY + bob * s);
     ctx.scale(s, s);
 
     drawEars(sp);
@@ -999,21 +1116,12 @@ function drawCreature(t) {
     // 状態アイコン
     ctx.font = 'bold 22px sans-serif';
     ctx.textAlign = 'center';
-    if (state.sleeping) {
-        for (let i = 0; i < 3; i++) {
-            const p = (t * 0.6 + i * 0.33) % 1;
-            ctx.globalAlpha = 1 - p;
-            ctx.fillStyle = '#fff';
-            ctx.fillText('Z', W / 2 + 46 * s + p * 26, baseY - 40 * s - p * 40);
-        }
-        ctx.globalAlpha = 1;
-    }
     if (state.sick) {
         ctx.fillStyle = '#16a34a';
-        ctx.fillText('🤒', W / 2 + 46 * s, baseY - 44 * s);
+        ctx.fillText('🤒', cx + 46 * s, baseY - 44 * s);
     }
     if (!state.sleeping && !state.sick && state.hunger < 25) {
-        ctx.fillText('🍖', W / 2 - 52 * s, baseY - 44 * s + Math.sin(t * 3) * 4);
+        ctx.fillText('🍖', cx - 52 * s, baseY - 44 * s + Math.sin(t * 3) * 4);
     }
     ctx.textAlign = 'left';
 }
@@ -1088,12 +1196,18 @@ function frame(ts) {
         if (marker) marker.style.left = (mini.pos * 100) + '%';
     }
 
+    // ねるときは げんかんまで あるいて いく
+    const target = state.sleeping ? DOOR_X : 0.5;
+    petPos += (target - petPos) * Math.min(1, dt * 3.5);
+    petInside = state.sleeping && Math.abs(petPos - DOOR_X) < 0.012;
+
     drawBackground(t);
+    drawHouse(t);
     if (state.stage === 'egg') {
         drawEgg(t);
     } else {
         drawPoops();
-        drawCreature(t);
+        if (!petInside) drawCreature(t);
     }
     drawParticles(dt, t);
     updateUI();
@@ -1124,6 +1238,9 @@ function init() {
     } else {
         state = newState();
     }
+
+    petPos = state.sleeping ? DOOR_X : 0.5;
+    petInside = state.sleeping;
 
     canvas.addEventListener('click', tapCanvas);
     el('modal-back').addEventListener('click', (e) => {
