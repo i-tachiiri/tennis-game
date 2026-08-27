@@ -263,13 +263,32 @@ const SHOP = [
     { id: 'toilet',  cat: 'room', label: '🚽 ペットトイレ',         cost: 140, note: 'うんちが トイレに はいる' },
     { id: 'aircon',  cat: 'room', label: '❄️ エアコン',             cost: 200, note: 'げんきが へりにくくなる' },
     { id: 'bank',    cat: 'room', label: '🐷 ちょきんばこ',         cost: 250, note: 'おしごとの おだちんが 2わり アップ' },
+    { id: 'garland', cat: 'room', label: '🎏 ガーランド',           cost: 60,  note: 'みため だけ' },
+    { id: 'poster',  cat: 'room', label: '🖼 ポスター',             cost: 80,  note: 'みため だけ' },
+    { id: 'guitar',  cat: 'room', label: '🎸 ギター',               cost: 160, note: 'きげんが へりにくくなる' },
+    { id: 'vacuum',  cat: 'room', label: '🧹 そうじき',             cost: 200, note: 'そうじで きれいが まんタンに' },
+    { id: 'game',    cat: 'room', label: '🕹 ゲームき',             cost: 220, note: 'あそびの きげんが もっとアップ' },
     { id: 'tree',    cat: 'yard', label: '🌳 おおきな き',        cost: 100, note: 'げんきが へりにくくなる' },
     { id: 'flower',  cat: 'yard', label: '🌷 はなだん',           cost: 70,  note: 'きげんが すこし へりにくくなる' },
     { id: 'post',    cat: 'yard', label: '📮 ポスト',             cost: 90,  note: 'ときどき コインが とどく' },
     { id: 'rainbow', cat: 'yard', label: '🌈 にじ',               cost: 150, note: 'みため だけ' },
+    { id: 'mushroom',cat: 'yard', label: '🍄 きのこ',              cost: 50,  note: 'みため だけ' },
+    { id: 'balloon', cat: 'yard', label: '🎈 ふうせん',            cost: 70,  note: 'みため だけ' },
+    { id: 'nameplate',cat:'yard', label: '🪧 ひょうさつ',          cost: 100, note: 'おうちに なまえが つく' },
+    { id: 'butterfly',cat:'yard', label: '🦋 ちょうちょ',          cost: 90,  note: 'みため だけ' },
+    { id: 'bird',    cat: 'yard', label: '🐦 ことり',              cost: 110, note: 'みため だけ' },
+    { id: 'sun',     cat: 'yard', label: '☀️ おひさま',            cost: 120, note: 'みため だけ' },
     { id: 'ribbon',  cat: 'wear', label: '🎀 リボン',             cost: 80,  note: 'みため だけ' },
     { id: 'hat',     cat: 'wear', label: '👒 むぎわらぼうし',     cost: 110, note: 'みため だけ' },
-    { id: 'glasses', cat: 'wear', label: '👓 めがね',             cost: 130, note: 'みため だけ' }
+    { id: 'glasses', cat: 'wear', label: '👓 めがね',             cost: 130, note: 'みため だけ' },
+    { id: 'hairflower', cat: 'wear', label: '🌸 かみの おはな',    cost: 70,  note: 'みため だけ' },
+    { id: 'scarf',   cat: 'wear', label: '🧣 マフラー',            cost: 90,  note: 'みため だけ' },
+    { id: 'necktie', cat: 'wear', label: '👔 ネクタイ',            cost: 100, note: 'みため だけ' },
+    { id: 'sunglass',cat: 'wear', label: '😎 サングラス',          cost: 120, note: 'みため だけ' },
+    { id: 'headphone',cat:'wear', label: '🎧 ヘッドホン',          cost: 140, note: 'みため だけ' },
+    { id: 'backpack',cat: 'wear', label: '🎒 ランドセル',          cost: 160, note: 'みため だけ' },
+    { id: 'cape',    cat: 'wear', label: '🦸 マント',              cost: 250, note: 'みため だけ' },
+    { id: 'crown',   cat: 'wear', label: '👑 おうかん',            cost: 300, note: 'みため だけ' }
 ];
 
 const SHOP_CAT = [
@@ -421,7 +440,7 @@ function applyTime(dt) {
         }
     } else {
         // ショップで かったものは へる はやさを ゆるめる
-        const happyRate = 2.5 * (has('doll') ? 0.85 : 1) * (has('flower') ? 0.9 : 1);
+        const happyRate = 2.5 * (has('doll') ? 0.85 : 1) * (has('flower') ? 0.9 : 1) * (has('guitar') ? 0.9 : 1);
         const energyRate = 1.6 * (has('tree') ? 0.85 : 1) * (has('aircon') ? 0.85 : 1);
         // トイレが あれば うんちで よごれにくい
         const dirtPerPoop = has('toilet') ? 1 : 3;
@@ -595,7 +614,7 @@ function stopMini() {
     else { coins = 3; happy = 6; label = 'ざんねん…'; }
 
     state.coins += coins;
-    state.happy = clamp(state.happy + happy * (has('tv') ? 1.3 : 1), 0, 100);
+    state.happy = clamp(state.happy + happy * (has('tv') ? 1.3 : 1) * (has('game') ? 1.15 : 1), 0, 100);
     state.energy = clamp(state.energy - 12, 0, 100);
     state.hunger = clamp(state.hunger - 8, 0, 100);
     state.clean = clamp(state.clean - 6, 0, 100);
@@ -695,7 +714,7 @@ function doCleanPoop() {
     if (state.poops.length === 0) { addLog('そうじする ところは なさそうだ。'); return; }
     const n = state.poops.length;
     state.poops = [];
-    state.clean = clamp(state.clean + 18 * n, 0, 100);
+    state.clean = has('vacuum') ? 100 : clamp(state.clean + 18 * n, 0, 100);
     state.happy = clamp(state.happy + 4, 0, 100);
     state.care.clean += 1;
     burst('bubble', 8);
@@ -1105,6 +1124,80 @@ function drawYard(t) {
         ctx.restore();
     }
 
+    if (has('sun') && !night) {                     // おひさま
+        const x = W * 0.85, y = H * 0.13;
+        ctx.save();
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 4 * s;
+        ctx.lineCap = 'round';
+        for (let i = 0; i < 8; i++) {
+            const a = i / 8 * Math.PI * 2 + t * 0.2;
+            ctx.beginPath();
+            ctx.moveTo(x + Math.cos(a) * 22 * s, y + Math.sin(a) * 22 * s);
+            ctx.lineTo(x + Math.cos(a) * 31 * s, y + Math.sin(a) * 31 * s);
+            ctx.stroke();
+        }
+        ctx.restore();
+        ctx.fillStyle = '#fbbf24';
+        ellipse(x, y, 19 * s, 19 * s);
+        ctx.fillStyle = '#fde68a';
+        ellipse(x - 4 * s, y - 4 * s, 9 * s, 8 * s);
+    }
+
+    if (has('balloon')) {                           // ふうせん
+        const bx = W * 0.36 + Math.sin(t * 0.9) * 8 * s;
+        const by = H * 0.44 + Math.sin(t * 1.3) * 6 * s;
+        ctx.strokeStyle = 'rgba(60,40,20,0.5)';
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(W * 0.36, H * 0.80);
+        ctx.quadraticCurveTo(bx - 6 * s, (by + H * 0.80) / 2, bx, by + 16 * s);
+        ctx.stroke();
+        ctx.fillStyle = night ? '#9f1239' : '#fb7185';
+        ellipse(bx, by, 15 * s, 18 * s);
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ellipse(bx - 5 * s, by - 6 * s, 4 * s, 5 * s);
+        ctx.fillStyle = night ? '#881337' : '#e11d48';
+        ctx.beginPath();
+        ctx.moveTo(bx - 4 * s, by + 17 * s);
+        ctx.lineTo(bx + 4 * s, by + 17 * s);
+        ctx.lineTo(bx, by + 22 * s);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    if (has('butterfly')) {                         // ちょうちょ
+        [[0.27, 0.52, 1.0], [0.44, 0.60, 1.6]].forEach(function (bset, k) {
+            const bx = W * bset[0] + Math.sin(t * bset[2]) * 26 * s;
+            const by = H * bset[1] + Math.cos(t * bset[2] * 1.3) * 16 * s;
+            const flap = Math.abs(Math.sin(t * 9 + k)) * 0.7 + 0.3;
+            ctx.fillStyle = k ? '#f472b6' : '#facc15';
+            ctx.save();
+            ctx.translate(bx, by);
+            ctx.scale(flap, 1);
+            ellipse(-6 * s, -3 * s, 6 * s, 7 * s);
+            ellipse(6 * s, -3 * s, 6 * s, 7 * s);
+            ellipse(-5 * s, 4 * s, 4 * s, 5 * s);
+            ellipse(5 * s, 4 * s, 4 * s, 5 * s);
+            ctx.restore();
+            ctx.fillStyle = '#78350f';
+            ellipse(bx, by, 1.8 * s, 7 * s);
+        });
+    }
+
+    if (has('mushroom')) {                          // きのこ
+        [[0.15, 1], [0.20, 0.8], [0.24, 0.6]].forEach(function (mk) {
+            const x = W * mk[0], y = H * 0.93, k = mk[1];
+            ctx.fillStyle = '#fef3c7';
+            ctx.fillRect(x - 4 * s * k, y - 12 * s * k, 8 * s * k, 12 * s * k);
+            ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';
+            ellipse(x, y - 12 * s * k, 12 * s * k, 9 * s * k);
+            ctx.fillStyle = '#fff';
+            ellipse(x - 4 * s * k, y - 14 * s * k, 2.5 * s * k, 2 * s * k);
+            ellipse(x + 4 * s * k, y - 12 * s * k, 2 * s * k, 1.6 * s * k);
+        });
+    }
+
     if (has('tree')) {
         const x = W * 0.12, y = H * 0.80;
         ctx.fillStyle = night ? '#4a2c10' : '#78350f';
@@ -1139,7 +1232,47 @@ function drawYard(t) {
     }
 }
 
-// ポストは おうちの まえに 立つので べつに えがく
+// おうちに くっつく もの（おうちの あとに えがく）
+function drawHouseExtras(t) {
+    const W = cw(), H = ch(), s = W / 380;
+    const night = state.sleeping;
+
+    if (has('nameplate')) {                         // ひょうさつ（ドアの上）
+        const x = W * 0.784, y = H * 0.625;
+        ctx.fillStyle = night ? '#7c5a3a' : '#fbbf24';
+        ctx.fillRect(x - 20 * s, y - 8 * s, 40 * s, 16 * s);
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 2.5 * s;
+        ctx.strokeRect(x - 20 * s, y - 8 * s, 40 * s, 16 * s);
+        ctx.fillStyle = '#451a03';
+        ctx.font = `bold ${10 * s}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText((state.name || '').slice(0, 4), x, y + 4 * s);
+        ctx.textAlign = 'left';
+    }
+
+    if (has('bird')) {                              // ことりが えんとつに とまる
+        const x = W * 0.80 + 29 * s, y = H * 0.79 - 106 * s;
+        const hop = Math.abs(Math.sin(t * 2)) * 3 * s;
+        ctx.fillStyle = night ? '#7c5a3a' : '#38bdf8';
+        ellipse(x, y - 6 * s - hop, 9 * s, 7 * s);
+        ellipse(x + 6 * s, y - 12 * s - hop, 5.5 * s, 5 * s);
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.moveTo(x + 11 * s, y - 13 * s - hop);
+        ctx.lineTo(x + 17 * s, y - 11 * s - hop);
+        ctx.lineTo(x + 11 * s, y - 9 * s - hop);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#1f2937';
+        ellipse(x + 7 * s, y - 13 * s - hop, 1.4 * s, 1.4 * s);
+        ctx.fillStyle = night ? '#5b4636' : '#0ea5e9';
+        ellipse(x - 3 * s, y - 6 * s - hop, 5 * s, 4 * s);
+    }
+
+    drawPost(t);
+}
+
 function drawPost(t) {
     if (!has('post')) return;
     const W = cw(), H = ch(), s = W / 380;
@@ -1160,7 +1293,7 @@ function drawPost(t) {
     ctx.fillRect(x + 16 * s, y - 64 * s, 11 * s, 8 * s);
 }
 
-// へやに かざるもの
+// へやに かざるもの（かべ・おくの もの）
 function drawRoomStuff(t) {
     const W = cw(), H = ch(), s = W / 380;
     const night = state.sleeping;
@@ -1291,6 +1424,13 @@ function drawRoomStuff(t) {
         });
     }
 
+}
+
+// へやの てまえに おく もの（ベッドより まえ）
+function drawRoomFloor(t) {
+    const W = cw(), H = ch(), s = W / 380;
+    const night = state.sleeping;
+
     if (has('bin')) {                                       // ゴミばこ
         const x = W * 0.05, y = H * 0.95;
         ctx.fillStyle = night ? '#475569' : '#64748b';
@@ -1342,6 +1482,100 @@ function drawRoomStuff(t) {
         });
         ctx.fillStyle = night ? '#991b1b' : '#fca5a5';
         ctx.fillRect(x - 19 * s, y - 16 * s, 38 * s, 3 * s);
+    }
+
+    if (has('garland')) {                                   // ガーランド
+        const y0 = H * 0.045;
+        ctx.strokeStyle = night ? '#6b5a3a' : '#a16207';
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(W * 0.03, y0);
+        ctx.quadraticCurveTo(W * 0.38, y0 + H * 0.05, W * 0.73, y0);
+        ctx.stroke();
+        const cols = ['#ef4444', '#facc15', '#4ade80', '#38bdf8', '#f472b6', '#a78bfa'];
+        for (let i = 0; i < 9; i++) {
+            const q = i / 8;
+            const fx = W * 0.03 + (W * 0.70) * q;
+            const fy = y0 + Math.sin(q * Math.PI) * H * 0.037;
+            ctx.fillStyle = night ? 'rgba(255,255,255,0.25)' : cols[i % cols.length];
+            ctx.beginPath();
+            ctx.moveTo(fx - 8 * s, fy);
+            ctx.lineTo(fx + 8 * s, fy);
+            ctx.lineTo(fx, fy + 15 * s);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+
+    if (has('poster')) {                                    // ポスター
+        const x = W * 0.70, y = H * 0.50;
+        ctx.fillStyle = night ? '#4b5b46' : '#fef3c7';
+        ctx.fillRect(x - 22 * s, y - 30 * s, 44 * s, 60 * s);
+        ctx.strokeStyle = night ? '#3b2f4f' : '#d97706';
+        ctx.lineWidth = 2.5 * s;
+        ctx.strokeRect(x - 22 * s, y - 30 * s, 44 * s, 60 * s);
+        ctx.fillStyle = night ? '#6b5a3a' : '#38bdf8';
+        ctx.fillRect(x - 18 * s, y - 26 * s, 36 * s, 30 * s);
+        ctx.fillStyle = night ? '#7c6f4a' : '#facc15';
+        star(x, y - 12 * s, 5, 11 * s, 5 * s);
+        ctx.fillStyle = night ? '#4b5b46' : '#f472b6';
+        ctx.fillRect(x - 18 * s, y + 8 * s, 36 * s, 5 * s);
+        ctx.fillRect(x - 18 * s, y + 17 * s, 24 * s, 5 * s);
+    }
+
+    if (has('guitar')) {                                    // ギター
+        const x = W * 0.79, y = H * 0.93;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(-0.22);
+        ctx.fillStyle = night ? '#7c5a3a' : '#d97706';
+        ellipse(0, -18 * s, 17 * s, 14 * s);
+        ellipse(0, -34 * s, 13 * s, 12 * s);
+        ctx.fillStyle = '#451a03';
+        ellipse(0, -24 * s, 5 * s, 5 * s);
+        ctx.fillStyle = night ? '#5b4636' : '#92400e';
+        ctx.fillRect(-4 * s, -74 * s, 8 * s, 42 * s);
+        ctx.fillRect(-7 * s, -84 * s, 14 * s, 12 * s);
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.lineWidth = 1 * s;
+        [-2, 0, 2].forEach(function (q) {
+            ctx.beginPath();
+            ctx.moveTo(q * s, -72 * s);
+            ctx.lineTo(q * s, -6 * s);
+            ctx.stroke();
+        });
+        ctx.restore();
+    }
+
+    if (has('vacuum')) {                                    // そうじき
+        const x = W * 0.90, y = H * 0.96;
+        ctx.fillStyle = night ? '#4b5563' : '#94a3b8';
+        ctx.fillRect(x - 16 * s, y - 22 * s, 32 * s, 20 * s);
+        ctx.fillStyle = night ? '#334155' : '#64748b';
+        ctx.fillRect(x - 20 * s, y - 6 * s, 40 * s, 6 * s);
+        ctx.fillStyle = '#dc2626';
+        ellipse(x + 4 * s, y - 14 * s, 6 * s, 6 * s);
+        ctx.strokeStyle = night ? '#334155' : '#475569';
+        ctx.lineWidth = 4 * s;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x - 12 * s, y - 22 * s);
+        ctx.quadraticCurveTo(x - 26 * s, y - 50 * s, x - 10 * s, y - 62 * s);
+        ctx.stroke();
+    }
+
+    if (has('game')) {                                      // ゲームき
+        const x = W * 0.40, y = H * 0.965;
+        ctx.fillStyle = night ? '#4b5563' : '#a78bfa';
+        ctx.fillRect(x - 22 * s, y - 15 * s, 44 * s, 15 * s);
+        ctx.fillStyle = night ? '#334155' : '#c4b5fd';
+        ctx.fillRect(x - 22 * s, y - 15 * s, 44 * s, 4 * s);
+        ctx.fillStyle = night ? '#1e293b' : '#38bdf8';
+        ctx.fillRect(x - 12 * s, y - 12 * s, 24 * s, 9 * s);
+        ctx.fillStyle = '#ef4444';
+        ellipse(x + 17 * s, y - 8 * s, 2.5 * s, 2.5 * s);
+        ctx.fillStyle = '#1f2937';
+        ctx.fillRect(x - 20 * s, y - 9 * s, 7 * s, 2.5 * s);
     }
 
     if (has('bank')) {                                      // ちょきんばこ
@@ -1744,6 +1978,27 @@ function drawCreature(t) {
 
     drawEars(sp);
 
+    if (state.wearing === 'cape') {                      // マント（からだの うしろ）
+        const sway = Math.sin(t * 2) * 6;
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.moveTo(-32, -28);
+        ctx.lineTo(32, -28);
+        ctx.lineTo(78 + sway, 62);
+        ctx.lineTo(-78 + sway, 62);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#991b1b';
+        ctx.fillRect(-34, -34, 68, 11);
+    } else if (state.wearing === 'backpack') {           // ランドセル
+        ctx.fillStyle = '#b91c1c';
+        ctx.fillRect(-64, -6, 30, 40);
+        ctx.fillStyle = '#7f1d1d';
+        ctx.fillRect(-64, -6, 30, 12);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(-52, 6, 7, 5);
+    }
+
     // 足
     ctx.fillStyle = sp.accent;
     ellipse(-22, 46, 15, 9);
@@ -1799,6 +2054,39 @@ function drawCreature(t) {
         ctx.fill();
         ctx.fillStyle = '#ec4899';
         ellipse(-30, -34, 6, 6);
+    } else if (state.wearing === 'crown') {              // おうかん
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.moveTo(-24, -38);
+        ctx.lineTo(-24, -60); ctx.lineTo(-10, -48); ctx.lineTo(0, -66);
+        ctx.lineTo(10, -48); ctx.lineTo(24, -60); ctx.lineTo(24, -38);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#dc2626';
+        ellipse(0, -44, 4, 4);
+        ctx.fillStyle = '#38bdf8';
+        ellipse(-14, -42, 3, 3);
+        ellipse(14, -42, 3, 3);
+    } else if (state.wearing === 'headphone') {          // ヘッドホン
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.arc(0, -4, 46, Math.PI * 1.18, Math.PI * 1.82);
+        ctx.stroke();
+        ctx.fillStyle = '#334155';
+        ellipse(-44, -8, 10, 13);
+        ellipse(44, -8, 10, 13);
+        ctx.fillStyle = '#ef4444';
+        ellipse(-44, -8, 5, 7);
+        ellipse(44, -8, 5, 7);
+    } else if (state.wearing === 'hairflower') {         // かみの おはな
+        ctx.fillStyle = '#f472b6';
+        for (let k = 0; k < 5; k++) {
+            const a = k / 5 * Math.PI * 2;
+            ellipse(28 + Math.cos(a) * 8, -36 + Math.sin(a) * 8, 6, 6);
+        }
+        ctx.fillStyle = '#facc15';
+        ellipse(28, -36, 5, 5);
     } else if (state.wearing === 'glasses') {            // めがね
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ellipse(-16, -8, 13, 13);
@@ -1813,6 +2101,40 @@ function drawCreature(t) {
         ctx.moveTo(-29, -11); ctx.lineTo(-42, -15);
         ctx.moveTo(29, -11); ctx.lineTo(42, -15);
         ctx.stroke();
+    } else if (state.wearing === 'sunglass') {           // サングラス
+        ctx.fillStyle = '#1f2937';
+        ellipse(-17, -8, 15, 12);
+        ellipse(17, -8, 15, 12);
+        ctx.fillRect(-6, -11, 12, 5);
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ellipse(-21, -12, 5, 3);
+        ellipse(13, -12, 5, 3);
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-31, -10); ctx.lineTo(-44, -14);
+        ctx.moveTo(31, -10); ctx.lineTo(44, -14);
+        ctx.stroke();
+    } else if (state.wearing === 'scarf') {              // マフラー
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-42, 26, 84, 14);
+        ctx.fillStyle = '#b91c1c';
+        ctx.fillRect(24, 34, 15, 30);
+        ctx.fillStyle = '#fca5a5';
+        [-30, -10, 10, 30].forEach(function (q) { ctx.fillRect(q, 26, 6, 14); });
+    } else if (state.wearing === 'necktie') {            // ネクタイ
+        ctx.fillStyle = '#1d4ed8';
+        ctx.beginPath();
+        ctx.moveTo(-9, 20); ctx.lineTo(9, 20); ctx.lineTo(5, 28); ctx.lineTo(-5, 28);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-5, 28); ctx.lineTo(5, 28); ctx.lineTo(9, 48); ctx.lineTo(0, 54); ctx.lineTo(-9, 48);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#93c5fd';
+        ctx.fillRect(-7, 32, 14, 4);
+        ctx.fillRect(-8, 40, 16, 4);
     }
 
     // よごれ
@@ -2164,10 +2486,11 @@ function frame(ts) {
         drawBackground(t);
         drawYard(t);
         drawHouse(t);
-        drawPost(t);
+        drawHouseExtras(t);
     } else {
         drawRoom(t);
         drawBedBack(t);
+        drawRoomFloor(t);
     }
     if (state.stage === 'egg') {
         drawEgg(t);
