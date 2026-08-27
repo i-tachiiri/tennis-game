@@ -322,6 +322,9 @@ function expNeeded(level) { return 20 + level * 15; }
 // ショップで かったか どうか
 function has(id) { return !!(state.owned && state.owned[id]); }
 
+// いま みにつけているか
+function isWorn(id) { return !!(state.worn && state.worn[id]); }
+
 function currentSpecies() {
     if (state.stage === 'baby') return SPECIES.baby;
     if (state.stage === 'child') return SPECIES.child;
@@ -392,7 +395,7 @@ function newState() {
         poops: [], poopTimer: 90, postTimer: 180, jobs: 0,
         view: 'out',
         owned: {},
-        wearing: null,
+        worn: {},
         care: { eat: 0, play: 0, train: 0, clean: 0 },
         log: ['たまごが とどいた！ タップして あたためよう。'],
         exhausted: false
@@ -413,7 +416,11 @@ function load() {
         const s = JSON.parse(raw);
         if (!s || s.version !== 1) return null;
         if (!s.owned) s.owned = {};        // ショップより まえの セーブ
-        if (!('wearing' in s)) s.wearing = null;
+        if (!s.worn) {                     // 1つしか つけられなかった ころの セーブ
+            s.worn = {};
+            if (s.wearing) s.worn[s.wearing] = true;
+        }
+        delete s.wearing;
         if (typeof s.postTimer !== 'number') s.postTimer = 180;
         return s;
     } catch (e) {
@@ -792,7 +799,7 @@ function openShop() {
                 const poor = state.coins < it.cost;
                 btn = `<div class="game-btn ${poor ? 'disabled' : ''}" onclick="buyItem('${it.id}')">${it.cost}🪙 で かう</div>`;
             } else if (it.cat === 'wear') {
-                const on = state.wearing === it.id;
+                const on = isWorn(it.id);
                 btn = `<div class="game-btn ${on ? 'pink' : 'gray'}" onclick="wearItem('${it.id}')">${on ? 'はずす' : 'つける'}</div>`;
             } else {
                 btn = `<div class="game-btn gray disabled">かざってある</div>`;
@@ -805,6 +812,11 @@ function openShop() {
                 <div style="width:38%">${btn}</div>
             </div>`;
         });
+        if (cat === 'wear') {
+            const wearing = SHOP.filter(function (it) { return it.cat === 'wear' && isWorn(it.id); }).length;
+            html += `<div class="text-xs text-gray-500 text-left mb-2">いくつでも かさねて つけられるよ（いま ${wearing}こ）</div>`;
+            if (wearing > 0) html += `<div class="game-btn gray mb-2" onclick="takeOffAll()">ぜんぶ はずす</div>`;
+        }
     });
     html += `<div class="game-btn gray mt-3" onclick="hideModal()">とじる</div>`;
     showModal(html);
@@ -816,7 +828,7 @@ function buyItem(id) {
     if (state.coins < it.cost) { addLog('コインが たりない…'); return; }
     state.coins -= it.cost;
     state.owned[id] = true;
-    if (it.cat === 'wear') state.wearing = id;
+    if (it.cat === 'wear') state.worn[id] = true;
     burst('star', 10);
     addLog(`🛒 ${it.label} を かった！`);
     save();
@@ -826,8 +838,21 @@ function buyItem(id) {
 
 function wearItem(id) {
     if (!has(id)) return;
-    state.wearing = state.wearing === id ? null : id;
-    addLog(state.wearing ? `${state.name} は ${SHOP.filter(function (x) { return x.id === id; })[0].label} を つけた！` : `${state.name} は みにつけていたものを はずした。`);
+    const label = SHOP.filter(function (x) { return x.id === id; })[0].label;
+    if (isWorn(id)) {
+        delete state.worn[id];
+        addLog(`${state.name} は ${label} を はずした。`);
+    } else {
+        state.worn[id] = true;
+        addLog(`${state.name} は ${label} を つけた！`);
+    }
+    save();
+    openShop();
+}
+
+function takeOffAll() {
+    state.worn = {};
+    addLog(`${state.name} は みにつけていたものを ぜんぶ はずした。`);
     save();
     openShop();
 }
@@ -1978,7 +2003,7 @@ function drawCreature(t) {
 
     drawEars(sp);
 
-    if (state.wearing === 'cape') {                      // マント（からだの うしろ）
+    if (isWorn('cape')) {                      // マント（からだの うしろ）
         const sway = Math.sin(t * 2) * 6;
         ctx.fillStyle = '#dc2626';
         ctx.beginPath();
@@ -1990,7 +2015,8 @@ function drawCreature(t) {
         ctx.fill();
         ctx.fillStyle = '#991b1b';
         ctx.fillRect(-34, -34, 68, 11);
-    } else if (state.wearing === 'backpack') {           // ランドセル
+    }
+    if (isWorn('backpack')) {           // ランドセル
         ctx.fillStyle = '#b91c1c';
         ctx.fillRect(-64, -6, 30, 40);
         ctx.fillStyle = '#7f1d1d';
@@ -2035,14 +2061,15 @@ function drawCreature(t) {
     drawEyes(m, t);
     drawMouth(m, t);
 
-    if (state.wearing === 'hat') {                       // むぎわらぼうし
+    if (isWorn('hat')) {                       // むぎわらぼうし
         ctx.fillStyle = '#fcd34d';
         ellipse(0, -38, 54, 13);
         ctx.fillStyle = '#fbbf24';
         ellipse(0, -50, 26, 17);
         ctx.fillStyle = '#ef4444';
         ctx.fillRect(-26, -47, 52, 7);
-    } else if (state.wearing === 'ribbon') {             // リボン
+    }
+    if (isWorn('ribbon')) {             // リボン
         ctx.fillStyle = '#f472b6';
         ctx.beginPath();
         ctx.moveTo(-30, -34); ctx.lineTo(-50, -45); ctx.lineTo(-50, -23);
@@ -2054,7 +2081,8 @@ function drawCreature(t) {
         ctx.fill();
         ctx.fillStyle = '#ec4899';
         ellipse(-30, -34, 6, 6);
-    } else if (state.wearing === 'crown') {              // おうかん
+    }
+    if (isWorn('crown')) {              // おうかん
         ctx.fillStyle = '#fbbf24';
         ctx.beginPath();
         ctx.moveTo(-24, -38);
@@ -2067,7 +2095,8 @@ function drawCreature(t) {
         ctx.fillStyle = '#38bdf8';
         ellipse(-14, -42, 3, 3);
         ellipse(14, -42, 3, 3);
-    } else if (state.wearing === 'headphone') {          // ヘッドホン
+    }
+    if (isWorn('headphone')) {          // ヘッドホン
         ctx.strokeStyle = '#1f2937';
         ctx.lineWidth = 7;
         ctx.beginPath();
@@ -2079,7 +2108,8 @@ function drawCreature(t) {
         ctx.fillStyle = '#ef4444';
         ellipse(-44, -8, 5, 7);
         ellipse(44, -8, 5, 7);
-    } else if (state.wearing === 'hairflower') {         // かみの おはな
+    }
+    if (isWorn('hairflower')) {         // かみの おはな
         ctx.fillStyle = '#f472b6';
         for (let k = 0; k < 5; k++) {
             const a = k / 5 * Math.PI * 2;
@@ -2087,7 +2117,8 @@ function drawCreature(t) {
         }
         ctx.fillStyle = '#facc15';
         ellipse(28, -36, 5, 5);
-    } else if (state.wearing === 'glasses') {            // めがね
+    }
+    if (isWorn('glasses')) {            // めがね
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ellipse(-16, -8, 13, 13);
         ellipse(16, -8, 13, 13);
@@ -2101,7 +2132,8 @@ function drawCreature(t) {
         ctx.moveTo(-29, -11); ctx.lineTo(-42, -15);
         ctx.moveTo(29, -11); ctx.lineTo(42, -15);
         ctx.stroke();
-    } else if (state.wearing === 'sunglass') {           // サングラス
+    }
+    if (isWorn('sunglass')) {           // サングラス
         ctx.fillStyle = '#1f2937';
         ellipse(-17, -8, 15, 12);
         ellipse(17, -8, 15, 12);
@@ -2115,14 +2147,16 @@ function drawCreature(t) {
         ctx.moveTo(-31, -10); ctx.lineTo(-44, -14);
         ctx.moveTo(31, -10); ctx.lineTo(44, -14);
         ctx.stroke();
-    } else if (state.wearing === 'scarf') {              // マフラー
+    }
+    if (isWorn('scarf')) {              // マフラー
         ctx.fillStyle = '#ef4444';
         ctx.fillRect(-42, 26, 84, 14);
         ctx.fillStyle = '#b91c1c';
         ctx.fillRect(24, 34, 15, 30);
         ctx.fillStyle = '#fca5a5';
         [-30, -10, 10, 30].forEach(function (q) { ctx.fillRect(q, 26, 6, 14); });
-    } else if (state.wearing === 'necktie') {            // ネクタイ
+    }
+    if (isWorn('necktie')) {            // ネクタイ
         ctx.fillStyle = '#1d4ed8';
         ctx.beginPath();
         ctx.moveTo(-9, 20); ctx.lineTo(9, 20); ctx.lineTo(5, 28); ctx.lineTo(-5, 28);
