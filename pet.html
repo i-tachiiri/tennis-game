@@ -203,8 +203,9 @@
         <div class="game-btn gray" id="btn-sleep" onclick="toggleSleep()">💤 ねる</div>
         <div class="game-btn" id="btn-med" style="background:#14b8a6;border-bottom-color:#0f766e" onclick="useMedicine()">💊 くすり</div>
     </div>
-    <div class="grid grid-cols-2 gap-2">
+    <div class="grid grid-cols-3 gap-2">
         <div class="game-btn gray" id="btn-status" onclick="openStatus()">📖 ずかん</div>
+        <div class="game-btn" id="btn-report" style="background:#7c3aed;border-bottom-color:#5b21b6" onclick="openReport()">📊 レポート</div>
         <div class="game-btn" id="btn-shop" style="background:#0ea5e9;border-bottom-color:#0369a1" onclick="openShop()">🛒 ショップ</div>
     </div>
 </div>
@@ -254,6 +255,7 @@ const MAX_COINS = 9000000000000000;   // 9000兆
 
 function addCoins(n) {
     state.coins = Math.min(MAX_COINS, state.coins + n);
+    if (state.stats) state.stats.earned = Math.min(MAX_COINS, state.stats.earned + n);
 }
 
 // おおきな かずは 「兆」「億」「万」で よみやすく
@@ -761,6 +763,7 @@ function newState() {
         level: 1, exp: 0, coins: 60, power: 0,
         sleeping: false, sick: false, sickTimer: 0,
         poops: [], poopTimer: 90, postTimer: 180, jobs: 0,
+        stats: { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0 },
         view: 'out',
         owned: {},
         worn: {},
@@ -791,6 +794,7 @@ function load() {
         }
         delete s.wearing;
         if (s.view === 'in') s.view = 'living';          // へやが 1つだった ころの セーブ
+        if (!s.stats) s.stats = { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0 };
         if (!s.theme) s.theme = {};
         Object.keys(s.theme).forEach(function (k) {      // 1まいだけの ころの セーブ
             if (!Array.isArray(s.theme[k])) s.theme[k] = [s.theme[k]];
@@ -859,6 +863,7 @@ function applyTime(dt) {
         if (state.sickTimer > (isWorn('mask') ? 70 : 40)) {
             state.sick = true;
             state.sickTimer = 0;
+            state.stats.sick++;
             addLog(`⚠ ${state.name} が びょうきに なってしまった…！`);
         }
     }
@@ -955,6 +960,7 @@ function feed(key) {
     state.hunger = clamp(state.hunger + f.hunger, 0, 100);
     state.happy = clamp(state.happy + f.happy, 0, 100);
     state.care.eat += f.eat;
+    state.stats.meals++;
     state.poopTimer = Math.min(state.poopTimer, 45);
     setAction('eat', 3, key);
     burst('heart', 5);
@@ -1022,6 +1028,7 @@ function doActivity(id) {
     state.clean = clamp(state.clean - (a.cl || 0), 0, 100);
     if (a.c) addCoins(a.c);
     state.care.play += 1;
+    state.stats.acts++;
     setAction('activity', 2.8, a.id);
     burst('heart', 6);
     addLog(`${a.emoji} ${a.label}！ たのしかった${a.c ? `（+${a.c}🪙）` : ''}`);
@@ -1068,6 +1075,7 @@ function stopMini() {
     state.hunger = clamp(state.hunger - 8, 0, 100);
     state.clean = clamp(state.clean - 6, 0, 100);
     state.care.play += 1;
+    state.stats.plays++;
     setAction('play', 2.5);
     burst('heart', 8);
     addLog(`${label} いっしょに あそんだ！ (+${coins}🪙)`);
@@ -1152,6 +1160,7 @@ function doBath() {
     state.clean = 100;
     state.happy = clamp(state.happy + (has('pool') ? 14 : 6), 0, 100);
     state.care.clean += 1;
+    state.stats.baths++;
     setAction('bath', 3.5);
     burst('bubble', 12);
     addLog(`🛁 おふろで ごしごし！ ぴかぴかに なった。`);
@@ -1234,6 +1243,7 @@ function useMedicine() {
     state.sickTimer = 0;
     state.hp = clamp(state.hp + 20, 0, 100);
     state.happy = clamp(state.happy + 8, 0, 100);
+    state.stats.meds++;
     burst('star', 8);
     addLog(`💊 おくすりを のんだ。 びょうきが なおった！`);
     save();
@@ -1361,6 +1371,67 @@ function takeOffAll() {
     addLog(`${state.name} は みにつけていたものを ぜんぶ はずした。`);
     save();
     openShop();
+}
+
+function openReport() {
+    const c = state.care;
+    const st = state.stats || { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0 };
+    const days = Math.floor(state.ageSec / DAY_SEC);
+    const total = Math.max(1, c.eat + c.play + c.train + c.clean);
+    const ownedCount = SHOP.filter(function (i) { return has(i.id); }).length;
+    const wornCount = SHOP.filter(function (i) { return i.cat === 'wear' && isWorn(i.id); }).length;
+    const actCount = ACTIVITIES.filter(function (a) { return has(a.item); }).length;
+
+    const bars = [
+        ['🍚 ごはん', c.eat, '#f97316'],
+        ['🎾 あそび', c.play, '#3b82f6'],
+        ['💪 きたえる', c.train, '#a855f7'],
+        ['🫧 おそうじ', c.clean, '#38bdf8']
+    ].map(function (b) {
+        const pct = Math.round(b[1] / total * 100);
+        return `<div class="mb-2">
+            <div class="flex justify-between text-xs font-bold"><span>${b[0]}</span><span>${b[1]}かい（${pct}%）</span></div>
+            <div class="bar-outer"><div class="bar-inner" style="width:${pct}%;background:${b[2]}"></div></div>
+        </div>`;
+    }).join('');
+
+    // そだてかたの しんだん
+    const top = [['ごはん', c.eat], ['あそび', c.play], ['トレーニング', c.train], ['おそうじ', c.clean]]
+        .sort(function (a, b) { return b[1] - a[1]; })[0];
+    let title;
+    if (total < 8) title = 'まだ はじまったばかり。これから！';
+    else if (st.sick === 0 && state.hp > 70) title = 'びょうき しらずの けんこうっこ！';
+    else if (top[0] === 'トレーニング') title = 'きたえるのが だいすきな がんばりや！';
+    else if (top[0] === 'ごはん') title = 'たべることが なにより すきな こ！';
+    else if (top[0] === 'あそび') title = 'あそぶのが だいすきな げんきっこ！';
+    else title = 'いつも きれいずきな しっかりもの！';
+
+    showModal(`
+        <div class="font-bold text-lg mb-1">📊 そだてかた レポート</div>
+        <div class="text-xs text-gray-600 mb-3">${state.name} / ${currentSpecies().name} / ${days}日目</div>
+
+        <div class="text-left text-sm mb-3" style="background:#fef3c7;border-radius:10px;padding:8px">
+            <span class="font-bold">${title}</span>
+        </div>
+
+        <div class="text-xs font-bold text-gray-600 text-left mb-1">おせわの うちわけ</div>
+        ${bars}
+
+        <div class="text-xs font-bold text-gray-600 text-left mt-3 mb-1">これまでの きろく</div>
+        <div class="text-left text-sm leading-6">
+            ⭐ レベル ${state.level} ／ 💪 ちから ${state.power}<br>
+            🍽 ごはんを あげた かず ${st.meals}<br>
+            🎾 あそんだ かず ${st.plays + st.acts}（うち アイテム ${st.acts}）<br>
+            🛁 おふろ ${st.baths} ／ 💊 おくすり ${st.meds} ／ 🤒 びょうき ${st.sick}<br>
+            💼 おしごと ${state.jobs || 0}かい<br>
+            🪙 これまでに かせいだ コイン ${coinText(st.earned)}<br>
+            🛒 もちもの ${ownedCount}／${SHOP.length}（みにつけ ${wornCount}）<br>
+            🎪 できる あそび ${actCount}／${ACTIVITIES.length}
+        </div>
+
+        <div class="text-xs text-gray-500 mt-3">いまの ようす: おなか ${Math.round(state.hunger)} / きげん ${Math.round(state.happy)} / きれい ${Math.round(state.clean)} / げんき ${Math.round(state.energy)} / たいりょく ${Math.round(state.hp)}</div>
+        <div class="game-btn gray mt-3" onclick="hideModal()">とじる</div>
+    `);
 }
 
 function openStatus() {
