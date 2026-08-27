@@ -222,7 +222,7 @@ const MEDICINE_COST = 30;
 
 let state = null;
 let particles = [];
-let action = { type: null, until: 0 };
+let action = { type: null, until: 0, dur: 1, food: null };
 let mini = { active: false, pos: 0, dir: 1, speed: 0.8 };
 let canvas, ctx, lastFrame = 0, saveTimer = 0;
 let petPos = 0.5;          // ペットの立ち位置（キャンバス幅にたいする割合）
@@ -278,9 +278,17 @@ function burst(type, count) {
     }
 }
 
-function setAction(type, sec) {
+function setAction(type, sec, food) {
     action.type = type;
     action.until = now() + sec;
+    action.dur = sec;
+    action.food = food || null;
+}
+
+// アクションの しんこう度（0→1）
+function actionProgress() {
+    if (!action.type) return 1;
+    return clamp(1 - (action.until - now()) / action.dur, 0, 1);
 }
 
 /* ---------------- state ---------------- */
@@ -459,7 +467,7 @@ function feed(key) {
     state.happy = clamp(state.happy + f.happy, 0, 100);
     state.care.eat += f.eat;
     state.poopTimer = Math.min(state.poopTimer, 45);
-    setAction('eat', 2);
+    setAction('eat', 3, key);
     burst('heart', 5);
     addLog(`${f.label} を たべた！ おいしそう。`);
     gainExp(f.exp);
@@ -504,7 +512,7 @@ function stopMini() {
     state.hunger = clamp(state.hunger - 8, 0, 100);
     state.clean = clamp(state.clean - 6, 0, 100);
     state.care.play += 1;
-    setAction('play', 2);
+    setAction('play', 2.5);
     burst('heart', 8);
     addLog(`${label} いっしょに あそんだ！ (+${coins}🪙)`);
     gainExp(8);
@@ -523,7 +531,7 @@ function doTrain() {
     state.power += 1;
     state.coins += 8;
     state.care.train += 1;
-    setAction('train', 2);
+    setAction('train', 2.5);
     burst('sweat', 6);
     addLog(`💪 トレーニング！ ちからが ${state.power} に なった (+8🪙)`);
     gainExp(15);
@@ -536,7 +544,7 @@ function doBath() {
     state.clean = 100;
     state.happy = clamp(state.happy + 6, 0, 100);
     state.care.clean += 1;
-    setAction('bath', 2);
+    setAction('bath', 3.5);
     burst('bubble', 12);
     addLog(`🛁 おふろで ごしごし！ ぴかぴかに なった。`);
     gainExp(4);
@@ -623,7 +631,7 @@ function hardReset() {
     hideModal();
     state = newState();
     particles = [];
-    action = { type: null, until: 0 };
+    action = { type: null, until: 0, dur: 1, food: null };
     save();
     renderLog();
     updateUI();
@@ -704,7 +712,7 @@ function ch() { return canvas.height / (window.devicePixelRatio || 1); }
 function mood() {
     if (state.sleeping) return 'sleep';
     if (action.type === 'eat') return 'eat';
-    if (action.type === 'happy' || action.type === 'play') return 'joy';
+    if (action.type === 'happy' || action.type === 'play' || action.type === 'bath') return 'joy';
     if (action.type === 'train') return 'train';
     if (state.sick) return 'sick';
     if (state.hp < 25 || state.hunger < 20 || state.happy < 20 || state.clean < 20) return 'sad';
@@ -1055,12 +1063,14 @@ function drawCreature(t) {
     const baseY = H * 0.70;
     const cx = petPos * W;
 
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.16)';
-    ctx.beginPath();
-    ctx.ellipse(cx, baseY + 52 * s, 44 * s, 10 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    if (action.type !== 'bath') {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.16)';
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY + 52 * s, 44 * s, 10 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
 
     ctx.save();
     ctx.translate(cx, baseY + bob * s);
@@ -1074,7 +1084,7 @@ function drawCreature(t) {
     ellipse(22, 46, 15, 9);
 
     // 手
-    const arm = m === 'joy' ? -18 : (m === 'train' ? -22 + Math.sin(t * 9) * 10 : 6);
+    const arm = m === 'joy' ? -18 : (m === 'train' ? -22 + Math.sin(t * 9) * 10 : (m === 'eat' ? -4 : 6));
     ctx.fillStyle = sp.accent;
     ellipse(-44, 12 + arm, 11, 11);
     ellipse(44, 12 + arm, 11, 11);
@@ -1124,6 +1134,208 @@ function drawCreature(t) {
         ctx.fillText('🍖', cx - 52 * s, baseY - 44 * s + Math.sin(t * 3) * 4);
     }
     ctx.textAlign = 'left';
+}
+
+/* ---------------- action scenes ---------------- */
+
+// ペットと おなじ ざひょうけいを つかう
+function stageInfo() {
+    const W = cw(), H = ch();
+    return { W: W, H: H, s: petScale() * (W / 380), cx: petPos * W, baseY: H * 0.70 };
+}
+
+function drawFoodItem(key) {
+    if (key === 'feast') {
+        ctx.fillStyle = '#fde68a';                       // ほね
+        ctx.fillRect(-26, -6, 52, 7);
+        ctx.beginPath();
+        ctx.arc(-26, -2.5, 6, 0, Math.PI * 2);
+        ctx.arc(26, -2.5, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#b45309';                       // おにく
+        ellipse(0, -9, 21, 13);
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(0, -9, 21, 13, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = '#92400e';
+        ellipse(-6, -13, 8, 4);
+    } else if (key === 'cake') {
+        ctx.fillStyle = '#fef3c7';                       // スポンジ
+        ctx.beginPath();
+        ctx.moveTo(-18, 0); ctx.lineTo(18, 0); ctx.lineTo(11, -26); ctx.lineTo(-11, -26);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#fbcfe8';                       // クリーム
+        ctx.fillRect(-15, -15, 30, 6);
+        ctx.beginPath();
+        ctx.moveTo(-11, -26); ctx.lineTo(11, -26); ctx.lineTo(12, -31); ctx.lineTo(-12, -31);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ef4444';                       // いちご
+        ellipse(0, -35, 6, 6);
+    } else {
+        ctx.fillStyle = '#fff';                          // ごはん
+        ellipse(0, -14, 17, 11);
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(0, -14, 17, 11, 0, Math.PI, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = '#dc2626';                       // おちゃわん
+        ctx.beginPath();
+        ctx.moveTo(-23, -10);
+        ctx.lineTo(23, -10);
+        ctx.quadraticCurveTo(19, 9, 0, 9);
+        ctx.quadraticCurveTo(-19, 9, -23, -10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#fca5a5';
+        ctx.fillRect(-23, -11, 46, 3);
+        ctx.fillStyle = '#b91c1c';                       // だい
+        ctx.fillRect(-7, 7, 14, 4);
+    }
+}
+
+function drawFoodScene(t) {
+    const st = stageInfo();
+    const left = 1 - Math.floor(actionProgress() * 3) / 3;   // 3くちで たべおわる
+    if (left <= 0) return;
+    ctx.save();
+    ctx.translate(st.cx - 76 * st.s, st.baseY + 12 * st.s + Math.sin(t * 9) * 2.5 * st.s);
+    ctx.scale(st.s * 1.2, st.s * 1.2);
+    ctx.scale(left, left);
+    drawFoodItem(action.food);
+    ctx.restore();
+}
+
+function drawTubBack(t) {
+    const st = stageInfo();
+    ctx.save();
+    ctx.translate(st.cx, st.baseY);
+    ctx.scale(st.s, st.s);
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
+    ellipse(0, 64, 78, 10);
+    ctx.fillStyle = '#e0f2fe';                               // タブ
+    ctx.fillRect(-74, 24, 148, 34);
+    ellipse(0, 58, 74, 12);
+    ctx.fillStyle = '#bae6fd';                               // ふちの うちがわ
+    ellipse(0, 24, 74, 17);
+    ctx.restore();
+}
+
+function drawTubFront(t) {
+    const st = stageInfo();
+    ctx.save();
+    ctx.translate(st.cx, st.baseY);
+    ctx.scale(st.s, st.s);
+
+    const wave = Math.sin(t * 3) * 1.5;
+    ctx.fillStyle = 'rgba(56,189,248,0.95)';                 // おゆ
+    ellipse(0, 30 + wave, 68, 14);
+
+    ctx.fillStyle = '#e0f2fe';                               // タブの まえがわ
+    ctx.beginPath();
+    ctx.ellipse(0, 30, 74, 17, 0, 0, Math.PI);
+    ctx.rect(-74, 30, 148, 30);
+    ctx.fill();
+    ctx.fillStyle = '#f0f9ff';
+    ctx.beginPath();
+    ctx.ellipse(0, 58, 74, 12, 0, 0, Math.PI);
+    ctx.fill();
+    ctx.strokeStyle = '#7dd3fc';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 30, 74, 17, 0, 0, Math.PI);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff';                                  // あわ（おゆの ふち）
+    for (let i = 0; i < 9; i++) {
+        const a = i / 8 * Math.PI;
+        ctx.globalAlpha = 0.9;
+        ellipse(-66 + i * 16.5, 30 + wave + Math.sin(t * 4 + i) * 2, 9 + (i % 3) * 2, 7);
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = '#fff';                                  // あたまの あわ
+    ellipse(-12, -46, 12, 9);
+    ellipse(4, -52, 14, 10);
+    ellipse(16, -44, 10, 8);
+
+    // アヒル
+    ctx.fillStyle = '#facc15';
+    ellipse(48, 22 + wave, 13, 9);
+    ellipse(56, 12 + wave, 8, 8);
+    ctx.fillStyle = '#f97316';
+    ctx.beginPath();
+    ctx.moveTo(62, 11 + wave); ctx.lineTo(72, 14 + wave); ctx.lineTo(62, 16 + wave);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#1f2937';
+    ellipse(58, 10 + wave, 1.6, 1.6);
+    ctx.restore();
+
+    // ゆげ
+    ctx.save();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 4.5 * st.s;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 3; i++) {
+        const q = (t * 0.5 + i * 0.33) % 1;
+        ctx.globalAlpha = (1 - q) * 0.9;
+        const x = st.cx + (-40 + i * 40) * st.s;
+        const y = st.baseY + (10 - q * 70) * st.s;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x + 10 * st.s, y - 10 * st.s, x, y - 20 * st.s);
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+}
+
+function drawDumbbell(t) {
+    const st = stageInfo();
+    const y = 12 + (-22 + Math.sin(t * 9) * 10);
+    ctx.save();
+    ctx.translate(st.cx, st.baseY);
+    ctx.scale(st.s, st.s);
+    [-52, 52].forEach((x) => {
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(x - 12, y - 2.5, 24, 5);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x - 16, y - 10, 8, 20);
+        ctx.fillRect(x + 8, y - 10, 8, 20);
+    });
+    ctx.restore();
+}
+
+function drawBall(t) {
+    const st = stageInfo();
+    const hop = Math.abs(Math.sin(t * 5));
+    const gx = st.cx + 58 * st.s, gy = st.baseY + 48 * st.s;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.14)';
+    ctx.beginPath();
+    ctx.ellipse(gx, gy, (12 - hop * 4) * st.s, (4 - hop * 1.5) * st.s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.translate(gx, gy - 13 * st.s - hop * 54 * st.s);
+    ctx.scale(st.s, st.s);
+    ctx.fillStyle = '#f8fafc';
+    ellipse(0, 0, 13, 13);
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, 13, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-13, 1);
+    ctx.quadraticCurveTo(0, -7, 13, 1);
+    ctx.stroke();
+    ctx.restore();
 }
 
 function drawParticles(dt, t) {
@@ -1207,7 +1419,14 @@ function frame(ts) {
         drawEgg(t);
     } else {
         drawPoops();
-        if (!petInside) drawCreature(t);
+        if (!petInside) {
+            if (action.type === 'bath') drawTubBack(t);
+            drawCreature(t);
+            if (action.type === 'bath') drawTubFront(t);
+            else if (action.type === 'eat') drawFoodScene(t);
+            else if (action.type === 'train') drawDumbbell(t);
+            else if (action.type === 'play') drawBall(t);
+        }
     }
     drawParticles(dt, t);
     updateUI();
