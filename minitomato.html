@@ -28,6 +28,38 @@
             0%, 100% { transform: rotate(-5deg); }
             50% { transform: rotate(5deg); }
         }
+        /* 🌱 育っている感じの微妙な揺れ */
+        #plant-growth-group {
+            transform-origin: 100px 225px;
+            animation: plant-sway 4s ease-in-out infinite;
+        }
+        @keyframes plant-sway {
+            0%, 100% { transform: rotate(-1deg); }
+            50% { transform: rotate(1deg); }
+        }
+        /* 成長した瞬間のキラキラ */
+        #plant-growth-group.grow-burst {
+            animation: plant-sway 4s ease-in-out infinite, grow-burst 0.9s ease-out;
+        }
+        @keyframes grow-burst {
+            0% { filter: drop-shadow(0 0 0 rgba(190, 242, 100, 0)); transform: scale(1) rotate(-1deg); }
+            30% { filter: drop-shadow(0 0 12px rgba(190, 242, 100, 0.9)); transform: scale(1.06) rotate(0deg); }
+            100% { filter: drop-shadow(0 0 0 rgba(190, 242, 100, 0)); transform: scale(1) rotate(-1deg); }
+        }
+        /* 成長パーティクル */
+        .growth-sparkle {
+            position: absolute;
+            font-size: 14px;
+            pointer-events: none;
+            animation: sparkle-rise 1.2s ease-out forwards;
+            z-index: 25;
+        }
+        @keyframes sparkle-rise {
+            0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
+            30% { opacity: 1; transform: translate(-50%, -20px) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -80px) scale(0.7); }
+        }
+
         /* バリアのエフェクト */
         .barrier-glow {
             animation: barrier-pulse 1.5s infinite alternate;
@@ -1926,6 +1958,28 @@
             }
 
             plantGrowthGroup.innerHTML = svgContent;
+
+            // 成長した瞬間にキラキラエフェクト
+            const growSnapshot = plantGrowthGroup._lastGrowthShown;
+            if (growSnapshot !== undefined && activePlant.growth > growSnapshot + 0.5) {
+                plantGrowthGroup.classList.remove('grow-burst');
+                void plantGrowthGroup.offsetWidth;
+                plantGrowthGroup.classList.add('grow-burst');
+                spawnGrowthSparkle(activePlant.stage);
+            }
+            plantGrowthGroup._lastGrowthShown = activePlant.growth;
+        }
+
+        function spawnGrowthSparkle(stage) {
+            if (!popupContainer) return;
+            const glyphs = ['✨','🌱','💚','🌟'];
+            const sp = document.createElement('div');
+            sp.className = 'growth-sparkle';
+            sp.style.left = (40 + Math.random() * 40) + '%';
+            sp.style.top = '55%';
+            sp.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+            popupContainer.appendChild(sp);
+            setTimeout(() => sp.remove(), 1300);
         }
 
         // --- ショップリストの描画 ---
