@@ -249,6 +249,30 @@ const FOODS = {
 
 const MEDICINE_COST = 30;
 
+// JavaScript が きちんと かぞえられる いちばん おおきな あたり
+const MAX_COINS = 9000000000000000;   // 9000兆
+
+function addCoins(n) {
+    state.coins = Math.min(MAX_COINS, state.coins + n);
+}
+
+// おおきな かずは 「兆」「億」「万」で よみやすく
+function coinText(n) {
+    if (n >= 1e12) {
+        const v = n / 1e12;
+        return (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10) + '兆';
+    }
+    if (n >= 1e8) {
+        const v = n / 1e8;
+        return (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10) + '億';
+    }
+    if (n >= 1e4) {
+        const v = n / 1e4;
+        return (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10) + '万';
+    }
+    return String(Math.round(n));
+}
+
 // かった ものが あると できる こと
 // e:げんきを つかう / hu:おなかが へる / h:きげん / x:けいけんち /
 // c:コイン / eg:げんきが ふえる / hg:おなかが ふえる / cl:きれいが へる
@@ -292,11 +316,17 @@ const JOBS = [
     { id: 'carry', label: '📦 にもつはこび', energy: 25, hunger: 15, happy: 6, minPower: 3, minLevel: 1,
       base: 28, perPower: 4, perLevel: 2 },
     { id: 'shop',  label: '🏪 おみせばん',   energy: 18, hunger: 10, happy: 4, minPower: 0, minLevel: 5,
-      base: 22, perPower: 2, perLevel: 3 }
+      base: 22, perPower: 2, perLevel: 3 },
+    { id: 'office', label: '🏢 かいしゃで はたらく', energy: 30, hunger: 18, happy: 8, minPower: 10, minLevel: 10,
+      base: 90, perPower: 6, perLevel: 6 },
+    { id: 'space', label: '🚀 うちゅうひこうし', energy: 45, hunger: 25, happy: 10, minPower: 20, minLevel: 15,
+      base: 600, perPower: 20, perLevel: 25 },
+    { id: 'legend', label: '🌠 でんせつの おしごと', energy: 60, hunger: 35, happy: 0, minPower: 30, minLevel: 20,
+      base: 0, perPower: 0, perLevel: 0, flat: 1000000000000000 }
 ];
 
 function jobPay(j) {
-    const raw = j.base + state.power * j.perPower + state.level * j.perLevel;
+    const raw = j.flat ? j.flat : j.base + state.power * j.perPower + state.level * j.perLevel;
     return Math.round(raw * (has('bank') ? 1.2 : 1));
 }
 
@@ -817,7 +847,7 @@ function applyTime(dt) {
         if (state.postTimer <= 0) {
             const times = Math.min(10, 1 + Math.floor(-state.postTimer / 180));
             state.postTimer = 180;
-            state.coins += 5 * times;
+            addCoins(5 * times);
             addLog(`📮 ポストに コインが とどいていた！ (+${5 * times}🪙)`);
         }
     }
@@ -862,7 +892,7 @@ function gainExp(n) {
     while (state.exp >= need) {
         state.exp -= need;
         state.level++;
-        state.coins += 20;
+        addCoins(20);
         addLog(`🎉 レベル ${state.level} に あがった！ (+20🪙)`);
         need = expNeeded(state.level);
     }
@@ -990,7 +1020,7 @@ function doActivity(id) {
     state.hunger = clamp(state.hunger - a.hu + (a.hg || 0), 0, 100);
     state.happy = clamp(state.happy + a.h, 0, 100);
     state.clean = clamp(state.clean - (a.cl || 0), 0, 100);
-    if (a.c) state.coins += a.c;
+    if (a.c) addCoins(a.c);
     state.care.play += 1;
     setAction('activity', 2.8, a.id);
     burst('heart', 6);
@@ -1032,7 +1062,7 @@ function stopMini() {
     else if (d < 0.22) { coins = 10; happy = 12; label = 'まあまあ…'; }
     else { coins = 3; happy = 6; label = 'ざんねん…'; }
 
-    state.coins += Math.round(coins * (has('bike') ? 1.3 : 1));
+    addCoins(Math.round(coins * (has('bike') ? 1.3 : 1)));
     state.happy = clamp(state.happy + happy * (has('tv') ? 1.3 : 1) * (has('game') ? 1.15 : 1) * (has('toybox') ? 1.1 : 1), 0, 100);
     state.energy = clamp(state.energy - 12, 0, 100);
     state.hunger = clamp(state.hunger - 8, 0, 100);
@@ -1063,7 +1093,7 @@ function openJobMenu() {
                 <div class="text-xs text-gray-500">${why}</div>
             </div>
             <div style="width:40%">
-                <div class="game-btn ${ng ? 'disabled' : ''}" onclick="doJob('${j.id}')">${jobPay(j)}🪙 もらう</div>
+                <div class="game-btn ${ng ? 'disabled' : ''}" onclick="doJob('${j.id}')">${coinText(jobPay(j))}🪙 もらう</div>
             </div>
         </div>`;
     }).join('');
@@ -1087,11 +1117,12 @@ function doJob(id) {
     state.hunger = clamp(state.hunger - j.hunger, 0, 100);
     state.happy = clamp(state.happy - j.happy, 0, 100);
     state.clean = clamp(state.clean - 8, 0, 100);
-    state.coins += pay;
+    addCoins(pay);
     state.jobs = (state.jobs || 0) + 1;
     setAction('work', 2.5, id);
-    burst('star', 6);
-    addLog(`${j.label} を がんばった！ おだちん ${pay}🪙`);
+    burst('star', id === 'legend' ? 30 : 6);
+    if (id === 'legend') addLog('🌌 うちゅうの おそうじを たのまれた…！');
+    addLog(`${j.label} を がんばった！ おだちん ${coinText(pay)}🪙`);
     gainExp(10);
     save();
 }
@@ -1106,7 +1137,7 @@ function doTrain() {
     state.happy = clamp(state.happy - 5, 0, 100);
     state.clean = clamp(state.clean - 10, 0, 100);
     state.power += 1;
-    state.coins += 8;
+    addCoins(8);
     state.care.train += 1;
     setAction('train', 2.5);
     burst('sweat', 6);
@@ -1139,7 +1170,7 @@ function doCleanPoop() {
     burst('bubble', 8);
     if (has('bin')) {
         const tip = 5 * n;
-        state.coins += tip;
+        addCoins(tip);
         addLog(`🧹 うんちを ${n}こ ゴミばこに すてた！ (+${tip}🪙)`);
     } else {
         addLog(`🧹 うんちを ${n}こ かたづけた！`);
@@ -1217,7 +1248,7 @@ function setShopTab(cat) {
 
 function openShop() {
     let html = `<div class="font-bold text-lg mb-1">🛒 ショップ</div>
-        <div class="text-sm font-bold text-amber-700 mb-2">もっているコイン ${state.coins}🪙</div>
+        <div class="text-sm font-bold text-amber-700 mb-2">もっているコイン ${coinText(state.coins)}🪙</div>
         <div class="grid grid-cols-3 gap-1 mb-3">`;
     SHOP_CAT.forEach(function (pair) {
         const cat = pair[0];
@@ -1342,7 +1373,7 @@ function openStatus() {
             レベル：${state.level}（つぎまで ${expNeeded(state.level) - state.exp}）<br>
             ねんれい：${Math.floor(state.ageSec / DAY_SEC)}日目<br>
             ちから：${state.power}<br>
-            コイン：${state.coins}🪙<br>
+            コイン：${coinText(state.coins)}🪙<br>
             <hr class="my-2">
             <span class="text-xs text-gray-600">おせわの きろく</span><br>
             🍚 ごはん ${c.eat} / 🎾 あそび ${c.play}<br>
@@ -5160,7 +5191,7 @@ function setBar(id, numId, value) {
 
 function updateUI() {
     el('pet-name').textContent = state.stage === 'egg' ? 'たまご' : state.name;
-    el('coin-view').textContent = '🪙 ' + state.coins;
+    el('coin-view').textContent = '🪙 ' + coinText(state.coins);
     el('stage-view').textContent = state.stage === 'egg' ? 'たまご' : currentSpecies().name;
     el('age-view').textContent = Math.floor(state.ageSec / DAY_SEC) + '日目';
     el('power-view').textContent = 'ちから ' + state.power;
