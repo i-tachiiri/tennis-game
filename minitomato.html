@@ -1957,17 +1957,47 @@
                 ` + ledLightSVG + shieldGlowSVG;
             }
 
-            plantGrowthGroup.innerHTML = svgContent;
+            // 成長率に応じて根本(100,225)を軸に段階的にスケールアップ
+            // 0% → 0.55, 100% → 1.05 の連続スケール
+            const growthScale = 0.55 + 0.5 * Math.min(1, Math.max(0, activePlant.growth / 100));
+            plantGrowthGroup.innerHTML = `<g transform="translate(100 225) scale(${growthScale.toFixed(3)}) translate(-100 -225)">${svgContent}</g>`;
 
             // 成長した瞬間にキラキラエフェクト
             const growSnapshot = plantGrowthGroup._lastGrowthShown;
+            const stageSnapshot = plantGrowthGroup._lastStageShown;
             if (growSnapshot !== undefined && activePlant.growth > growSnapshot + 0.5) {
                 plantGrowthGroup.classList.remove('grow-burst');
                 void plantGrowthGroup.offsetWidth;
                 plantGrowthGroup.classList.add('grow-burst');
                 spawnGrowthSparkle(activePlant.stage);
             }
+            // ステージが上がった瞬間は大きめの演出
+            if (stageSnapshot !== undefined && activePlant.stage > stageSnapshot) {
+                spawnStageUpBanner(STAGES[activePlant.stage]);
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => spawnGrowthSparkle(activePlant.stage), i * 90);
+                }
+            }
             plantGrowthGroup._lastGrowthShown = activePlant.growth;
+            plantGrowthGroup._lastStageShown = activePlant.stage;
+        }
+
+        function spawnStageUpBanner(stageInfo) {
+            if (!popupContainer || !stageInfo) return;
+            const b = document.createElement('div');
+            b.className = 'growth-sparkle';
+            b.style.left = '50%';
+            b.style.top = '35%';
+            b.style.fontSize = '20px';
+            b.style.background = 'rgba(255,255,255,0.9)';
+            b.style.padding = '4px 10px';
+            b.style.borderRadius = '9999px';
+            b.style.color = '#166534';
+            b.style.fontWeight = '900';
+            b.style.textShadow = '0 0 6px rgba(190, 242, 100, 0.9)';
+            b.textContent = `${stageInfo.emoji} ${stageInfo.name}！`;
+            popupContainer.appendChild(b);
+            setTimeout(() => b.remove(), 1300);
         }
 
         function spawnGrowthSparkle(stage) {
