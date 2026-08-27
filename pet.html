@@ -204,7 +204,7 @@
         <div class="game-btn" id="btn-med" style="background:#14b8a6;border-bottom-color:#0f766e" onclick="useMedicine()">💊 くすり</div>
     </div>
     <div class="grid grid-cols-3 gap-2" id="row-extra">
-        <div class="game-btn blue" id="btn-talk" style="display:none" onclick="openTalk()">🤖 はなす</div>
+        <div class="game-btn blue" id="btn-talk" style="display:none" onclick="openTalk()">🤖 ロボット</div>
         <div class="game-btn gray" id="btn-status" onclick="openStatus()">📖 ずかん</div>
         <div class="game-btn" id="btn-report" style="background:#7c3aed;border-bottom-color:#5b21b6" onclick="openReport()">📊 レポート</div>
         <div class="game-btn" id="btn-shop" style="background:#0ea5e9;border-bottom-color:#0369a1" onclick="openShop()">🛒 ショップ</div>
@@ -487,6 +487,7 @@ const SHOP = [
     { id: 'roboarm',  cat: 'room', label: '🦾 ロボットアーム', cost: 600, note: 'おなかが すいたら ごはんを あげる' },
     { id: 'robosoap', cat: 'room', label: '🧽 おそうじモジュール', cost: 500, note: 'よごれたら おふろに いれてくれる' },
     { id: 'robomed',  cat: 'room', label: '🩺 ケアモジュール', cost: 900, note: 'びょうきに なったら くすりを つかう' },
+    { id: 'robomic',  cat: 'room', label: '🎙 おねがいマイク', cost: 350, note: '「〜して」と たのむと やってくれる' },
     { id: 'hammock',  cat: 'room', label: '🛖 ハンモック',        cost: 260, note: 'ひるねが できる' },
     { id: 'kotatsu',  cat: 'room', label: '🔥 こたつ',            cost: 300, note: 'こたつに はいれる' },
     { id: 'petbed',   cat: 'room', label: '🛏 ペットベッド',      cost: 150, note: 'まるくなって やすめる' },
@@ -821,7 +822,7 @@ function newState() {
         sleeping: false, sick: false, sickTimer: 0,
         poops: [], poopTimer: 90, postTimer: 180, robotTimer: 45, chatTimer: 20, jobs: 0,
         helps: 0, lastTalk: 0,
-        stats: { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0 },
+        stats: { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0 },
         view: 'out',
         owned: {},
         worn: {},
@@ -863,6 +864,7 @@ function load() {
         if (typeof s.helps !== 'number') s.helps = 0;
         if (typeof s.lastTalk !== 'number') s.lastTalk = 0;
         if (typeof s.stats.talks !== 'number') s.stats.talks = 0;
+        if (typeof s.stats.orders !== 'number') s.stats.orders = 0;
         return s;
     } catch (e) {
         return null;
@@ -1128,18 +1130,243 @@ function talkTo(key) {
     save();
 }
 
+const ORDER_CHIPS = [
+    ['🍚 ごはんを あげて', 'ごはんを あげて'],
+    ['🛁 おふろに いれて', 'おふろに いれて'],
+    ['🧹 そうじして', 'そうじして'],
+    ['🎾 あそんで あげて', 'あそんで あげて'],
+    ['💪 きたえて', 'きたえて'],
+    ['💼 おしごと して', 'おしごと して'],
+    ['💊 なおして', 'なおして'],
+    ['💤 ねかせて', 'ねかせて'],
+    ['⏰ おこして', 'おこして']
+];
+
 function renderTalk() {
     const btns = TALK_MENU.map(function (m) {
         return `<div class="game-btn blue mb-2" onclick="talkTo('${m.key}')">${m.label}</div>`;
     }).join('');
+
+    let ask;
+    if (canOrder()) {
+        const chips = ORDER_CHIPS.map(function (c) {
+            return `<div class="game-btn green" style="font-size:0.68rem;padding:7px 2px" onclick="sendOrder('${c[1]}')">${c[0]}</div>`;
+        }).join('');
+        ask = `<div class="text-xs font-bold text-gray-600 text-left mb-1">🎙 「〜して」と おねがい</div>
+            <input id="order-input" value="${escAttr(orderDraft)}" placeholder="れい: ごはんを あげて"
+                oninput="setOrderDraft(this.value)"
+                onkeydown="if(event.key==='Enter'){sendOrder();}"
+                style="width:100%;box-sizing:border-box;font-family:inherit;font-size:0.95rem;padding:9px 10px;
+                       border:3px solid #78350f;border-radius:12px;background:#fff;margin-bottom:6px">
+            <div class="game-btn mb-2" onclick="sendOrder()">🎙 おねがい！</div>
+            <div class="grid grid-cols-3 gap-1 mb-3">${chips}</div>`;
+    } else {
+        ask = `<div class="text-left text-xs mb-3" style="background:#fef3c7;border-radius:10px;padding:8px;line-height:1.6">
+            🎙 ショップ（おへや）の <b>おねがいマイク</b>を かうと、<br>
+            「ごはんを あげて」のように たのめるように なるよ！
+        </div>`;
+    }
+
     showModal(`
         <div class="font-bold text-lg mb-2">🤖 ロボットと おはなし</div>
         <div class="text-left text-sm mb-3" style="background:#e0f2fe;border-radius:12px;padding:10px;line-height:1.6">
             🤖「${talkText}」
         </div>
+        ${ask}
+        <div class="text-xs font-bold text-gray-600 text-left mb-1">💬 おしゃべり</div>
         ${btns}
         <div class="game-btn gray mt-1" onclick="hideModal()">またね</div>
     `);
+}
+
+/* ---------------- orders（「〜して」と おねがい） ---------------- */
+
+// たべものの よびかた（うしろの ものほど ざっくり）
+const FOOD_ALIAS = [
+    ['steak', ['ステーキ']], ['ramen', ['ラーメン']], ['pizza', ['ピザ']],
+    ['icecream', ['アイス']], ['pudding', ['プリン']], ['donut', ['ドーナツ']],
+    ['cake', ['ケーキ']], ['honey', ['はちみつ', 'ハチミツ']], ['grape', ['ぶどう', 'ブドウ']],
+    ['banana', ['バナナ']], ['milk', ['ミルク', 'ぎゅうにゅう', '牛乳']], ['fish', ['さかな', '魚']],
+    ['berry', ['いちご', 'イチゴ']], ['carrot', ['にんじん', 'ニンジン', '人参']],
+    ['onigiri', ['おにぎり']], ['feast', ['ディナー', 'ごうか', 'ごちそう']],
+    ['rice', ['ごはん', 'ご飯', 'ライス']]
+];
+
+// 「〜して」の ことば → やること
+const ORDERS = [
+    { key: 'med',     words: ['くすり', '薬', 'なおし', '治し', 'びょうき', '病気', 'かいふく'] },
+    { key: 'wake',    words: ['おこして', '起こして', 'おきて', 'おはよう', 'めをさま'] },
+    { key: 'sleep',   words: ['ねかせ', 'ねむら', 'おやすみ', 'ねる', '寝', 'すいみん'] },
+    { key: 'bath',    words: ['おふろ', 'ふろ', '風呂', 'あらっ', 'あらい', '洗', 'シャワー', 'ぴかぴか', 'きれいに'] },
+    { key: 'clean',   words: ['そうじ', '掃除', 'うんち', 'ちらか', 'かたづけ', '片付', 'ごみ', 'ゴミ'] },
+    { key: 'feed',    words: ['ごはん', 'ご飯', 'たべ', '食べ', 'おなか', 'えさ', 'エサ', 'おやつ', 'まんぷく'] },
+    { key: 'play',    words: ['あそ', '遊', 'たのし', 'ゲーム', 'あいて'] },
+    { key: 'train',   words: ['きたえ', '鍛え', 'トレーニング', 'ちから', 'きんとれ', '筋トレ', 'うんどう', '運動'] },
+    { key: 'job',     words: ['しごと', '仕事', 'はたら', '働', 'かせ', '稼', 'コイン', 'おかね', 'お金', 'バイト'] },
+    { key: 'shop',    words: ['ショップ', 'かいもの', '買い物', 'おみせ', 'みせ', 'かって', '買って'] },
+    { key: 'report',  words: ['レポート', 'せいせき', 'きろく', '記録'] },
+    { key: 'status',  words: ['ずかん', '図鑑', 'ステータス'] },
+    { key: 'v-bed',   words: ['2かい', '２かい', 'にかい', '二かい', '二階', 'しんしつ', '寝室', 'ベッド'] },
+    { key: 'v-kit',   words: ['キッチン', 'だいどころ', '台所'] },
+    { key: 'v-liv',   words: ['リビング', 'いま', '居間'] },
+    { key: 'v-out',   words: ['そと', '外', 'おにわ', 'にわ', '庭'] }
+];
+
+function canOrder() { return has('robot') && has('robomic'); }
+
+function findOrder(txt) {
+    for (let i = 0; i < ORDERS.length; i++) {
+        const o = ORDERS[i];
+        for (let k = 0; k < o.words.length; k++) {
+            if (txt.indexOf(o.words[k]) >= 0) return o.key;
+        }
+    }
+    return null;
+}
+
+function foodFromText(txt) {
+    for (let i = 0; i < FOOD_ALIAS.length; i++) {
+        const pair = FOOD_ALIAS[i];
+        for (let k = 0; k < pair[1].length; k++) {
+            if (txt.indexOf(pair[1][k]) >= 0) return pair[0];
+        }
+    }
+    return null;
+}
+
+// いま できる いちばん おだちんの いい おしごと
+function bestJob() {
+    const ok = JOBS.filter(function (j) {
+        return state.power >= j.minPower && state.level >= j.minLevel
+            && state.energy >= j.energy && state.hunger >= j.hunger;
+    });
+    ok.sort(function (a, b) { return jobPay(b) - jobPay(a); });
+    return ok[0] || null;
+}
+
+// もっている あそびから ひとつ えらぶ
+function pickActivity() {
+    const ok = ACTIVITIES.filter(function (a) {
+        return has(a.item) && state.energy >= a.e && state.hunger >= a.hu;
+    });
+    return ok.length ? ok[Math.floor(Math.random() * ok.length)] : null;
+}
+
+let orderDraft = '';
+
+function setOrderDraft(v) { orderDraft = v; }
+
+// 入力を そのまま HTML に いれても こわれないように
+function escAttr(v) {
+    return String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function sendOrder(preset) {
+    const box = el('order-input');
+    const txt = (preset !== undefined ? preset : (box ? box.value : '')).trim();
+    if (!txt) return;
+    if (!canOrder()) {
+        talkText = 'ショップの 🎙 おねがいマイクが あると おねがいを ききとれるよ';
+        renderTalk();
+        return;
+    }
+    orderDraft = '';
+    addLog(`🗣「${escAttr(txt)}」`);
+    const key = findOrder(txt);
+    state.stats.orders = (state.stats.orders || 0) + 1;
+
+    if (!key) {
+        talkText = 'うーん、わからなかった… 「ごはん」「おふろ」「そうじ」「あそんで」とか いってみて！';
+        robotSay('うーん、わからなかった…');
+        renderTalk();
+        save();
+        return;
+    }
+    if (state.stage === 'egg') {
+        talkText = 'まだ たまごだよ。タップして あたためよう！';
+        renderTalk();
+        return;
+    }
+    hideModal();
+    runOrder(key, txt);
+    save();
+}
+
+function runOrder(key, txt) {
+    const n = state.name;
+
+    if (key === 'wake') {
+        if (!state.sleeping) { addLog(`🤖「${n} は もう おきてるよ」`); robotSay(`${n} は もう おきてるよ`); return; }
+        robotSay('はーい、おこして くるね！');
+        toggleSleep();
+        return;
+    }
+    if (key === 'sleep') {
+        if (state.sleeping) { addLog(`🤖「${n} は もう ねてるよ」`); robotSay(`${n} は もう ねてるよ`); return; }
+        robotSay('はーい、ねかしつけて くるね');
+        toggleSleep();
+        return;
+    }
+    if (state.sleeping && key !== 'report' && key !== 'status' && key !== 'shop' && key.indexOf('v-') !== 0) {
+        addLog(`🤖「${n} は ねてるよ。おこして からに しよう？」`);
+        robotSay(`${n} は ねてるよ。おこす？`);
+        return;
+    }
+
+    if (key === 'med') {
+        if (!state.sick) { addLog(`🤖「${n} は げんきだよ！ おくすりは いらないね」`); robotSay('げんきだから だいじょうぶ！'); return; }
+        robotSay('おくすりを もってくるね');
+        useMedicine();
+        return;
+    }
+    if (key === 'bath') { robotSay('りょうかい！ おふろに いれるね'); doBath(); return; }
+    if (key === 'clean') {
+        if (state.poops.length === 0) { addLog('🤖「おへやは きれいだよ！」'); robotSay('おへやは きれいだよ！'); return; }
+        robotSay('まかせて！ そうじ するね');
+        doCleanPoop();
+        return;
+    }
+    if (key === 'feed') {
+        const want = foodFromText(txt);
+        let k = want || 'rice';
+        if (!want) {                                  // なにを たべるか いわれなかったら かえる ものを えらぶ
+            const cheap = Object.keys(FOODS).filter(function (x) { return state.coins >= foodCost(FOODS[x]); })
+                .sort(function (a, b) { return FOODS[b].hunger - FOODS[a].hunger; });
+            k = cheap.length ? (state.coins >= foodCost(FOODS.rice) ? 'rice' : cheap[0]) : 'rice';
+        }
+        if (state.coins < foodCost(FOODS[k])) {
+            addLog(`🤖「コインが たりないよ…（${FOODS[k].label} は ${foodCost(FOODS[k])}🪙）」`);
+            robotSay('コインが たりないみたい…');
+            return;
+        }
+        robotSay(`${FOODS[k].label} を もってくるね！`);
+        feed(k);
+        return;
+    }
+    if (key === 'play') {
+        const a = pickActivity();
+        if (a) { robotSay(`${a.emoji} ${a.label}に しよう！`); doActivity(a.id); }
+        else { robotSay('ボールで あそぼう！'); startPlay(); }
+        return;
+    }
+    if (key === 'train') { robotSay('がんばれー！'); doTrain(); return; }
+    if (key === 'job') {
+        const j = bestJob();
+        if (!j) { addLog('🤖「いま できる おしごとが ないよ。げんきを ためよう」'); robotSay('いま できる おしごとが ないよ'); return; }
+        robotSay(`${j.label} が よさそう！`);
+        doJob(j.id);
+        return;
+    }
+    if (key === 'shop') { robotSay('ショップを ひらくね'); openShop(); return; }
+    if (key === 'report') { robotSay('レポートを だすね'); openReport(); return; }
+    if (key === 'status') { robotSay('ずかんを ひらくね'); openStatus(); return; }
+    if (key.indexOf('v-') === 0) {
+        const v = { 'v-out': 'out', 'v-liv': 'living', 'v-kit': 'kitchen', 'v-bed': 'bed' }[key];
+        robotSay(`${ROOM_LABEL[v]}へ いこう！`);
+        setView(v);
+        return;
+    }
 }
 
 /* ---------------- growth ---------------- */
@@ -1639,7 +1866,7 @@ function takeOffAll() {
 
 function openReport() {
     const c = state.care;
-    const st = state.stats || { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0 };
+    const st = state.stats || { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0 };
     const days = Math.floor(state.ageSec / DAY_SEC);
     const total = Math.max(1, c.eat + c.play + c.train + c.clean);
     const ownedCount = SHOP.filter(function (i) { return has(i.id); }).length;
@@ -1689,6 +1916,7 @@ function openReport() {
             🛁 おふろ ${st.baths} ／ 💊 おくすり ${st.meds} ／ 🤒 びょうき ${st.sick}<br>
             💼 おしごと ${state.jobs || 0}かい<br>
             🤖 ロボットの おてつだい ${state.helps || 0}かい ／ 💬 おしゃべり ${st.talks || 0}かい<br>
+            🎙 ロボットへの おねがい ${st.orders || 0}かい<br>
             🪙 これまでに かせいだ コイン ${coinText(st.earned)}<br>
             🛒 もちもの ${ownedCount}／${SHOP.length}（みにつけ ${wornCount}）<br>
             🎪 できる あそび ${actCount}／${ACTIVITIES.length}
