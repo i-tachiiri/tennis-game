@@ -384,11 +384,29 @@ const STYLE_COLORS = {
 
 function styleSlot(id) { return id.split('_')[0]; }
 
-function styleCol(slot, night, defDay, defNight) {
-    const id = state.theme && state.theme[slot];
-    const c = id && STYLE_COLORS[id];
-    if (!c) return night ? defNight : defDay;
-    return night ? c.night : c.day;
+// はってある もの（1めんに なんまいでも）
+function styleList(slot) {
+    const v = state.theme && state.theme[slot];
+    if (!v) return [];
+    return Array.isArray(v) ? v.slice() : [v];
+}
+
+function styleUsed(id) { return styleList(styleSlot(id)).indexOf(id) >= 0; }
+
+// はってある まいすうぶんの いろ（なければ もとの いろ）
+function styleColors(slot, night, defDay, defNight) {
+    const ids = styleList(slot).filter(function (id) { return STYLE_COLORS[id]; });
+    if (!ids.length) return [night ? defNight : defDay];
+    return ids.map(function (id) { return night ? STYLE_COLORS[id].night : STYLE_COLORS[id].day; });
+}
+
+// よこに ならべて はる
+function paintBands(x, y, w, h, cols) {
+    const n = cols.length;
+    for (let i = 0; i < n; i++) {
+        ctx.fillStyle = cols[i];
+        ctx.fillRect(x + w * i / n, y, w / n + 0.7, h);
+    }
 }
 
 const SHOP_CAT = [
@@ -542,6 +560,9 @@ function load() {
         }
         delete s.wearing;
         if (!s.theme) s.theme = {};
+        Object.keys(s.theme).forEach(function (k) {      // 1まいだけの ころの セーブ
+            if (!Array.isArray(s.theme[k])) s.theme[k] = [s.theme[k]];
+        });
         if (typeof s.postTimer !== 'number') s.postTimer = 180;
         return s;
     } catch (e) {
@@ -940,8 +961,8 @@ function openShop() {
                 const on = isWorn(it.id);
                 btn = `<div class="game-btn ${on ? 'pink' : 'gray'}" onclick="wearItem('${it.id}')">${on ? 'はずす' : 'つける'}</div>`;
             } else if (it.cat === 'style') {
-                const on = state.theme[styleSlot(it.id)] === it.id;
-                btn = `<div class="game-btn ${on ? 'pink' : 'gray'}" onclick="useStyle('${it.id}')">${on ? 'もどす' : 'つかう'}</div>`;
+                const on = styleUsed(it.id);
+                btn = `<div class="game-btn ${on ? 'pink' : 'gray'}" onclick="useStyle('${it.id}')">${on ? 'はがす' : 'はる'}</div>`;
             } else {
                 btn = `<div class="game-btn gray disabled">かざってある</div>`;
             }
@@ -953,6 +974,11 @@ function openShop() {
                 <div style="width:38%">${btn}</div>
             </div>`;
         });
+        if (cat === 'style') {
+            const used = SHOP.filter(function (it) { return it.cat === 'style' && styleUsed(it.id); }).length;
+            html += `<div class="text-xs text-gray-500 text-left mb-2">おなじ めんに なんまいでも はれるよ（いま ${used}まい）</div>`;
+            if (used > 0) html += `<div class="game-btn gray mb-2" onclick="peelAll()">ぜんぶ はがす</div>`;
+        }
         if (cat === 'wear') {
             const wearing = SHOP.filter(function (it) { return it.cat === 'wear' && isWorn(it.id); }).length;
             html += `<div class="text-xs text-gray-500 text-left mb-2">いくつでも かさねて つけられるよ（いま ${wearing}こ）</div>`;
@@ -970,7 +996,10 @@ function buyItem(id) {
     state.coins -= it.cost;
     state.owned[id] = true;
     if (it.cat === 'wear') state.worn[id] = true;
-    if (it.cat === 'style') state.theme[styleSlot(id)] = id;
+    if (it.cat === 'style') {
+        const slot = styleSlot(id);
+        state.theme[slot] = styleList(slot).concat([id]);
+    }
     burst('star', 10);
     addLog(`🛒 ${it.label} を かった！`);
     save();
@@ -996,13 +1025,23 @@ function useStyle(id) {
     if (!has(id)) return;
     const slot = styleSlot(id);
     const label = SHOP.filter(function (x) { return x.id === id; })[0].label;
-    if (state.theme[slot] === id) {
-        delete state.theme[slot];
-        addLog(`${label} を もとに もどした。`);
+    const list = styleList(slot);
+    const at = list.indexOf(id);
+    if (at >= 0) {
+        list.splice(at, 1);
+        if (list.length) state.theme[slot] = list; else delete state.theme[slot];
+        addLog(`${label} を はがした。`);
     } else {
-        state.theme[slot] = id;
-        addLog(`🎨 ${label} に もようがえ した！`);
+        state.theme[slot] = list.concat([id]);
+        addLog(`🎨 ${label} を はった！`);
     }
+    save();
+    openShop();
+}
+
+function peelAll() {
+    state.theme = {};
+    addLog('はってあった もようを ぜんぶ はがした。');
     save();
     openShop();
 }
@@ -1199,18 +1238,22 @@ function drawHouse(t) {
     ctx.fillRect(22, -106, 15, 30);
 
     // やね
-    ctx.fillStyle = styleCol('roof', night, '#dc2626', '#7f1d1d');
+    ctx.save();
     ctx.beginPath();
     ctx.moveTo(-56, -54); ctx.lineTo(0, -98); ctx.lineTo(56, -54);
     ctx.closePath();
-    ctx.fill();
+    ctx.clip();
+    paintBands(-56, -98, 112, 46, styleColors('roof', night, '#dc2626', '#7f1d1d'));
+    ctx.restore();
+    ctx.beginPath();
+    ctx.moveTo(-56, -54); ctx.lineTo(0, -98); ctx.lineTo(56, -54);
+    ctx.closePath();
     ctx.strokeStyle = 'rgba(60,20,10,0.5)';
     ctx.lineWidth = 3;
     ctx.stroke();
 
     // かべ
-    ctx.fillStyle = styleCol('wall2', night, '#e0b884', '#7c5a3a');
-    ctx.fillRect(-44, -54, 88, 58);
+    paintBands(-44, -54, 88, 58, styleColors('wall2', night, '#e0b884', '#7c5a3a'));
     ctx.strokeStyle = 'rgba(80,45,15,0.45)';
     ctx.lineWidth = 3;
     ctx.strokeRect(-44, -54, 88, 58);
@@ -2304,8 +2347,7 @@ function drawRoom(t) {
     const wallH = H * 0.74;
 
     // かべ
-    ctx.fillStyle = styleCol('wall', night, '#fdebd0', '#4b3b63');
-    ctx.fillRect(0, 0, W, wallH);
+    paintBands(0, 0, W, wallH, styleColors('wall', night, '#fdebd0', '#4b3b63'));
     ctx.fillStyle = night ? 'rgba(255,255,255,0.05)' : 'rgba(180,120,60,0.10)';
     for (let x = 0; x < W; x += 30) ctx.fillRect(x, 0, 13, wallH);
 
@@ -2367,8 +2409,7 @@ function drawRoom(t) {
     ctx.fill();
 
     // ゆか
-    ctx.fillStyle = styleCol('floor', night, '#c08b5c', '#5a4636');
-    ctx.fillRect(0, wallH, W, H - wallH);
+    paintBands(0, wallH, W, H - wallH, styleColors('floor', night, '#c08b5c', '#5a4636'));
     ctx.strokeStyle = night ? 'rgba(0,0,0,0.25)' : 'rgba(120,80,40,0.35)';
     ctx.lineWidth = 2;
     for (let i = 1; i < 4; i++) {
