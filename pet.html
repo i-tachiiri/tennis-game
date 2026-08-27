@@ -191,14 +191,17 @@
         <div id="log" class="px-1"></div>
     </div>
 
-    <div class="grid grid-cols-3 gap-2">
+    <div class="grid grid-cols-4 gap-2 mb-2">
         <div class="game-btn" id="btn-feed" onclick="openFoodMenu()">🍚 ごはん</div>
         <div class="game-btn blue" id="btn-play" onclick="startPlay()">🎾 あそぶ</div>
-        <div class="game-btn purple" id="btn-train" onclick="doTrain()">💪 トレーニング</div>
+        <div class="game-btn purple" id="btn-train" onclick="doTrain()">💪 きたえる</div>
+        <div class="game-btn" id="btn-job" style="background:#d97706;border-bottom-color:#92400e" onclick="openJobMenu()">💼 おしごと</div>
         <div class="game-btn green" id="btn-bath" onclick="doBath()">🛁 おふろ</div>
         <div class="game-btn pink" id="btn-clean" onclick="doCleanPoop()">🧹 そうじ</div>
         <div class="game-btn gray" id="btn-sleep" onclick="toggleSleep()">💤 ねる</div>
-        <div class="game-btn" id="btn-med" style="background:#14b8a6;border-bottom-color:#0f766e" onclick="useMedicine()">💊 おくすり</div>
+        <div class="game-btn" id="btn-med" style="background:#14b8a6;border-bottom-color:#0f766e" onclick="useMedicine()">💊 くすり</div>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
         <div class="game-btn gray" id="btn-status" onclick="openStatus()">📖 ずかん</div>
         <div class="game-btn" id="btn-shop" style="background:#0ea5e9;border-bottom-color:#0369a1" onclick="openShop()">🛒 ショップ</div>
     </div>
@@ -230,6 +233,21 @@ const FOODS = {
 
 const MEDICINE_COST = 30;
 
+// おしごと: ちからと レベルが たかいほど おだちんが ふえる
+const JOBS = [
+    { id: 'weed',  label: '🌿 くさむしり',   energy: 12, hunger: 8,  happy: 3, minPower: 0, minLevel: 1,
+      base: 12, perPower: 2, perLevel: 1 },
+    { id: 'carry', label: '📦 にもつはこび', energy: 25, hunger: 15, happy: 6, minPower: 3, minLevel: 1,
+      base: 28, perPower: 4, perLevel: 2 },
+    { id: 'shop',  label: '🏪 おみせばん',   energy: 18, hunger: 10, happy: 4, minPower: 0, minLevel: 5,
+      base: 22, perPower: 2, perLevel: 3 }
+];
+
+function jobPay(j) {
+    const raw = j.base + state.power * j.perPower + state.level * j.perLevel;
+    return Math.round(raw * (has('bank') ? 1.2 : 1));
+}
+
 // おさらが あると ごはんが すこし やすくなる
 function foodCost(f) { return has('dish') ? Math.max(1, Math.round(f.cost * 0.8)) : f.cost; }
 
@@ -244,6 +262,7 @@ const SHOP = [
     { id: 'curtain', cat: 'room', label: '🪟 カーテン',             cost: 70,  note: 'よるは しまって ぐっすり ねむれる' },
     { id: 'toilet',  cat: 'room', label: '🚽 ペットトイレ',         cost: 140, note: 'うんちが トイレに はいる' },
     { id: 'aircon',  cat: 'room', label: '❄️ エアコン',             cost: 200, note: 'げんきが へりにくくなる' },
+    { id: 'bank',    cat: 'room', label: '🐷 ちょきんばこ',         cost: 250, note: 'おしごとの おだちんが 2わり アップ' },
     { id: 'tree',    cat: 'yard', label: '🌳 おおきな き',        cost: 100, note: 'げんきが へりにくくなる' },
     { id: 'flower',  cat: 'yard', label: '🌷 はなだん',           cost: 70,  note: 'きげんが すこし へりにくくなる' },
     { id: 'post',    cat: 'yard', label: '📮 ポスト',             cost: 90,  note: 'ときどき コインが とどく' },
@@ -351,7 +370,7 @@ function newState() {
         hunger: 80, happy: 80, clean: 100, energy: 100, hp: 100,
         level: 1, exp: 0, coins: 60, power: 0,
         sleeping: false, sick: false, sickTimer: 0,
-        poops: [], poopTimer: 90, postTimer: 180,
+        poops: [], poopTimer: 90, postTimer: 180, jobs: 0,
         view: 'out',
         owned: {},
         wearing: null,
@@ -588,6 +607,57 @@ function stopMini() {
     save();
 }
 
+function openJobMenu() {
+    if (busy()) return;
+    const rows = JOBS.map(function (j) {
+        const lackPower = state.power < j.minPower;
+        const lackLevel = state.level < j.minLevel;
+        const tired = state.energy < j.energy || state.hunger < j.hunger;
+        const ng = lackPower || lackLevel || tired;
+        let why = '';
+        if (lackPower) why = `ちから ${j.minPower} から`;
+        else if (lackLevel) why = `レベル ${j.minLevel} から`;
+        else if (tired) why = 'げんきか おなかが たりない';
+        else why = `げんき -${j.energy} / おなか -${j.hunger}`;
+        return `<div class="flex items-center gap-2 mb-2">
+            <div class="text-left text-sm" style="flex:1">
+                <div class="font-bold">${j.label}</div>
+                <div class="text-xs text-gray-500">${why}</div>
+            </div>
+            <div style="width:40%">
+                <div class="game-btn ${ng ? 'disabled' : ''}" onclick="doJob('${j.id}')">${jobPay(j)}🪙 もらう</div>
+            </div>
+        </div>`;
+    }).join('');
+    showModal(`<div class="font-bold text-lg mb-1">💼 おしごと</div>
+        <div class="text-xs text-gray-600 mb-3">ちからと レベルが あがると おだちんも ふえるよ</div>
+        ${rows}
+        <div class="game-btn gray mt-2" onclick="hideModal()">やめる</div>`);
+}
+
+function doJob(id) {
+    hideModal();
+    if (busy()) return;
+    const j = JOBS.filter(function (x) { return x.id === id; })[0];
+    if (!j) return;
+    if (state.power < j.minPower) { addLog(`まだ ちからが たりない…`); return; }
+    if (state.level < j.minLevel) { addLog(`まだ レベルが たりない…`); return; }
+    if (state.energy < j.energy || state.hunger < j.hunger) { addLog(`げんきか おなかが たりない…`); return; }
+
+    const pay = jobPay(j);
+    state.energy = clamp(state.energy - j.energy, 0, 100);
+    state.hunger = clamp(state.hunger - j.hunger, 0, 100);
+    state.happy = clamp(state.happy - j.happy, 0, 100);
+    state.clean = clamp(state.clean - 8, 0, 100);
+    state.coins += pay;
+    state.jobs = (state.jobs || 0) + 1;
+    setAction('work', 2.5, id);
+    burst('star', 6);
+    addLog(`${j.label} を がんばった！ おだちん ${pay}🪙`);
+    gainExp(10);
+    save();
+}
+
 function doTrain() {
     if (busy()) return;
     if (state.energy < 20) { addLog(`げんきが たりない… やすませてあげよう。`); return; }
@@ -757,8 +827,10 @@ function openStatus() {
             <hr class="my-2">
             <span class="text-xs text-gray-600">おせわの きろく</span><br>
             🍚 ごはん ${c.eat} / 🎾 あそび ${c.play}<br>
-            💪 トレーニング ${c.train} / 🫧 おそうじ ${c.clean}
+            💪 きたえた ${c.train} / 🫧 おそうじ ${c.clean}<br>
+            💼 おしごと ${state.jobs || 0}かい
         </div>
+        <div class="text-xs text-gray-500 mt-2">ちからと レベルが あがると おしごとの おだちんが ふえるよ</div>
         <div class="text-xs text-gray-500 mt-3">Lv9で いちばん おおい おせわの すがたに しんかするよ</div>
         <div class="game-btn gray mt-3" onclick="hideModal()">とじる</div>
         <div class="game-btn pink mt-2" onclick="confirmReset()">🔄 さいしょから</div>
@@ -860,7 +932,7 @@ function mood() {
     if (state.sleeping) return 'sleep';
     if (action.type === 'eat') return 'eat';
     if (action.type === 'happy' || action.type === 'play' || action.type === 'bath') return 'joy';
-    if (action.type === 'train') return 'train';
+    if (action.type === 'train' || action.type === 'work') return 'train';
     if (state.sick) return 'sick';
     if (state.hp < 25 || state.hunger < 20 || state.happy < 20 || state.clean < 20) return 'sad';
     if (state.happy > 70) return 'joy';
@@ -1270,6 +1342,28 @@ function drawRoomStuff(t) {
         });
         ctx.fillStyle = night ? '#991b1b' : '#fca5a5';
         ctx.fillRect(x - 19 * s, y - 16 * s, 38 * s, 3 * s);
+    }
+
+    if (has('bank')) {                                      // ちょきんばこ
+        const x = W * 0.66, y = H * 0.96;
+        ctx.fillStyle = night ? '#7f3f5f' : '#f472b6';
+        ctx.fillRect(x - 15 * s, y - 6 * s, 7 * s, 6 * s);
+        ctx.fillRect(x + 6 * s, y - 6 * s, 7 * s, 6 * s);
+        ctx.fillStyle = night ? '#9d5f7a' : '#f9a8d4';
+        ellipse(x, y - 15 * s, 22 * s, 14 * s);
+        ellipse(x + 20 * s, y - 18 * s, 11 * s, 10 * s);
+        ctx.fillStyle = night ? '#7f3f5f' : '#f472b6';
+        ellipse(x + 28 * s, y - 18 * s, 5 * s, 5 * s);
+        ctx.beginPath();
+        ctx.moveTo(x + 12 * s, y - 27 * s);
+        ctx.lineTo(x + 20 * s, y - 24 * s);
+        ctx.lineTo(x + 12 * s, y - 21 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#1f2937';
+        ellipse(x + 22 * s, y - 20 * s, 1.8 * s, 1.8 * s);
+        ctx.fillStyle = '#a16207';
+        ctx.fillRect(x - 7 * s, y - 29 * s, 15 * s, 3.5 * s);
     }
 
     if (has('doll')) {
@@ -1902,6 +1996,49 @@ function drawTubFront(t) {
     ctx.restore();
 }
 
+function drawWorkScene(t) {
+    const st = stageInfo();
+    const arm = 12 + (-22 + Math.sin(t * 9) * 10);
+    const id = action.food;
+    ctx.save();
+    ctx.translate(st.cx, st.baseY);
+    ctx.scale(st.s, st.s);
+    if (id === 'carry') {                                  // にもつ
+        ctx.fillStyle = '#d6a15b';
+        ctx.fillRect(-30, arm - 56, 60, 38);
+        ctx.strokeStyle = '#92400e';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(-30, arm - 56, 60, 38);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(-30, arm - 42, 60, 7);
+    } else if (id === 'weed') {                            // くさ
+        ctx.strokeStyle = '#16a34a';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        [[-64, -16], [-56, -24], [-48, -14]].forEach(function (g) {
+            ctx.beginPath();
+            ctx.moveTo(-52, arm);
+            ctx.quadraticCurveTo(g[0], arm + g[1], g[0] - 3, arm + g[1] * 1.7);
+            ctx.stroke();
+        });
+        ctx.fillStyle = '#22c55e';
+        ellipse(66, 44, 17, 7);
+        ellipse(60, 38, 10, 5);
+    } else {                                               // おみせばんの コイン
+        ctx.fillStyle = '#facc15';
+        ellipse(54, arm, 14, 14);
+        ctx.strokeStyle = '#a16207';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(54, arm, 14, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = '#a16207';
+        ctx.fillRect(47, arm - 2, 14, 3.5);
+        ctx.fillRect(52, arm - 9, 4, 18);
+    }
+    ctx.restore();
+}
+
 function drawDumbbell(t) {
     const st = stageInfo();
     const y = 12 + (-22 + Math.sin(t * 9) * 10);
@@ -1991,7 +2128,7 @@ function updateUI() {
     el('btn-view-in').classList.toggle('view-off', isOutside());
 
     const locked = state.stage === 'egg' || state.sleeping;
-    ['btn-feed', 'btn-play', 'btn-train', 'btn-bath', 'btn-clean', 'btn-med'].forEach((id) => {
+    ['btn-feed', 'btn-play', 'btn-train', 'btn-job', 'btn-bath', 'btn-clean', 'btn-med'].forEach((id) => {
         el(id).classList.toggle('disabled', locked);
     });
     el('btn-med').classList.toggle('disabled', locked || !state.sick);
@@ -2043,6 +2180,7 @@ function frame(ts) {
             if (action.type === 'bath') drawTubFront(t);
             else if (action.type === 'eat') drawFoodScene(t);
             else if (action.type === 'train') drawDumbbell(t);
+            else if (action.type === 'work') drawWorkScene(t);
             else if (action.type === 'play') drawBall(t);
         }
     }
