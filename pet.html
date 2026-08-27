@@ -230,13 +230,23 @@ const FOODS = {
 
 const MEDICINE_COST = 30;
 
+// おさらが あると ごはんが すこし やすくなる
+function foodCost(f) { return has('dish') ? Math.max(1, Math.round(f.cost * 0.8)) : f.cost; }
+
 const SHOP = [
     { id: 'doll',    cat: 'room', label: '🧸 ぬいぐるみ',         cost: 60,  note: 'きげんが へりにくくなる' },
     { id: 'plant',   cat: 'room', label: '🪴 かんようしょくぶつ', cost: 90,  note: 'きれいが へりにくくなる' },
     { id: 'shelf',   cat: 'room', label: '📚 ほんだな',           cost: 120, note: 'トレーニングの けいけんちアップ' },
     { id: 'tv',      cat: 'room', label: '📺 テレビ',             cost: 180, note: 'あそびの きげんアップ' },
+    { id: 'dish',    cat: 'room', label: '🍽 ごはんの おさら',      cost: 60,  note: 'ごはんが 2わり やすくなる' },
+    { id: 'bin',     cat: 'room', label: '🗑 ゴミばこ',             cost: 80,  note: 'そうじで コインが もらえる' },
+    { id: 'clock',   cat: 'room', label: '🕰 かべどけい',           cost: 90,  note: 'いまの じかんが わかる' },
+    { id: 'curtain', cat: 'room', label: '🪟 カーテン',             cost: 70,  note: 'よるは しまって ぐっすり ねむれる' },
+    { id: 'toilet',  cat: 'room', label: '🚽 ペットトイレ',         cost: 140, note: 'うんちが トイレに はいる' },
+    { id: 'aircon',  cat: 'room', label: '❄️ エアコン',             cost: 200, note: 'げんきが へりにくくなる' },
     { id: 'tree',    cat: 'yard', label: '🌳 おおきな き',        cost: 100, note: 'げんきが へりにくくなる' },
     { id: 'flower',  cat: 'yard', label: '🌷 はなだん',           cost: 70,  note: 'きげんが すこし へりにくくなる' },
+    { id: 'post',    cat: 'yard', label: '📮 ポスト',             cost: 90,  note: 'ときどき コインが とどく' },
     { id: 'rainbow', cat: 'yard', label: '🌈 にじ',               cost: 150, note: 'みため だけ' },
     { id: 'ribbon',  cat: 'wear', label: '🎀 リボン',             cost: 80,  note: 'みため だけ' },
     { id: 'hat',     cat: 'wear', label: '👒 むぎわらぼうし',     cost: 110, note: 'みため だけ' },
@@ -341,7 +351,7 @@ function newState() {
         hunger: 80, happy: 80, clean: 100, energy: 100, hp: 100,
         level: 1, exp: 0, coins: 60, power: 0,
         sleeping: false, sick: false, sickTimer: 0,
-        poops: [], poopTimer: 90,
+        poops: [], poopTimer: 90, postTimer: 180,
         view: 'out',
         owned: {},
         wearing: null,
@@ -366,6 +376,7 @@ function load() {
         if (!s || s.version !== 1) return null;
         if (!s.owned) s.owned = {};        // ショップより まえの セーブ
         if (!('wearing' in s)) s.wearing = null;
+        if (typeof s.postTimer !== 'number') s.postTimer = 180;
         return s;
     } catch (e) {
         return null;
@@ -382,7 +393,7 @@ function applyTime(dt) {
     const m = dt / 60;
 
     if (state.sleeping) {
-        state.energy = clamp(state.energy + 16 * m, 0, 100);
+        state.energy = clamp(state.energy + (has('curtain') ? 20 : 16) * m, 0, 100);
         state.hunger = clamp(state.hunger - 2 * m, 0, 100);
         state.happy = clamp(state.happy - 0.5 * m, 0, 100);
         if (state.energy >= 100) {
@@ -392,8 +403,10 @@ function applyTime(dt) {
     } else {
         // ショップで かったものは へる はやさを ゆるめる
         const happyRate = 2.5 * (has('doll') ? 0.85 : 1) * (has('flower') ? 0.9 : 1);
-        const energyRate = 1.6 * (has('tree') ? 0.85 : 1);
-        const cleanRate = (2 + state.poops.length * 3) * (has('plant') ? 0.85 : 1);
+        const energyRate = 1.6 * (has('tree') ? 0.85 : 1) * (has('aircon') ? 0.85 : 1);
+        // トイレが あれば うんちで よごれにくい
+        const dirtPerPoop = has('toilet') ? 1 : 3;
+        const cleanRate = (2 + state.poops.length * dirtPerPoop) * (has('plant') ? 0.85 : 1);
         state.hunger = clamp(state.hunger - 3.2 * m, 0, 100);
         state.happy = clamp(state.happy - happyRate * m, 0, 100);
         state.energy = clamp(state.energy - energyRate * m, 0, 100);
@@ -406,6 +419,16 @@ function applyTime(dt) {
                 // ペットや おうちに かぶらないよう ひだり手前に ならべる
                 state.poops.push({ x: 0.06 + state.poops.length * 0.05 + Math.random() * 0.02 });
             }
+        }
+    }
+
+    if (has('post')) {                      // ポストに ときどき コインが とどく
+        state.postTimer -= dt;
+        if (state.postTimer <= 0) {
+            const times = Math.min(10, 1 + Math.floor(-state.postTimer / 180));
+            state.postTimer = 180;
+            state.coins += 5 * times;
+            addLog(`📮 ポストに コインが とどいていた！ (+${5 * times}🪙)`);
         }
     }
 
@@ -491,9 +514,10 @@ function openFoodMenu() {
     if (busy()) return;
     const rows = Object.keys(FOODS).map((k) => {
         const f = FOODS[k];
-        const poor = state.coins < f.cost;
+        const cost = foodCost(f);
+        const poor = state.coins < cost;
         return `<div class="game-btn ${poor ? 'disabled' : ''} mb-2" onclick="feed('${k}')">
-            ${f.label}<span class="text-xs"> / ${f.cost}🪙</span></div>`;
+            ${f.label}<span class="text-xs"> / ${cost}🪙</span></div>`;
     }).join('');
     showModal(`<div class="font-bold text-lg mb-3">なにを たべる？</div>${rows}
         <div class="game-btn gray mt-1" onclick="hideModal()">やめる</div>`);
@@ -503,10 +527,11 @@ function feed(key) {
     hideModal();
     if (busy()) return;
     const f = FOODS[key];
-    if (state.coins < f.cost) { addLog('コインが たりない…'); return; }
+    const cost = foodCost(f);
+    if (state.coins < cost) { addLog('コインが たりない…'); return; }
     if (state.hunger > 95) { addLog(`${state.name}「おなか いっぱいだよ〜」`); return; }
 
-    state.coins -= f.cost;
+    state.coins -= cost;
     state.hunger = clamp(state.hunger + f.hunger, 0, 100);
     state.happy = clamp(state.happy + f.happy, 0, 100);
     state.care.eat += f.eat;
@@ -604,7 +629,13 @@ function doCleanPoop() {
     state.happy = clamp(state.happy + 4, 0, 100);
     state.care.clean += 1;
     burst('bubble', 8);
-    addLog(`🧹 うんちを ${n}こ かたづけた！`);
+    if (has('bin')) {
+        const tip = 5 * n;
+        state.coins += tip;
+        addLog(`🧹 うんちを ${n}こ ゴミばこに すてた！ (+${tip}🪙)`);
+    } else {
+        addLog(`🧹 うんちを ${n}こ かたづけた！`);
+    }
     gainExp(3);
     save();
 }
@@ -1036,25 +1067,47 @@ function drawYard(t) {
     }
 }
 
+// ポストは おうちの まえに 立つので べつに えがく
+function drawPost(t) {
+    if (!has('post')) return;
+    const W = cw(), H = ch(), s = W / 380;
+    const night = state.sleeping;
+    const x = W * 0.66, y = H * 0.84;
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ellipse(x, y, 12 * s, 4 * s);
+    ctx.fillStyle = night ? '#4a2c10' : '#78350f';
+    ctx.fillRect(x - 3 * s, y - 36 * s, 6 * s, 36 * s);
+    ctx.fillStyle = night ? '#7f1d1d' : '#dc2626';
+    ctx.fillRect(x - 14 * s, y - 55 * s, 28 * s, 21 * s);
+    ctx.fillStyle = night ? '#450a0a' : '#991b1b';
+    ctx.fillRect(x - 14 * s, y - 55 * s, 28 * s, 5 * s);
+    ctx.fillStyle = '#1f2937';
+    ctx.fillRect(x - 8 * s, y - 47 * s, 16 * s, 3 * s);
+    ctx.fillStyle = night ? '#a16207' : '#facc15';
+    ctx.fillRect(x + 13 * s, y - 64 * s, 3 * s, 16 * s);
+    ctx.fillRect(x + 16 * s, y - 64 * s, 11 * s, 8 * s);
+}
+
 // へやに かざるもの
 function drawRoomStuff(t) {
     const W = cw(), H = ch(), s = W / 380;
     const night = state.sleeping;
 
-    if (has('tv')) {
-        const x = W * 0.08, y = H * 0.83;
+    if (has('tv')) {                                        // かべかけテレビ
+        const x = W * 0.09, y = H * 0.46;
         ctx.fillStyle = '#57534e';
-        ctx.fillRect(x - 5 * s, y - 11 * s, 10 * s, 11 * s);
-        ctx.fillRect(x - 20 * s, y - 2 * s, 40 * s, 4 * s);
+        ctx.fillRect(x - 5 * s, y + 17 * s, 10 * s, 7 * s);
         ctx.fillStyle = '#1f2937';
-        ctx.fillRect(x - 28 * s, y - 45 * s, 56 * s, 35 * s);
+        ctx.fillRect(x - 30 * s, y - 20 * s, 60 * s, 38 * s);
         ctx.fillStyle = night ? '#334155' : '#7dd3fc';
-        ctx.fillRect(x - 24 * s, y - 41 * s, 48 * s, 27 * s);
+        ctx.fillRect(x - 26 * s, y - 16 * s, 52 * s, 30 * s);
         if (!night) {
             ctx.fillStyle = 'rgba(255,255,255,0.7)';
-            ctx.fillRect(x - 20 * s, y - 37 * s, 16 * s, 3 * s);
+            ctx.fillRect(x - 22 * s, y - 12 * s, 18 * s, 3 * s);
             ctx.fillStyle = '#fde68a';
-            ellipse(x + 10 * s, y - 30 * s, 7 * s, 7 * s);
+            ellipse(x + 11 * s, y - 3 * s, 8 * s, 8 * s);
+            ctx.fillStyle = '#86efac';
+            ctx.fillRect(x - 26 * s, y + 8 * s, 52 * s, 6 * s);
         }
     }
 
@@ -1090,8 +1143,137 @@ function drawRoomStuff(t) {
         ellipse(x + 13 * s, y - 30 * s, 13 * s, 8 * s);
     }
 
+    if (has('curtain')) {                                   // カーテン（よるは しまる）
+        const wx = W * 0.17, wy = H * 0.18, ww = W * 0.21, wh = H * 0.30;
+        ctx.fillStyle = night ? '#5b4636' : '#92400e';
+        ctx.fillRect(wx - 11 * s, wy - 11 * s, ww + 22 * s, 6 * s);
+        const panel = night ? ww * 0.52 : ww * 0.23;
+        ctx.fillStyle = night ? '#a78bfa' : '#f9a8d4';
+        ctx.fillRect(wx - 7 * s, wy - 7 * s, panel, wh + 8 * s);
+        ctx.fillRect(wx + ww + 7 * s - panel, wy - 7 * s, panel, wh + 8 * s);
+        ctx.strokeStyle = 'rgba(0,0,0,0.13)';
+        ctx.lineWidth = 2 * s;
+        [0.33, 0.66].forEach(function (q) {
+            ctx.beginPath();
+            ctx.moveTo(wx - 7 * s + panel * q, wy - 7 * s);
+            ctx.lineTo(wx - 7 * s + panel * q, wy + wh);
+            ctx.moveTo(wx + ww + 7 * s - panel + panel * q, wy - 7 * s);
+            ctx.lineTo(wx + ww + 7 * s - panel + panel * q, wy + wh);
+            ctx.stroke();
+        });
+    }
+
+    if (has('clock')) {                                     // かべどけい（いまの じかん）
+        const x = W * 0.62, y = H * 0.30, r = W * 0.042;
+        ctx.fillStyle = night ? '#6b5a3a' : '#a16207';
+        ellipse(x, y, r + 3 * s, r + 3 * s);
+        ctx.fillStyle = night ? '#d6d3d1' : '#fffbeb';
+        ellipse(x, y, r, r);
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 2 * s;
+        for (let i = 0; i < 12; i++) {
+            const a = i / 12 * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(x + Math.cos(a) * r * 0.76, y + Math.sin(a) * r * 0.76);
+            ctx.lineTo(x + Math.cos(a) * r * 0.92, y + Math.sin(a) * r * 0.92);
+            ctx.stroke();
+        }
+        const d = new Date();
+        const hA = ((d.getHours() % 12) + d.getMinutes() / 60) / 12 * Math.PI * 2 - Math.PI / 2;
+        const mA = d.getMinutes() / 60 * Math.PI * 2 - Math.PI / 2;
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = 4 * s;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + Math.cos(hA) * r * 0.5, y + Math.sin(hA) * r * 0.5);
+        ctx.stroke();
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + Math.cos(mA) * r * 0.74, y + Math.sin(mA) * r * 0.74);
+        ctx.stroke();
+        ctx.fillStyle = '#dc2626';
+        ellipse(x, y, 2.5 * s, 2.5 * s);
+    }
+
+    if (has('aircon')) {                                    // エアコン
+        const x = W * 0.86, y = H * 0.11;
+        ctx.fillStyle = night ? '#cbd5e1' : '#f8fafc';
+        ctx.fillRect(x - 30 * s, y - 12 * s, 60 * s, 24 * s);
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2 * s;
+        ctx.strokeRect(x - 30 * s, y - 12 * s, 60 * s, 24 * s);
+        ctx.fillStyle = night ? '#94a3b8' : '#e2e8f0';
+        ctx.fillRect(x - 26 * s, y + 3 * s, 52 * s, 6 * s);
+        ctx.fillStyle = '#38bdf8';
+        ellipse(x + 23 * s, y - 6 * s, 3 * s, 3 * s);
+        ctx.strokeStyle = 'rgba(56,189,248,0.5)';
+        ctx.lineWidth = 2.5 * s;
+        [0, 1].forEach(function (i) {
+            const yy = y + (18 + i * 10) * s;
+            ctx.beginPath();
+            ctx.moveTo(x - 16 * s + i * 10 * s, yy);
+            ctx.quadraticCurveTo(x - 4 * s + i * 10 * s, yy + 6 * s, x + 8 * s + i * 10 * s, yy);
+            ctx.stroke();
+        });
+    }
+
+    if (has('bin')) {                                       // ゴミばこ
+        const x = W * 0.05, y = H * 0.95;
+        ctx.fillStyle = night ? '#475569' : '#64748b';
+        ctx.beginPath();
+        ctx.moveTo(x - 14 * s, y - 30 * s);
+        ctx.lineTo(x + 14 * s, y - 30 * s);
+        ctx.lineTo(x + 10 * s, y);
+        ctx.lineTo(x - 10 * s, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = 2 * s;
+        [-6, 0, 6].forEach(function (q) {
+            ctx.beginPath();
+            ctx.moveTo(x + q * s, y - 27 * s);
+            ctx.lineTo(x + q * s * 0.8, y - 4 * s);
+            ctx.stroke();
+        });
+        ctx.fillStyle = night ? '#334155' : '#475569';
+        ctx.fillRect(x - 16 * s, y - 35 * s, 32 * s, 6 * s);
+        ctx.fillRect(x - 3 * s, y - 39 * s, 6 * s, 5 * s);
+    }
+
+    if (has('toilet')) {                                    // ペットトイレ
+        const x = W * 0.17, y = H * 0.95;
+        ctx.fillStyle = night ? '#3f6b8f' : '#60a5fa';
+        ctx.fillRect(x - 28 * s, y - 17 * s, 56 * s, 17 * s);
+        ctx.fillStyle = night ? '#5b7fa8' : '#dbeafe';
+        ctx.fillRect(x - 24 * s, y - 13 * s, 48 * s, 10 * s);
+        ctx.fillStyle = night ? '#334155' : '#e2e8f0';      // すな
+        for (let i = 0; i < 12; i++) {
+            ctx.fillRect(x + (-22 + (i * 37 % 44)) * s, y - (5 + (i * 13 % 6)) * s, 3 * s, 3 * s);
+        }
+    }
+
+    if (has('dish')) {                                      // ごはんの おさら
+        const x = W * 0.29, y = H * 0.965;
+        ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';
+        ctx.beginPath();
+        ctx.moveTo(x - 19 * s, y - 15 * s);
+        ctx.lineTo(x + 19 * s, y - 15 * s);
+        ctx.quadraticCurveTo(x + 14 * s, y, x, y);
+        ctx.quadraticCurveTo(x - 14 * s, y, x - 19 * s, y - 15 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = night ? '#5b3a1a' : '#b45309';
+        [[-8, -17], [0, -19], [8, -17], [-4, -14], [5, -14]].forEach(function (q) {
+            ellipse(x + q[0] * s, y + q[1] * s, 4 * s, 3.5 * s);
+        });
+        ctx.fillStyle = night ? '#991b1b' : '#fca5a5';
+        ctx.fillRect(x - 19 * s, y - 16 * s, 38 * s, 3 * s);
+    }
+
     if (has('doll')) {
-        const x = W * 0.20, y = H * 0.91;
+        const x = W * 0.53, y = H * 0.95;
         ctx.fillStyle = 'rgba(0,0,0,0.14)';
         ellipse(x, y + 1 * s, 14 * s, 4 * s);
         ctx.fillStyle = night ? '#7c5a3a' : '#b45309';
@@ -1253,13 +1435,17 @@ function drawBlanket(t) {
 
 function drawPoops() {
     const W = cw(), H = ch();
+    const s = W / 380;
+    const inTray = !isOutside() && has('toilet');    // トイレが あれば その中に たまる
     ctx.save();
-    state.poops.forEach((p) => {
-        const x = p.x * W, y = H * 0.86;
-        ctx.fillStyle = '#78350f';
-        ellipse(x, y, 12, 6);
-        ellipse(x, y - 6, 9, 5);
-        ellipse(x, y - 11, 5, 4);
+    ctx.fillStyle = '#78350f';
+    state.poops.forEach((p, i) => {
+        const k = (inTray ? 0.7 : 1) * s;
+        const x = inTray ? W * 0.17 + (i - (state.poops.length - 1) / 2) * 10 * s : p.x * W;
+        const y = inTray ? H * 0.95 - 10 * s : H * 0.86;
+        ellipse(x, y, 12 * k, 6 * k);
+        ellipse(x, y - 6 * k, 9 * k, 5 * k);
+        ellipse(x, y - 11 * k, 5 * k, 4 * k);
     });
     ctx.restore();
 }
@@ -1841,6 +2027,7 @@ function frame(ts) {
         drawBackground(t);
         drawYard(t);
         drawHouse(t);
+        drawPost(t);
     } else {
         drawRoom(t);
         drawBedBack(t);
