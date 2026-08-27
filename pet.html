@@ -1227,6 +1227,28 @@ function drawHouse(t) {
     ctx.fillStyle = '#fbbf24';
     ellipse(1, -14, 2.5, 2.5);
 
+    // げんかんの だん
+    ctx.fillStyle = night ? '#57534e' : '#d6d3d1';
+    ctx.fillRect(-24, 4, 36, 7);
+    ctx.fillStyle = night ? '#44403c' : '#a8a29e';
+    ctx.fillRect(-27, 10, 42, 5);
+
+    // ポーチライト
+    ctx.fillStyle = night ? '#78350f' : '#92400e';
+    ctx.fillRect(-40, -34, 4, 8);
+    if (night) {
+        ctx.fillStyle = 'rgba(253,230,138,0.35)';
+        ellipse(-38, -22, 15, 16);
+    }
+    ctx.fillStyle = night ? '#fde68a' : '#e7e5e4';
+    ctx.beginPath();
+    ctx.moveTo(-45, -18);
+    ctx.lineTo(-31, -18);
+    ctx.lineTo(-34, -28);
+    ctx.lineTo(-42, -28);
+    ctx.closePath();
+    ctx.fill();
+
     // まど（よるは あかりが ともる）
     ctx.fillStyle = night ? '#fde68a' : '#bae6fd';
     if (night) { ctx.shadowBlur = 18; ctx.shadowColor = '#fde68a'; }
@@ -1250,6 +1272,11 @@ function drawHouse(t) {
         });
     }
 
+    if (!petHidden) {                         // レースカーテン
+        ctx.fillStyle = 'rgba(255,255,255,0.45)';
+        ctx.fillRect(12, -44, 8, 24);
+        ctx.fillRect(30, -44, 8, 24);
+    }
     ctx.strokeStyle = night ? '#92400e' : '#78350f';
     ctx.lineWidth = 3;
     ctx.strokeRect(12, -44, 26, 24);
@@ -1673,6 +1700,14 @@ function drawHouseExtras(t) {
     const W = cw(), H = ch(), s = W / 380;
     const night = state.sleeping;
 
+    // げんかんから つづく いしだたみ
+    ctx.fillStyle = night ? 'rgba(87,83,78,0.8)' : 'rgba(190,186,180,0.95)';
+    [[0.79, 0.855, 0.95], [0.772, 0.905, 1.2], [0.748, 0.965, 1.45]].forEach(function (st2) {
+        ctx.beginPath();
+        ctx.ellipse(W * st2[0], H * st2[1], 15 * s * st2[2], 5 * s * st2[2], 0, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
     if (has('sunflower')) {                         // ひまわり
         const x = W * 0.75, y = H * 0.95;
         ctx.strokeStyle = night ? '#14532d' : '#16a34a';
@@ -2073,7 +2108,7 @@ function drawRoomFloor(t) {
     }
 
     if (has('mirror')) {                                    // かがみ
-        const x = W * 0.87, y = H * 0.36;
+        const x = W * 0.10, y = H * 0.62;
         ctx.fillStyle = night ? '#6b5a3a' : '#a16207';
         ellipse(x, y, 22 * s, 28 * s);
         ctx.fillStyle = night ? '#475569' : '#e0f2fe';
@@ -2274,9 +2309,62 @@ function drawRoom(t) {
     ctx.fillStyle = night ? 'rgba(255,255,255,0.05)' : 'rgba(180,120,60,0.10)';
     for (let x = 0; x < W; x += 30) ctx.fillRect(x, 0, 13, wallH);
 
+    // へやの すみ（ひだりの かべが すこし おくに ある）
+    ctx.fillStyle = 'rgba(0,0,0,0.10)';
+    ctx.fillRect(0, 0, W * 0.06, wallH);
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.06, 0);
+    ctx.lineTo(W * 0.06, wallH);
+    ctx.stroke();
+
+    // てんじょうと まわりぶち
+    ctx.fillStyle = night ? '#5b4a73' : '#fff7ea';
+    ctx.fillRect(0, 0, W, H * 0.05);
+    ctx.fillStyle = night ? '#3b2f4f' : '#e7c9a0';
+    ctx.fillRect(0, H * 0.05, W, H * 0.014);
+
+    // ドア（ひとりぐらしの げんかん）
+    const dx = W * 0.90, dTop = H * 0.30;
+    ctx.fillStyle = night ? '#4b3418' : '#92400e';
+    ctx.fillRect(dx - W * 0.078, dTop - H * 0.015, W * 0.156, wallH - dTop + H * 0.015);
+    ctx.fillStyle = night ? '#6b4a24' : '#b45309';
+    ctx.fillRect(dx - W * 0.066, dTop, W * 0.132, wallH - dTop);
+    ctx.fillStyle = night ? '#5b3e1e' : '#a1560a';
+    ctx.fillRect(dx - W * 0.048, dTop + H * 0.04, W * 0.096, H * 0.10);
+    ctx.fillRect(dx - W * 0.048, dTop + H * 0.17, W * 0.096, H * 0.14);
+    ctx.fillStyle = '#fbbf24';
+    ellipse(dx + W * 0.044, dTop + H * 0.19, 5 * (W / 380), 5 * (W / 380));
+    ctx.fillStyle = night ? '#292524' : '#78350f';
+    ctx.fillRect(dx - W * 0.078, wallH - H * 0.012, W * 0.156, H * 0.012);
+
+    // でんきの スイッチ
+    ctx.fillStyle = night ? '#cbd5e1' : '#f8fafc';
+    ctx.fillRect(W * 0.795, H * 0.50, W * 0.028, H * 0.045);
+    ctx.fillStyle = night ? '#94a3b8' : '#cbd5e1';
+    ctx.fillRect(W * 0.801, H * 0.512, W * 0.016, H * 0.021);
+
+    // コンセント
+    ctx.fillStyle = night ? '#cbd5e1' : '#f8fafc';
+    ctx.fillRect(W * 0.655, wallH - H * 0.055, W * 0.026, H * 0.036);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(W * 0.661, wallH - H * 0.047, W * 0.004, H * 0.014);
+    ctx.fillRect(W * 0.671, wallH - H * 0.047, W * 0.004, H * 0.014);
+
     // はばき
     ctx.fillStyle = night ? '#3b2f4f' : '#f3d3a8';
     ctx.fillRect(0, wallH - H * 0.03, W, H * 0.03);
+
+    // げんかんマット
+    ctx.fillStyle = night ? '#4b3418' : '#c2846a';
+    ctx.beginPath();
+    ctx.ellipse(W * 0.905, H * 0.80, W * 0.075, H * 0.028, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = night ? '#5b4023' : '#d9a184';
+    ctx.beginPath();
+    ctx.ellipse(W * 0.905, H * 0.80, W * 0.055, H * 0.018, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     // ゆか
     ctx.fillStyle = styleCol('floor', night, '#c08b5c', '#5a4636');
@@ -2318,16 +2406,26 @@ function drawRoom(t) {
     ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2);
     ctx.stroke();
 
-    // かべの え
-    const px = W * 0.45, py = H * 0.16, pw = W * 0.12, ph = H * 0.16;
-    ctx.fillStyle = night ? '#6b5a3a' : '#d97706';
+    // かべの カレンダー（ほんとうの つきと ひ）
+    const px = W * 0.45, py = H * 0.14, pw = W * 0.13, ph = H * 0.19;
+    const today = new Date();
+    ctx.fillStyle = night ? '#94a3b8' : '#f8fafc';
     ctx.fillRect(px, py, pw, ph);
-    ctx.fillStyle = night ? '#3f5b63' : '#7dd3fc';
-    ctx.fillRect(px + 5, py + 5, pw - 10, ph - 10);
-    ctx.fillStyle = night ? '#7c6f4a' : '#fbbf24';
-    ellipse(px + pw * 0.5, py + ph * 0.42, pw * 0.16, pw * 0.16);
-    ctx.fillStyle = night ? '#4b5b46' : '#86efac';
-    ctx.fillRect(px + 5, py + ph * 0.62, pw - 10, ph * 0.32 - 5);
+    ctx.strokeStyle = night ? '#3b2f4f' : '#cbd5e1';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px, py, pw, ph);
+    ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';
+    ctx.fillRect(px, py, pw, ph * 0.3);
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.round(H * 0.045)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText((today.getMonth() + 1) + 'がつ', px + pw / 2, py + ph * 0.23);
+    ctx.fillStyle = night ? '#475569' : '#1f2937';
+    ctx.font = `bold ${Math.round(H * 0.095)}px sans-serif`;
+    ctx.fillText(String(today.getDate()), px + pw / 2, py + ph * 0.86);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = night ? '#64748b' : '#94a3b8';
+    ctx.fillRect(px + pw * 0.44, py - H * 0.012, pw * 0.12, H * 0.014);
 
     // てんじょうの ランプ
     const lx = W * 0.68;
