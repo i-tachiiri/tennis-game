@@ -1009,7 +1009,7 @@
             const seconds = Math.min(86400, elapsedSec);
 
             // 各種倍率を1回だけ計算
-            let growthPerSec = 0.8;
+            let growthPerSec = 0.3;
             if (state.upgrades.greenhouse) growthPerSec *= 1.5;
             if (state.upgrades.growthElixir) growthPerSec *= 1.2;
             if (state.upgrades.warpEngine) growthPerSec *= 2.0;
@@ -2900,7 +2900,7 @@
 
                 // 4. 成長の計算
                 if (plant.growth < 100 && plant.health > 20) {
-                    let growthSpeed = 0.8;
+                    let growthSpeed = 0.3;
 
                     let currentGrowthGain = weatherConf.growthGain;
                     if (state.upgrades.ledLight && (state.weather === 'cloudy' || state.weather === 'rainy')) {
