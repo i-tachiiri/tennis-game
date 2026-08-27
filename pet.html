@@ -203,7 +203,8 @@
         <div class="game-btn gray" id="btn-sleep" onclick="toggleSleep()">💤 ねる</div>
         <div class="game-btn" id="btn-med" style="background:#14b8a6;border-bottom-color:#0f766e" onclick="useMedicine()">💊 くすり</div>
     </div>
-    <div class="grid grid-cols-3 gap-2">
+    <div class="grid grid-cols-3 gap-2" id="row-extra">
+        <div class="game-btn blue" id="btn-talk" style="display:none" onclick="openTalk()">🤖 はなす</div>
         <div class="game-btn gray" id="btn-status" onclick="openStatus()">📖 ずかん</div>
         <div class="game-btn" id="btn-report" style="background:#7c3aed;border-bottom-color:#5b21b6" onclick="openReport()">📊 レポート</div>
         <div class="game-btn" id="btn-shop" style="background:#0ea5e9;border-bottom-color:#0369a1" onclick="openShop()">🛒 ショップ</div>
@@ -483,6 +484,9 @@ const SHOP = [
     { id: 'robot',    cat: 'room', label: '🤖 おてつだいロボット', cost: 800, note: 'かってに おそうじして くれる' },
     { id: 'dock',     cat: 'room', label: '🔌 ロボットの じゅうでんき', cost: 150, note: 'よるは リビングで じゅうでん' },
     { id: 'robotoy',  cat: 'room', label: '🎛 ロボットの おもちゃ', cost: 80,  note: 'みため だけ' },
+    { id: 'roboarm',  cat: 'room', label: '🦾 ロボットアーム', cost: 600, note: 'おなかが すいたら ごはんを あげる' },
+    { id: 'robosoap', cat: 'room', label: '🧽 おそうじモジュール', cost: 500, note: 'よごれたら おふろに いれてくれる' },
+    { id: 'robomed',  cat: 'room', label: '🩺 ケアモジュール', cost: 900, note: 'びょうきに なったら くすりを つかう' },
     { id: 'hammock',  cat: 'room', label: '🛖 ハンモック',        cost: 260, note: 'ひるねが できる' },
     { id: 'kotatsu',  cat: 'room', label: '🔥 こたつ',            cost: 300, note: 'こたつに はいれる' },
     { id: 'petbed',   cat: 'room', label: '🛏 ペットベッド',      cost: 150, note: 'まるくなって やすめる' },
@@ -815,8 +819,9 @@ function newState() {
         hunger: 80, happy: 80, clean: 100, energy: 100, hp: 100,
         level: 1, exp: 0, coins: 60, power: 0,
         sleeping: false, sick: false, sickTimer: 0,
-        poops: [], poopTimer: 90, postTimer: 180, robotTimer: 45, jobs: 0,
-        stats: { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0 },
+        poops: [], poopTimer: 90, postTimer: 180, robotTimer: 45, chatTimer: 20, jobs: 0,
+        helps: 0, lastTalk: 0,
+        stats: { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0 },
         view: 'out',
         owned: {},
         worn: {},
@@ -853,6 +858,11 @@ function load() {
             if (!Array.isArray(s.theme[k])) s.theme[k] = [s.theme[k]];
         });
         if (typeof s.postTimer !== 'number') s.postTimer = 180;
+        if (typeof s.robotTimer !== 'number') s.robotTimer = 45;   // ロボットが くるまえの セーブ
+        if (typeof s.chatTimer !== 'number') s.chatTimer = 20;
+        if (typeof s.helps !== 'number') s.helps = 0;
+        if (typeof s.lastTalk !== 'number') s.lastTalk = 0;
+        if (typeof s.stats.talks !== 'number') s.stats.talks = 0;
         return s;
     } catch (e) {
         return null;
@@ -902,15 +912,16 @@ function applyTime(dt) {
         }
     }
 
-    if (has('robot')) {                     // ロボットが かってに おそうじ
+    if (has('robot')) {                     // ロボットが かってに おてつだい＆おしゃべり
         state.robotTimer = (typeof state.robotTimer === 'number' ? state.robotTimer : 45) - dt;
         if (state.robotTimer <= 0) {
             state.robotTimer = 45;
-            if (state.poops.length > 0) {
-                state.poops.pop();
-                state.clean = clamp(state.clean + 10, 0, 100);
-                addLog('🤖 ロボットが おそうじして くれた！');
-            }
+            robotHelp();
+        }
+        state.chatTimer = (typeof state.chatTimer === 'number' ? state.chatTimer : 20) - dt;
+        if (state.chatTimer <= 0) {
+            state.chatTimer = 22 + Math.random() * 16;
+            robotSay(robotLine());
         }
     }
 
@@ -960,6 +971,177 @@ function applyTime(dt) {
     }
 }
 
+/* ---------------- robot ---------------- */
+
+// キャンバスの ふきだし（robotSay で セット、drawRobot が えがく）
+let roboTalk = { text: '', until: 0 };
+
+function robotSay(text, sec) {
+    if (!state || !has('robot') || state.stage === 'egg') return;
+    roboTalk = { text: text, until: now() + (sec || 4.5) };
+}
+
+function robotDays() { return Math.floor(state.ageSec / DAY_SEC); }
+
+// そのときの ようすに あわせた ひとこと
+function robotLine() {
+    const n = state.name;
+    if (state.sick) return `${n} が びょうきだよ！ おくすりを あげて！`;
+    if (state.hp <= 1) return `${n} が ぐったり… はやく おせわ しよう`;
+    if (state.hunger < 25) return `${n} の おなかが ペコペコ みたいだよ`;
+    if (state.poops.length >= 3) return 'おへやが ちらかってる… そうじ するね！';
+    if (state.clean < 25) return `${n} が よごれてるよ。おふろは どうかな`;
+    if (state.energy < 25) return `${n} が ねむそう。ねかせて あげよう`;
+    if (state.happy < 25) return `${n} と あそんで あげて！ さみしそうだよ`;
+    return randomChat();
+}
+
+function randomChat() {
+    const n = state.name;
+    const list = [
+        `きょうで ${robotDays()}日目 だね。はやいなあ`,
+        `${n} は きょうも げんきだよ`,
+        `レベル ${state.level} まで きたね！ すごい`,
+        `コインは いま ${coinText(state.coins)} あるよ`,
+        'ぼくの バッテリーは まんタン！',
+        `${n} の わらいがお、ぼく すきだな`,
+        'なにか てつだえる こと ある？',
+        'いっしょに いられて うれしいよ',
+        'おそうじは ぼくに まかせてね',
+        `${n} と キミが なかよしで よかった`,
+        'ときどき ショップを のぞくと たのしいよ',
+        'ピピッ… きょうも いい ひ だね'
+    ];
+    return list[Math.floor(Math.random() * list.length)];
+}
+
+// いちばん たりない ところを おしえて くれる
+function robotAdvice() {
+    const n = state.name;
+    if (state.sick) return `${n} は びょうき。「💊 くすり」を つかおう！`;
+    const low = [
+        ['おなか', state.hunger, `「🍚 ごはん」を あげよう`],
+        ['きげん', state.happy, `「🎾 あそぶ」で あそんで あげよう`],
+        ['きれい', state.clean, `「🛁 おふろ」に いれて あげよう`],
+        ['げんき', state.energy, `「💤 ねる」で やすませて あげよう`]
+    ].sort(function (a, b) { return a[1] - b[1]; })[0];
+    if (low[1] > 70) return `ぜんぶ ばっちり！ 「💼 おしごと」で コインを かせぐ チャンスだよ`;
+    return `${low[0]} が ${Math.round(low[1])} だよ。${low[2]}`;
+}
+
+function robotStatusTalk() {
+    const n = state.name;
+    const mark = state.hp > 70 ? 'とても げんき' : state.hp > 30 ? 'まあまあ げんき' : 'ちょっと つかれぎみ';
+    return `${n} は ${mark}（たいりょく ${Math.round(state.hp)}）。${robotDays()}日目、レベル ${state.level} だよ`;
+}
+
+// 45びょうごとの おてつだい（もっている モジュールの ぶんだけ できる）
+function robotHelp() {
+    if (state.stage === 'egg') return;
+
+    if (has('robomed') && state.sick && state.coins >= MEDICINE_COST) {
+        state.coins -= MEDICINE_COST;
+        state.sick = false;
+        state.sickTimer = 0;
+        state.hp = clamp(state.hp + 20, 0, 100);
+        state.happy = clamp(state.happy + 8, 0, 100);
+        state.stats.meds++;
+        state.helps = (state.helps || 0) + 1;
+        burst('star', 6);
+        addLog(`🤖 ロボットが おくすりを のませて くれた！ (-${MEDICINE_COST}🪙)`);
+        robotSay('だいじょうぶ、もう へいきだよ');
+        return;
+    }
+
+    const f = FOODS.onigiri, cost = foodCost(f);
+    if (has('roboarm') && state.hunger < 30 && state.coins >= cost) {
+        state.coins -= cost;
+        state.hunger = clamp(state.hunger + f.hunger, 0, 100);
+        state.happy = clamp(state.happy + f.happy, 0, 100);
+        state.care.eat += f.eat;
+        state.stats.meals++;
+        state.helps = (state.helps || 0) + 1;
+        state.poopTimer = Math.min(state.poopTimer, 45);
+        burst('heart', 5);
+        addLog(`🤖 ロボットが ${f.label} を あげてくれた！ (-${cost}🪙)`);
+        robotSay('はい、どうぞ！ めしあがれ');
+        return;
+    }
+
+    if (has('robosoap') && state.clean < 30) {
+        state.clean = 100;
+        state.happy = clamp(state.happy + 6, 0, 100);
+        state.care.clean += 1;
+        state.stats.baths++;
+        state.helps = (state.helps || 0) + 1;
+        burst('bubble', 8);
+        addLog('🤖 ロボットが おふろに いれて くれた！ ぴかぴか！');
+        robotSay('ごしごし〜 きれいに なったよ');
+        return;
+    }
+
+    if (state.poops.length > 0) {
+        state.poops.pop();
+        state.clean = clamp(state.clean + 10, 0, 100);
+        state.helps = (state.helps || 0) + 1;
+        addLog('🤖 ロボットが おそうじして くれた！');
+        robotSay('おそうじ、まかせて！');
+    }
+}
+
+/* ---------------- talking ---------------- */
+
+let talkText = '';
+
+function openTalk() {
+    if (!has('robot')) return;
+    talkText = robotLine();
+    robotSay(talkText, 5);
+    renderTalk();
+}
+
+const TALK_MENU = [
+    { key: 'hi',     label: '😀 やっほー！' },
+    { key: 'how',    label: '❓ ちょうし どう？' },
+    { key: 'what',   label: '💡 なにを すれば いい？' },
+    { key: 'chat',   label: '🎵 なにか はなして' },
+    { key: 'thanks', label: '🙏 ありがとう' }
+];
+
+function talkTo(key) {
+    const n = state.name;
+    if (key === 'hi') talkText = `やっほー！ ${n} も よろこんでるよ`;
+    else if (key === 'how') talkText = robotStatusTalk();
+    else if (key === 'what') talkText = robotAdvice();
+    else if (key === 'chat') talkText = randomChat();
+    else talkText = 'どういたしまして！ また よんでね';
+
+    state.stats.talks = (state.stats.talks || 0) + 1;
+    // はなすと ちょっとだけ きげんが よくなる（れんぞくは 6びょうに 1かいまで）
+    if (now() - (state.lastTalk || 0) > 6) {
+        state.lastTalk = now();
+        state.happy = clamp(state.happy + 2, 0, 100);
+        burst('heart', 3);
+    }
+    robotSay(talkText, 5);
+    renderTalk();
+    save();
+}
+
+function renderTalk() {
+    const btns = TALK_MENU.map(function (m) {
+        return `<div class="game-btn blue mb-2" onclick="talkTo('${m.key}')">${m.label}</div>`;
+    }).join('');
+    showModal(`
+        <div class="font-bold text-lg mb-2">🤖 ロボットと おはなし</div>
+        <div class="text-left text-sm mb-3" style="background:#e0f2fe;border-radius:12px;padding:10px;line-height:1.6">
+            🤖「${talkText}」
+        </div>
+        ${btns}
+        <div class="game-btn gray mt-1" onclick="hideModal()">またね</div>
+    `);
+}
+
 /* ---------------- growth ---------------- */
 
 function gainExp(n) {
@@ -970,6 +1152,7 @@ function gainExp(n) {
         state.level++;
         addCoins(20);
         addLog(`🎉 レベル ${state.level} に あがった！ (+20🪙)`);
+        robotSay(`レベル ${state.level}！ おめでとう！`, 5);
         need = expNeeded(state.level);
     }
     checkEvolve();
@@ -1036,6 +1219,7 @@ function feed(key) {
     setAction('eat', 3, key);
     burst('heart', 5);
     addLog(`${f.label} を たべた！ おいしそう。`);
+    robotSay('おいしそう だね！');
     gainExp(f.exp);
     save();
 }
@@ -1206,6 +1390,7 @@ function doJob(id) {
     burst('star', id === 'legend' ? 30 : 6);
     if (id === 'legend') addLog('🌌 うちゅうの おそうじを たのまれた…！');
     addLog(`${j.label} を がんばった！ おだちん ${coinText(pay)}🪙`);
+    robotSay('おつかれさま！ よく はたらいたね');
     gainExp(10);
     save();
 }
@@ -1239,6 +1424,7 @@ function doBath() {
     setAction('bath', 3.5);
     burst('bubble', 12);
     addLog(`🛁 おふろで ごしごし！ ぴかぴかに なった。`);
+    robotSay('ぴかぴか！ きもち よさそう');
     gainExp(4);
     save();
 }
@@ -1289,6 +1475,7 @@ function toggleSleep() {
     if (state.sleeping) {
         state.sleeping = false;
         addLog(isOutside() ? `${state.name} が おうちから でてきた！` : `${state.name} が ベッドから おきた！`);
+        robotSay('おはよう！ きょうも よろしくね', 5);
     } else {
         if (state.energy >= 98) {
             // げんきが まんタンだと すぐ おきてしまうので おうちに いれない
@@ -1304,6 +1491,7 @@ function toggleSleep() {
         addLog(isOutside()
             ? `🏠 ${state.name} は おうちに はいって ねむりについた…`
             : `🛏 ${state.name} は ベッドに もぐりこんだ…`);
+        robotSay(has('dock') ? 'おやすみ〜 ぼくも じゅうでん するね' : 'おやすみ〜 みまもってるよ', 5);
     }
     save();
     updateUI();
@@ -1321,6 +1509,7 @@ function useMedicine() {
     state.stats.meds++;
     burst('star', 8);
     addLog(`💊 おくすりを のんだ。 びょうきが なおった！`);
+    robotSay('よかった… ひとあんしん だね');
     save();
 }
 
@@ -1450,7 +1639,7 @@ function takeOffAll() {
 
 function openReport() {
     const c = state.care;
-    const st = state.stats || { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0 };
+    const st = state.stats || { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0 };
     const days = Math.floor(state.ageSec / DAY_SEC);
     const total = Math.max(1, c.eat + c.play + c.train + c.clean);
     const ownedCount = SHOP.filter(function (i) { return has(i.id); }).length;
@@ -1499,6 +1688,7 @@ function openReport() {
             🎾 あそんだ かず ${st.plays + st.acts}（うち アイテム ${st.acts}）<br>
             🛁 おふろ ${st.baths} ／ 💊 おくすり ${st.meds} ／ 🤒 びょうき ${st.sick}<br>
             💼 おしごと ${state.jobs || 0}かい<br>
+            🤖 ロボットの おてつだい ${state.helps || 0}かい ／ 💬 おしゃべり ${st.talks || 0}かい<br>
             🪙 これまでに かせいだ コイン ${coinText(st.earned)}<br>
             🛒 もちもの ${ownedCount}／${SHOP.length}（みにつけ ${wornCount}）<br>
             🎪 できる あそび ${actCount}／${ACTIVITIES.length}
@@ -3373,13 +3563,13 @@ function drawRoomFloor(t) {
     const night = isNight();
 
     if (has('dock')) {                                      // ロボットの じゅうでんき
-        const x = W * 0.09, y = H * 0.965;
+        const x = W * 0.90, y = H * 0.965;
         ctx.fillStyle = night ? '#334155' : '#64748b';
         ctx.fillRect(x - 22 * s, y - 6 * s, 44 * s, 6 * s);
         ctx.fillStyle = night ? '#1e293b' : '#475569';
         ctx.fillRect(x - 18 * s, y - 22 * s, 36 * s, 16 * s);
         ctx.fillStyle = (state.sleeping && has('robot')) ? '#4ade80' : (night ? '#7f1d1d' : '#ef4444');
-        ellipse(x - 12 * s, y - 14 * s, 3 * s, 3 * s);
+        ellipse(x + 12 * s, y - 14 * s, 3 * s, 3 * s);
         ctx.strokeStyle = night ? '#94a3b8' : '#cbd5e1';
         ctx.lineWidth = 2 * s;
         ctx.beginPath();
@@ -5623,8 +5813,8 @@ function drawRobot(t) {
     const parked = state.sleeping;
     // じゅうでんきが あるときは リビングに もどって じゅうでん する
     if (parked && has('dock') && state.view !== 'living') return;
-    const dockX = W * 0.09;
-    const x = parked ? dockX + 14 * s : W * (0.14 + (Math.sin(t * 0.32) * 0.5 + 0.5) * 0.46);
+    const dockX = W * 0.90;
+    const x = parked ? dockX - 14 * s : W * (0.14 + (Math.sin(t * 0.32) * 0.5 + 0.5) * 0.46);
     const y = isOutside() ? H * 0.945 : H * 0.965;
     const bob = parked ? 0 : Math.abs(Math.sin(t * 4)) * 2 * s;
     const face = night ? '#4ade80' : '#38bdf8';
@@ -5684,6 +5874,11 @@ function drawRobot(t) {
 
     ctx.restore();
 
+    // ふきだし（おしゃべり）
+    if (roboTalk.text && now() < roboTalk.until) {
+        drawSpeech(x, y - 50 * s, roboTalk.text, s, night);
+    }
+
     // そうじの ほこり
     if (!parked) {
         ctx.globalAlpha = 0.5;
@@ -5694,6 +5889,75 @@ function drawRobot(t) {
         }
         ctx.globalAlpha = 1;
     }
+}
+
+// ロボットの ふきだし
+function drawSpeech(x, y, text, s, night) {
+    const W = cw();
+    const fs = Math.max(9, 9.5 * s);
+    ctx.font = 'bold ' + fs + 'px sans-serif';
+
+    // 13もじ くらいで おりかえす（ことばの くぎりで きる）
+    const words = text.split(' ');
+    const lines = [];
+    let cur = '';
+    words.forEach(function (w) {
+        if (cur && (cur + w).length > 13) { lines.push(cur.trim()); cur = ''; }
+        cur += w + ' ';
+    });
+    if (cur.trim()) lines.push(cur.trim());
+
+    let tw = 0;
+    lines.forEach(function (l) { tw = Math.max(tw, ctx.measureText(l).width); });
+    const padX = 8 * s, padY = 6 * s, lh = fs * 1.35;
+    const bw = tw + padX * 2, bh = lines.length * lh + padY * 2;
+    let bx = clamp(x, bw / 2 + 4, W - bw / 2 - 4);
+    // ペットの かおを かくさないように よこへ ずらす
+    const px = petPos * W;
+    if (!petHidden && Math.abs(bx - px) < bw / 2 + 30 * s) {
+        bx = clamp(px + (x >= px ? 1 : -1) * (bw / 2 + 30 * s), bw / 2 + 4, W - bw / 2 - 4);
+    }
+    const by = y - bh;
+    const r = 8 * s;
+
+    ctx.fillStyle = night ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.96)';
+    ctx.strokeStyle = night ? '#94a3b8' : '#94a3b8';
+    ctx.lineWidth = 1.5 * s;
+    ctx.beginPath();
+    ctx.moveTo(bx - bw / 2 + r, by);
+    ctx.lineTo(bx + bw / 2 - r, by);
+    ctx.quadraticCurveTo(bx + bw / 2, by, bx + bw / 2, by + r);
+    ctx.lineTo(bx + bw / 2, by + bh - r);
+    ctx.quadraticCurveTo(bx + bw / 2, by + bh, bx + bw / 2 - r, by + bh);
+    ctx.lineTo(bx - bw / 2 + r, by + bh);
+    ctx.quadraticCurveTo(bx - bw / 2, by + bh, bx - bw / 2, by + bh - r);
+    ctx.lineTo(bx - bw / 2, by + r);
+    ctx.quadraticCurveTo(bx - bw / 2, by, bx - bw / 2 + r, by);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // しっぽ（ロボットの ほうを さす）
+    const tx = clamp(x, bx - bw / 2 + 8 * s, bx + bw / 2 - 8 * s);
+    ctx.beginPath();
+    ctx.moveTo(tx - 5 * s, by + bh - 1);
+    ctx.lineTo(tx + 5 * s, by + bh - 1);
+    ctx.lineTo(tx, by + bh + 8 * s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(tx - 5 * s, by + bh);
+    ctx.lineTo(tx, by + bh + 8 * s);
+    ctx.lineTo(tx + 5 * s, by + bh);
+    ctx.stroke();
+
+    ctx.fillStyle = night ? '#e2e8f0' : '#1f2937';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    lines.forEach(function (l, i) {
+        ctx.fillText(l, bx, by + padY + lh * (i + 0.5));
+    });
+    ctx.textBaseline = 'alphabetic';
 }
 
 function drawParticles(dt, t) {
@@ -5748,6 +6012,10 @@ function updateUI() {
         el(id).classList.toggle('disabled', locked);
     });
     el('btn-med').classList.toggle('disabled', locked || !state.sick);
+
+    const talk = has('robot') && state.stage !== 'egg';   // ロボットが いるときだけ はなせる
+    el('btn-talk').style.display = talk ? '' : 'none';
+    el('row-extra').className = 'grid ' + (talk ? 'grid-cols-4' : 'grid-cols-3') + ' gap-2';
 }
 
 /* ---------------- main loop ---------------- */
