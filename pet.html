@@ -147,8 +147,12 @@
             <div class="text-sm font-bold text-amber-700" id="coin-view">🪙 0</div>
         </div>
         <canvas id="stage"></canvas>
-        <div class="grid grid-cols-4 gap-1 mt-2">
+        <div class="grid grid-cols-3 gap-1 mt-2">
             <div class="game-btn green" id="btn-view-out" onclick="setView('out')">🌳 そと</div>
+            <div class="game-btn" id="btn-view-park" style="background:#65a30d;border-bottom-color:#3f6212" onclick="setView('park')">🏞 こうえん</div>
+            <div class="game-btn" id="btn-view-shop" style="background:#e11d48;border-bottom-color:#9f1239" onclick="setView('shop')">🏪 おみせ</div>
+        </div>
+        <div class="grid grid-cols-3 gap-1 mt-1">
             <div class="game-btn" id="btn-view-living" style="background:#a16207;border-bottom-color:#713f12" onclick="setView('living')">🛋 リビング</div>
             <div class="game-btn" id="btn-view-kitchen" style="background:#0d9488;border-bottom-color:#115e59" onclick="setView('kitchen')">🍳 キッチン</div>
             <div class="game-btn purple" id="btn-view-bed" onclick="setView('bed')">🛏 2かい</div>
@@ -319,10 +323,18 @@ const ACTIVITIES = [
     { id: 'diary',  item: 'diary',   emoji: '📔', label: 'にっきを かく',      room: 'bed',     e: 3,  hu: 2,  h: 10, x: 15 },
     { id: 'music',  item: 'musicbox',emoji: '🎶', label: 'オルゴールを きく',  room: 'bed',     e: 1,  hu: 1,  h: 18, x: 3 },
     { id: 'swing2', item: 'swingset',emoji: '🎠', label: 'ブランコに のる',    room: 'out',     e: 9,  hu: 6,  h: 22, x: 5 },
-    { id: 'sand',   item: 'sandbox', emoji: '🏖', label: 'すなあそびを する',  room: 'out',     e: 8,  hu: 5,  h: 20, x: 5, cl: 14 }
+    { id: 'sand',   item: 'sandbox', emoji: '🏖', label: 'すなあそびを する',  room: 'out',     e: 8,  hu: 5,  h: 20, x: 5, cl: 14 },
+    // こうえんの ゆうぐは かわなくても あそべる
+    { id: 'pswing', free: true, emoji: '🎠', label: 'こうえんの ブランコ',   room: 'park', e: 8,  hu: 5, h: 16, x: 4 },
+    { id: 'pslide', free: true, emoji: '🛝', label: 'すべりだいで あそぶ',   room: 'park', e: 7,  hu: 4, h: 15, x: 4 },
+    { id: 'pgym',   free: true, emoji: '🧗', label: 'ジャングルジムに のぼる', room: 'park', e: 11, hu: 7, h: 14, x: 6, pw: 1 },
+    { id: 'pwater', free: true, emoji: '⛲', label: 'ふんすいで みずあそび', room: 'park', e: 6,  hu: 3, h: 18, x: 3, cl: 8 }
 ];
 
-const ROOM_LABEL = { out: 'そと', living: 'リビング', kitchen: 'キッチン', bed: '2かい' };
+// かわなくても できる あそびが あるので まとめて はんてい
+function actOk(a) { return !!a.free || has(a.item); }
+
+const ROOM_LABEL = { out: 'そと', park: 'こうえん', shop: 'おみせ', living: 'リビング', kitchen: 'キッチン', bed: '2かい' };
 
 // おしごと: ちからと レベルが たかいほど おだちんが ふえる
 const JOBS = [
@@ -1137,6 +1149,8 @@ const ORDER_CHIPS = [
     ['🎾 あそんで あげて', 'あそんで あげて'],
     ['💪 きたえて', 'きたえて'],
     ['💼 おしごと して', 'おしごと して'],
+    ['🏞 こうえんに いこう', 'こうえんに いこう'],
+    ['🏪 おみせに いこう', 'おみせに いこう'],
     ['💊 なおして', 'なおして'],
     ['💤 ねかせて', 'ねかせて'],
     ['⏰ おこして', 'おこして']
@@ -1206,6 +1220,7 @@ const ORDERS = [
     { key: 'shop',    words: ['ショップ', 'かいもの', '買い物', 'おみせ', 'みせ', 'かって', '買って'] },
     { key: 'report',  words: ['レポート', 'せいせき', 'きろく', '記録'] },
     { key: 'status',  words: ['ずかん', '図鑑', 'ステータス'] },
+    { key: 'v-park',  words: ['こうえん', '公園', 'ゆうぐ', 'ブランコ', 'すべりだい'] },
     { key: 'v-bed',   words: ['2かい', '２かい', 'にかい', '二かい', '二階', 'しんしつ', '寝室', 'ベッド'] },
     { key: 'v-kit',   words: ['キッチン', 'だいどころ', '台所'] },
     { key: 'v-liv',   words: ['リビング', 'いま', '居間'] },
@@ -1247,7 +1262,7 @@ function bestJob() {
 // もっている あそびから ひとつ えらぶ
 function pickActivity() {
     const ok = ACTIVITIES.filter(function (a) {
-        return has(a.item) && state.energy >= a.e && state.hunger >= a.hu;
+        return actOk(a) && state.energy >= a.e && state.hunger >= a.hu;
     });
     return ok.length ? ok[Math.floor(Math.random() * ok.length)] : null;
 }
@@ -1362,7 +1377,7 @@ function runOrder(key, txt) {
     if (key === 'report') { robotSay('レポートを だすね'); openReport(); return; }
     if (key === 'status') { robotSay('ずかんを ひらくね'); openStatus(); return; }
     if (key.indexOf('v-') === 0) {
-        const v = { 'v-out': 'out', 'v-liv': 'living', 'v-kit': 'kitchen', 'v-bed': 'bed' }[key];
+        const v = { 'v-out': 'out', 'v-park': 'park', 'v-liv': 'living', 'v-kit': 'kitchen', 'v-bed': 'bed' }[key];
         robotSay(`${ROOM_LABEL[v]}へ いこう！`);
         setView(v);
         return;
@@ -1464,7 +1479,7 @@ function openPlayMenu() {
         </div>`;
     ACTIVITIES.forEach(function (a) {
         const item = SHOP.filter(function (x) { return x.id === a.item; })[0];
-        const owned = has(a.item);
+        const owned = actOk(a);
         const tired = state.energy < a.e || state.hunger < a.hu;
         let note, btn;
         if (!owned) {
@@ -1496,7 +1511,7 @@ function doActivity(id) {
     hideModal();
     if (busy()) return;
     const a = ACTIVITIES.filter(function (x) { return x.id === id; })[0];
-    if (!a || !has(a.item)) return;
+    if (!a || !actOk(a)) return;
     if (state.energy < a.e || state.hunger < a.hu) { addLog('げんきか おなかが たりない…'); return; }
 
     if (state.view !== a.room) {                     // やる ばしょへ いく
@@ -1627,6 +1642,7 @@ function doTrain() {
     if (state.energy < 20) { addLog(`げんきが たりない… やすませてあげよう。`); return; }
     if (state.hunger < 15) { addLog(`おなかが すいて トレーニングできない…`); return; }
 
+    goPlace('park');                                  // こうえんまで あるいて いく
     state.energy = clamp(state.energy - 20, 0, 100);
     state.hunger = clamp(state.hunger - 12, 0, 100);
     state.happy = clamp(state.happy - 5, 0, 100);
@@ -1636,7 +1652,7 @@ function doTrain() {
     state.care.train += 1;
     setAction('train', 2.5);
     burst('sweat', 6);
-    addLog(`💪 トレーニング！ ちからが ${state.power} に なった (+8🪙)`);
+    addLog(`💪 こうえんで トレーニング！ ちからが ${state.power} に なった (+8🪙)`);
     gainExp(has('shelf') ? 20 : 15);
     save();
 }
@@ -1676,12 +1692,19 @@ function doCleanPoop() {
     save();
 }
 
-function isOutside() { return state.view === 'out' || !state.view; }
+function isOutside() {
+    return state.view === 'out' || state.view === 'park' || state.view === 'shop' || !state.view;
+}
+function atPark() { return state.view === 'park'; }
+function atShop() { return state.view === 'shop'; }
 function inBedroom() { return state.view === 'bed'; }
 
 const ROOM_NAME = { living: 'リビング', kitchen: 'キッチン', bed: '2かいの しんしつ' };
+const OUT_NAME = { out: '🌳 そとに でた。', park: '🏞 こうえんに きた！', shop: '🏪 おみせに きた！' };
 
 function petTarget() {
+    if (atPark()) return 0.46;                      // ゆうぐの まんなか
+    if (atShop()) return 0.28;                      // おみせの まえ
     if (isOutside()) return state.sleeping ? DOOR_X : 0.5;
     if (inBedroom()) return state.sleeping ? BED_X : IN_X;
     if (state.view === 'kitchen') return 0.74;      // ながしだいの まえは あけておく
@@ -1692,9 +1715,16 @@ function setView(v) {
     if (state.view === v) return;
     state.view = v;
     petPos = petTarget();            // ばしょが かわるので すぐ そこに立たせる
-    addLog(v === 'out' ? `🌳 そとに でた。` : `🏠 ${ROOM_NAME[v]} に きた。`);
+    addLog(OUT_NAME[v] || `🏠 ${ROOM_NAME[v]} に きた。`);
     save();
     updateUI();
+}
+
+// おでかけ（ねている ときや たまごの ときは うごかない）
+function goPlace(v) {
+    if (state.stage === 'egg' || state.sleeping) return false;
+    if (state.view !== v) setView(v);
+    return true;
 }
 
 function toggleSleep() {
@@ -1708,6 +1738,11 @@ function toggleSleep() {
             // げんきが まんタンだと すぐ おきてしまうので おうちに いれない
             addLog(`${state.name} は げんきいっぱいで ねむくないみたい。`);
             return;
+        }
+        if (atPark() || atShop()) {                   // こうえん・おみせからは おうちへ かえる
+            state.view = 'out';
+            petPos = 0.5;
+            addLog(`🏠 ${state.name} は おうちへ かえってきた。`);
         }
         if (!isOutside() && !inBedroom()) {
             state.view = 'bed';                       // ベッドは 2かいに ある
@@ -1748,6 +1783,7 @@ function setShopTab(cat) {
 }
 
 function openShop() {
+    goPlace('shop');                                  // おみせまで あるいて いく
     let html = `<div class="font-bold text-lg mb-1">🛒 ショップ</div>
         <div class="text-sm font-bold text-amber-700 mb-2">もっているコイン ${coinText(state.coins)}🪙</div>
         <div class="grid grid-cols-3 gap-1 mb-3">`;
@@ -1871,7 +1907,7 @@ function openReport() {
     const total = Math.max(1, c.eat + c.play + c.train + c.clean);
     const ownedCount = SHOP.filter(function (i) { return has(i.id); }).length;
     const wornCount = SHOP.filter(function (i) { return i.cat === 'wear' && isWorn(i.id); }).length;
-    const actCount = ACTIVITIES.filter(function (a) { return has(a.item); }).length;
+    const actCount = ACTIVITIES.filter(function (a) { return actOk(a); }).length;
 
     const bars = [
         ['🍚 ごはん', c.eat, '#f97316'],
@@ -2100,6 +2136,213 @@ function drawBackground(t) {
     ctx.fillRect(0, H * 0.76, W, H * 0.24);
     ctx.fillStyle = night ? '#5b21b6' : '#4ade80';
     ctx.fillRect(0, H * 0.76, W, 6);
+}
+
+// ---------------- こうえん ----------------
+function drawPark(t) {
+    const W = cw(), H = ch(), s = W / 380;
+    const night = isNight();
+    const G = H * 0.76;                               // しばふの うえ
+    const F = H * 0.965;                              // ペットの あしもと
+
+    // とおくの き
+    [0.03, 0.97].forEach(function (fx, i) {
+        const x = W * fx, y = G + H * 0.02;
+        ctx.fillStyle = night ? '#3f2d1a' : '#78350f';
+        ctx.fillRect(x - 5 * s, y - 26 * s, 10 * s, 26 * s);
+        ctx.fillStyle = night ? '#14532d' : (i ? '#16a34a' : '#22c55e');
+        ellipse(x, y - 34 * s, 26 * s, 22 * s);
+        ellipse(x - 14 * s, y - 26 * s, 16 * s, 13 * s);
+        ellipse(x + 14 * s, y - 26 * s, 16 * s, 13 * s);
+    });
+
+    // さんぽみち
+    ctx.fillStyle = night ? '#57534e' : '#e7d7b8';
+    ctx.fillRect(0, H * 0.90, W, H * 0.05);
+    ctx.fillStyle = night ? '#44403c' : '#d6c39c';
+    ctx.fillRect(0, H * 0.90, W, 3 * s);
+
+    // すべりだい（ひだり）
+    const sx = W * 0.11, sy = G + H * 0.10;
+    ctx.strokeStyle = night ? '#78716c' : '#94a3b8';
+    ctx.lineWidth = 3 * s;
+    ctx.beginPath();
+    ctx.moveTo(sx - 12 * s, sy); ctx.lineTo(sx - 12 * s, sy - 38 * s);
+    ctx.moveTo(sx + 2 * s, sy); ctx.lineTo(sx + 2 * s, sy - 38 * s);
+    ctx.stroke();
+    for (let i = 0; i < 5; i++) {                     // はしご
+        const yy = sy - 6 * s - i * 7 * s;
+        ctx.beginPath(); ctx.moveTo(sx - 12 * s, yy); ctx.lineTo(sx + 2 * s, yy); ctx.stroke();
+    }
+    ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';    // すべる ところ
+    ctx.beginPath();
+    ctx.moveTo(sx + 2 * s, sy - 40 * s);
+    ctx.lineTo(sx + 12 * s, sy - 40 * s);
+    ctx.lineTo(sx + 34 * s, sy - 2 * s);
+    ctx.lineTo(sx + 24 * s, sy - 2 * s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = night ? '#991b1b' : '#f87171';
+    ctx.fillRect(sx - 2 * s, sy - 44 * s, 16 * s, 5 * s);
+
+    // ブランコ
+    const bx = W * 0.29, by = G + H * 0.11;
+    ctx.strokeStyle = night ? '#78716c' : '#64748b';
+    ctx.lineWidth = 3.5 * s;
+    ctx.beginPath();
+    ctx.moveTo(bx - 22 * s, by); ctx.lineTo(bx - 6 * s, by - 40 * s);
+    ctx.moveTo(bx + 22 * s, by); ctx.lineTo(bx + 6 * s, by - 40 * s);
+    ctx.moveTo(bx - 8 * s, by - 40 * s); ctx.lineTo(bx + 8 * s, by - 40 * s);
+    ctx.stroke();
+    const sw = Math.sin(t * 1.6) * 5 * s;
+    ctx.lineWidth = 1.6 * s;
+    [-9, 6].forEach(function (q, i) {
+        const ox = bx + q * s + (i ? -sw : sw);
+        ctx.beginPath();
+        ctx.moveTo(bx + q * s, by - 39 * s); ctx.lineTo(ox, by - 14 * s);
+        ctx.moveTo(bx + (q + 6) * s, by - 39 * s); ctx.lineTo(ox + 6 * s, by - 14 * s);
+        ctx.stroke();
+        ctx.fillStyle = night ? '#78350f' : '#facc15';
+        ctx.fillRect(ox - 2 * s, by - 14 * s, 10 * s, 3 * s);
+    });
+
+    // ふんすい（みぎ）
+    const fx2 = W * 0.74, fy = G + H * 0.09;
+    ctx.fillStyle = night ? '#475569' : '#cbd5e1';
+    ellipse(fx2, fy, 30 * s, 10 * s);
+    ctx.fillStyle = night ? '#1e3a5f' : '#7dd3fc';
+    ellipse(fx2, fy - 1 * s, 25 * s, 7 * s);
+    ctx.fillStyle = night ? '#475569' : '#e2e8f0';
+    ctx.fillRect(fx2 - 4 * s, fy - 20 * s, 8 * s, 18 * s);
+    ellipse(fx2, fy - 21 * s, 9 * s, 4 * s);
+    ctx.strokeStyle = night ? '#38bdf8' : '#38bdf8';
+    ctx.lineWidth = 2 * s;
+    for (let i = 0; i < 4; i++) {                     // みずしぶき
+        const a = (i / 4) * Math.PI * 2 + t * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(fx2, fy - 24 * s);
+        ctx.quadraticCurveTo(fx2 + Math.cos(a) * 12 * s, fy - 34 * s,
+                             fx2 + Math.cos(a) * 20 * s, fy - 6 * s);
+        ctx.stroke();
+    }
+
+    // ジャングルジム
+    const jx = W * 0.90, jy = G + H * 0.12;
+    ctx.strokeStyle = night ? '#0f766e' : '#14b8a6';
+    ctx.lineWidth = 2.5 * s;
+    for (let i = 0; i <= 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(jx - 24 * s + i * 16 * s, jy); ctx.lineTo(jx - 24 * s + i * 16 * s, jy - 40 * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(jx - 24 * s, jy - i * 13 * s); ctx.lineTo(jx + 24 * s, jy - i * 13 * s);
+        ctx.stroke();
+    }
+
+    // すなば（てまえ ひだり）
+    ctx.fillStyle = night ? '#78350f' : '#a16207';
+    ctx.fillRect(W * 0.005, F - 16 * s, 62 * s, 5 * s);
+    ctx.fillStyle = night ? '#78716c' : '#fde68a';
+    ctx.fillRect(W * 0.005 + 3 * s, F - 12 * s, 56 * s, 11 * s);
+    ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';    // バケツ
+    ctx.fillRect(W * 0.005 + 40 * s, F - 20 * s, 10 * s, 9 * s);
+
+}
+
+// ---------------- おみせ ----------------
+function drawShopTown(t) {
+    const W = cw(), H = ch(), s = W / 380;
+    const night = isNight();
+    const G = H * 0.76;
+
+    // ほどう
+    ctx.fillStyle = night ? '#44403c' : '#d4d4d8';
+    ctx.fillRect(0, H * 0.86, W, H * 0.14);
+    ctx.fillStyle = night ? '#57534e' : '#e4e4e7';
+    ctx.fillRect(0, H * 0.86, W, 4 * s);
+
+    // おみせ（みぎ半分）
+    const L = W * 0.42, R = W * 0.99, top = H * 0.20;
+    ctx.fillStyle = night ? '#3f3f46' : '#fef3c7';
+    ctx.fillRect(L, top, R - L, H * 0.68);
+    ctx.fillStyle = night ? '#27272a' : '#fcd34d';
+    ctx.fillRect(L, top, R - L, 10 * s);
+
+    // かんばん
+    ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';
+    ctx.fillRect(L + 10 * s, top - 22 * s, (R - L) - 20 * s, 22 * s);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold ' + (12 * s) + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🛒 ショップ', (L + R) / 2, top - 6 * s);
+
+    // ひさし（しましま）
+    const aw = (R - L) - 16 * s, ay = top + 12 * s;
+    for (let i = 0; i < 8; i++) {
+        ctx.fillStyle = (i % 2 ? (night ? '#7f1d1d' : '#f87171') : (night ? '#3f3f46' : '#fef2f2'));
+        ctx.fillRect(L + 8 * s + i * (aw / 8), ay, aw / 8, 16 * s);
+    }
+    ctx.fillStyle = night ? '#27272a' : '#dc2626';
+    ctx.fillRect(L + 8 * s, ay + 16 * s, aw, 3 * s);
+
+    // ウィンドウ
+    const wx = L + 16 * s, wy = ay + 28 * s, ww = (R - L) * 0.52, wh = H * 0.28;
+    ctx.fillStyle = night ? '#1e293b' : '#bae6fd';
+    ctx.fillRect(wx, wy, ww, wh);
+    ctx.strokeStyle = night ? '#57534e' : '#a16207';
+    ctx.lineWidth = 3 * s;
+    ctx.strokeRect(wx, wy, ww, wh);
+    // ならんだ しなもの
+    ctx.font = (13 * s) + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ['🍰', '🎾', '🧸', '🍚', '🎸', '🍭'].forEach(function (e, i) {
+        ctx.fillText(e, wx + ww * (0.18 + (i % 3) * 0.32), wy + wh * (i < 3 ? 0.38 : 0.82));
+    });
+    ctx.fillStyle = night ? '#44403c' : '#e7d7b8';
+    ctx.fillRect(wx + 3 * s, wy + wh * 0.45, ww - 6 * s, 4 * s);
+
+    // ドア
+    const dx = R - (R - L) * 0.26;
+    ctx.fillStyle = night ? '#292524' : '#a16207';
+    ctx.fillRect(dx - 20 * s, H * 0.88 - H * 0.34, 40 * s, H * 0.34);
+    ctx.fillStyle = night ? '#1c1917' : '#78350f';
+    ctx.fillRect(dx - 20 * s, H * 0.88 - H * 0.34, 40 * s, 4 * s);
+    ctx.fillStyle = night ? '#334155' : '#e0f2fe';
+    ctx.fillRect(dx - 14 * s, H * 0.88 - H * 0.31, 28 * s, 22 * s);
+    ctx.fillStyle = '#fbbf24';
+    ellipse(dx + 13 * s, H * 0.88 - H * 0.16, 3 * s, 3 * s);
+
+    // OPEN の ふだ
+    ctx.fillStyle = night ? '#166534' : '#22c55e';
+    ctx.fillRect(dx - 12 * s, H * 0.88 - H * 0.24, 24 * s, 10 * s);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold ' + (6 * s) + 'px sans-serif';
+    ctx.fillText('OPEN', dx, H * 0.88 - H * 0.24 + 7 * s);
+
+    // てまえの プランター（ドアの みぎ）
+    const plx = R - 26 * s;
+    ctx.fillStyle = night ? '#7c2d12' : '#c2410c';
+    ctx.fillRect(plx - 11 * s, H * 0.93 - 14 * s, 22 * s, 14 * s);
+    ctx.fillStyle = night ? '#14532d' : '#22c55e';
+    ellipse(plx, H * 0.93 - 20 * s, 12 * s, 9 * s);
+    ctx.fillStyle = night ? '#7f1d1d' : '#f472b6';
+    ellipse(plx - 5 * s, H * 0.93 - 24 * s, 3 * s, 3 * s);
+    ellipse(plx + 6 * s, H * 0.93 - 22 * s, 3 * s, 3 * s);
+
+    // がいとう（ひだり）
+    const px = W * 0.08, py = H * 0.90;
+    ctx.fillStyle = night ? '#57534e' : '#475569';
+    ctx.fillRect(px - 3 * s, py - 58 * s, 6 * s, 58 * s);
+    ctx.fillStyle = night ? '#fde68a' : '#e2e8f0';
+    ctx.beginPath();
+    ctx.moveTo(px - 12 * s, py - 58 * s);
+    ctx.lineTo(px + 12 * s, py - 58 * s);
+    ctx.lineTo(px + 7 * s, py - 70 * s);
+    ctx.lineTo(px - 7 * s, py - 70 * s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.textAlign = 'center';
 }
 
 function drawHouse(t) {
@@ -6230,8 +6473,8 @@ function updateUI() {
     el('level-num').textContent = state.level;
 
     el('btn-sleep').textContent = state.sleeping ? '☀ おこす' : '💤 ねる';
-    [['btn-view-out', 'out'], ['btn-view-living', 'living'],
-     ['btn-view-kitchen', 'kitchen'], ['btn-view-bed', 'bed']].forEach(function (pair) {
+    [['btn-view-out', 'out'], ['btn-view-park', 'park'], ['btn-view-shop', 'shop'],
+     ['btn-view-living', 'living'], ['btn-view-kitchen', 'kitchen'], ['btn-view-bed', 'bed']].forEach(function (pair) {
         el(pair[0]).classList.toggle('view-off', (state.view || 'out') !== pair[1]);
     });
 
@@ -6276,9 +6519,13 @@ function frame(ts) {
 
     if (outside) {
         drawBackground(t);
-        drawYard(t);
-        drawHouse(t);
-        drawHouseExtras(t);
+        if (atPark()) drawPark(t);
+        else if (atShop()) drawShopTown(t);
+        else {
+            drawYard(t);
+            drawHouse(t);
+            drawHouseExtras(t);
+        }
     } else {
         drawRoom(t);
         if (inBedroom()) drawBedBack(t);
