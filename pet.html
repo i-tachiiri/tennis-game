@@ -306,7 +306,18 @@ const ACTIVITIES = [
     { id: 'rope',   item: 'jumprope',emoji: '🪢', label: 'なわとびを する',    room: 'out',     e: 12, hu: 8,  h: 12, x: 10 },
     { id: 'bbq',    item: 'bbq',     emoji: '🍖', label: 'バーベキューを する', room: 'out',    e: 8,  hu: 0,  h: 20, x: 6, hg: 30 },
     { id: 'grow',   item: 'garden',  emoji: '🌱', label: 'やさいを そだてる',  room: 'out',     e: 10, hu: 5,  h: 10, x: 6, c: 18 },
-    { id: 'birds',  item: 'feeder',  emoji: '🐦', label: 'ことりと あそぶ',    room: 'out',     e: 3,  hu: 2,  h: 16, x: 3 }
+    { id: 'birds',  item: 'feeder',  emoji: '🐦', label: 'ことりと あそぶ',    room: 'out',     e: 3,  hu: 2,  h: 16, x: 3 },
+    { id: 'tea',    item: 'herbtea', emoji: '🍵', label: 'やくそうティーを のむ', room: 'kitchen', e: 0, hu: 2, h: 6, x: 2, hp: 15 },
+    { id: 'shake',  item: 'protein', emoji: '🥤', label: 'プロテインを のむ',  room: 'kitchen', e: 0,  hu: 0,  h: 4,  x: 4, pw: 1, hg: 8 },
+    { id: 'tako',   item: 'takoyaki',emoji: '🐙', label: 'たこやきを やく',    room: 'kitchen', e: 8,  hu: 0,  h: 18, x: 5, hg: 26 },
+    { id: 'juice',  item: 'juicer',  emoji: '🥤', label: 'ジュースを つくる',  room: 'kitchen', e: 4,  hu: 0,  h: 14, x: 3, hg: 12 },
+    { id: 'nap',    item: 'hammock', emoji: '🛖', label: 'ハンモックで ひるね', room: 'living',  e: 0,  hu: 3,  h: 12, x: 2, eg: 22 },
+    { id: 'kotatsu',item: 'kotatsu', emoji: '🔥', label: 'こたつに はいる',    room: 'living',  e: 0,  hu: 3,  h: 20, x: 2, eg: 10 },
+    { id: 'curl',   item: 'petbed',  emoji: '🛏', label: 'まるくなって やすむ', room: 'living',  e: 0,  hu: 2,  h: 10, x: 2, eg: 14 },
+    { id: 'diary',  item: 'diary',   emoji: '📔', label: 'にっきを かく',      room: 'bed',     e: 3,  hu: 2,  h: 10, x: 15 },
+    { id: 'music',  item: 'musicbox',emoji: '🎶', label: 'オルゴールを きく',  room: 'bed',     e: 1,  hu: 1,  h: 18, x: 3 },
+    { id: 'swing2', item: 'swingset',emoji: '🎠', label: 'ブランコに のる',    room: 'out',     e: 9,  hu: 6,  h: 22, x: 5 },
+    { id: 'sand',   item: 'sandbox', emoji: '🏖', label: 'すなあそびを する',  room: 'out',     e: 8,  hu: 5,  h: 20, x: 5, cl: 14 }
 ];
 
 const ROOM_LABEL = { out: 'そと', living: 'リビング', kitchen: 'キッチン', bed: '2かい' };
@@ -459,6 +470,19 @@ const SHOP = [
     { id: 'collar',       cat: 'wear', label: '🔔 すずの くびわ',     cost: 100, note: 'みため だけ' },
     { id: 'shoes',        cat: 'wear', label: '👟 スニーカー',        cost: 140, note: 'みため だけ' },
 
+    { id: 'vitamin',  cat: 'health', label: '🧴 ビタミンざい',    cost: 300, note: 'たいりょくの かいふくが はやい' },
+    { id: 'firstaid', cat: 'health', label: '🩺 きゅうきゅうばこ', cost: 250, note: 'びょうきに なりにくい' },
+    { id: 'herbtea',  cat: 'health', label: '🍵 やくそうティー',   cost: 120, note: 'のむと たいりょくが ふえる' },
+    { id: 'protein',  cat: 'health', label: '🥤 プロテイン',       cost: 200, note: 'のむと ちからが つく' },
+    { id: 'mattress', cat: 'health', label: '🛌 いい マットレス',  cost: 400, note: 'ねると たいりょくも かいふく' },
+    { id: 'brush',    cat: 'health', label: '🪥 はブラシ',         cost: 60,  note: 'きれいが へりにくい' },
+    { id: 'soap',     cat: 'health', label: '🧼 いい せっけん',    cost: 90,  note: 'おふろの きげんアップ' },
+    { id: 'warmsocks',cat: 'health', label: '🧦 あったかい くつした', cost: 80, note: 'げんきが へりにくい' },
+
+    { id: 'hammock',  cat: 'room', label: '🛖 ハンモック',        cost: 260, note: 'ひるねが できる' },
+    { id: 'kotatsu',  cat: 'room', label: '🔥 こたつ',            cost: 300, note: 'こたつに はいれる' },
+    { id: 'petbed',   cat: 'room', label: '🛏 ペットベッド',      cost: 150, note: 'まるくなって やすめる' },
+    { id: 'aroma',    cat: 'room', label: '🕯 アロマディフューザー', cost: 180, note: 'きげんが へりにくい' },
     { id: 'mic',       cat: 'room', label: '🎤 カラオケマイク',   cost: 200, note: 'うたを うたえる' },
     { id: 'artset',    cat: 'room', label: '🎨 おえかきセット',   cost: 150, note: 'おえかきが できる' },
     { id: 'puzzle',    cat: 'room', label: '🧩 パズル',           cost: 120, note: 'パズルが できる' },
@@ -475,6 +499,9 @@ const SHOP = [
     { id: 'toybox',    cat: 'room', label: '🧰 おもちゃばこ',      cost: 110, note: 'あそびの きげんアップ' },
 
     { id: 'pot',       cat: 'kitchen', label: '🍲 なべ',           cost: 100, note: 'りょうりが できる' },
+    { id: 'takoyaki', cat: 'kitchen', label: '🐙 たこやきき',     cost: 220, note: 'たこやきが やける' },
+    { id: 'juicer',   cat: 'kitchen', label: '🥤 ジューサー',      cost: 180, note: 'ジュースが つくれる' },
+    { id: 'breadmk',  cat: 'kitchen', label: '🍞 パンやきき',      cost: 200, note: 'みため だけ' },
     { id: 'jug',       cat: 'kitchen', label: '🍶 みずさし',       cost: 60,  note: 'みため だけ' },
     { id: 'cans',      cat: 'kitchen', label: '🥫 かんづめの たな', cost: 90,  note: 'みため だけ' },
     { id: 'garlic',    cat: 'kitchen', label: '🧄 つるした にんにく', cost: 50, note: 'みため だけ' },
@@ -485,6 +512,9 @@ const SHOP = [
     { id: 'plates',    cat: 'kitchen', label: '🍽 おさらの たな',  cost: 140, note: 'みため だけ' },
     { id: 'trashbag',  cat: 'kitchen', label: '🛍 ゴミぶくろ',     cost: 40,  note: 'みため だけ' },
 
+    { id: 'diary',    cat: 'bedroom', label: '📔 にっきちょう',   cost: 90,  note: 'にっきが かける' },
+    { id: 'musicbox', cat: 'bedroom', label: '🎶 オルゴール',      cost: 160, note: 'きくと おちつく' },
+    { id: 'starlight',cat: 'bedroom', label: '✨ ほしの ライト',   cost: 200, note: 'よるに ひかる' },
     { id: 'telescope', cat: 'bedroom', label: '🔭 ぼうえんきょう', cost: 300, note: 'よるに ほしが みられる' },
     { id: 'yogamat',   cat: 'bedroom', label: '🧘 ヨガマット',     cost: 100, note: 'ストレッチが できる' },
     { id: 'slippers',  cat: 'bedroom', label: '🥿 ルームシューズ', cost: 50,  note: 'みため だけ' },
@@ -496,6 +526,9 @@ const SHOP = [
     { id: 'bookpile',  cat: 'bedroom', label: '📗 ほんの やま',     cost: 60,  note: 'みため だけ' },
 
     { id: 'pond',      cat: 'yard', label: '⛲ いけ',              cost: 240, note: 'さかなつりが できる' },
+    { id: 'swingset', cat: 'yard', label: '🎠 ブランコ',          cost: 280, note: 'ブランコに のれる' },
+    { id: 'sandbox',  cat: 'yard', label: '🏖 すなば',            cost: 200, note: 'すなあそびが できる' },
+    { id: 'pinwheel', cat: 'yard', label: '🎡 かざぐるま',        cost: 60,  note: 'みため だけ' },
     { id: 'soccer',    cat: 'yard', label: '⚽ サッカーボール',    cost: 90,  note: 'サッカーが できる' },
     { id: 'jumprope',  cat: 'yard', label: '🪢 なわとび',          cost: 80,  note: 'なわとびが できる' },
     { id: 'bbq',       cat: 'yard', label: '🍖 バーベキューコンロ', cost: 240, note: 'バーベキューが できる' },
@@ -508,6 +541,9 @@ const SHOP = [
     { id: 'bench',     cat: 'yard', label: '🪑 ベンチ',            cost: 130, note: 'みため だけ' },
     { id: 'shishi',    cat: 'yard', label: '🎋 ししおどし',        cost: 200, note: 'みため だけ' },
 
+    { id: 'headband', cat: 'wear', label: '🎽 はちまき',          cost: 70,  note: 'みため だけ' },
+    { id: 'visor',    cat: 'wear', label: '🧢 サンバイザー',      cost: 110, note: 'みため だけ' },
+    { id: 'boots_blue',cat:'wear', label: '🥾 ながぐつ（あお）',  cost: 140, note: 'よごれにくくなる' },
     { id: 'ribbon_white', cat: 'wear', label: '🎀 リボン（しろ）',   cost: 80,  note: 'みため だけ' },
     { id: 'scarf_pink',   cat: 'wear', label: '🧣 マフラー（ピンク）', cost: 90, note: 'みため だけ' },
     { id: 'cape_white',   cat: 'wear', label: '🦸 マント（しろ）',   cost: 250, note: 'みため だけ' },
@@ -526,6 +562,12 @@ const SHOP = [
     { id: 'sofa_red',        cat: 'style', label: '🛋 ソファ（あか）',     cost: 190, note: 'リビングの ソファ' },
     { id: 'sofa_green',      cat: 'style', label: '🛋 ソファ（みどり）',   cost: 190, note: 'リビングの ソファ' },
     { id: 'sofa_brown',      cat: 'style', label: '🛋 ソファ（ちゃいろ）', cost: 190, note: 'リビングの ソファ' },
+    { id: 'wall_lav',        cat: 'style', label: '🧱 かべがみ（ラベンダー）', cost: 120, note: 'へやの かべ' },
+    { id: 'wall_peach',      cat: 'style', label: '🧱 かべがみ（ピーチ）',   cost: 120, note: 'へやの かべ' },
+    { id: 'floor_blue',      cat: 'style', label: '🟦 あおい ゆか',         cost: 150, note: 'へやの ゆか' },
+    { id: 'bedsheet_pinkd',  cat: 'style', label: '🛏 ふとん（もも）',      cost: 130, note: 'ベッドの ふとん' },
+    { id: 'rug_yellow',      cat: 'style', label: '🟨 ラグ（きいろ）',      cost: 110, note: 'へやの ラグ' },
+    { id: 'sofa_purple',     cat: 'style', label: '🛋 ソファ（むらさき）',  cost: 190, note: 'リビングの ソファ' },
     { id: 'wall_gray',       cat: 'style', label: '🧱 かべがみ（グレージュ）', cost: 120, note: 'へやの かべ' },
     { id: 'floor_red',       cat: 'style', label: '🟥 あかい ゆか',        cost: 150, note: 'へやの ゆか' },
     { id: 'roof_yellow',     cat: 'style', label: '🏠 やね（きいろ）',     cost: 180, note: 'おうちの やね' },
@@ -590,6 +632,12 @@ const STYLE_COLORS = {
     wall2_wood:   { day: '#c8a06a', night: '#5b4636' },
     wall_mint:    { day: '#d1fae5', night: '#2f4a42' },
     wall_gray:    { day: '#e7e5e4', night: '#3f3f46' },
+    wall_lav:     { day: '#ede9fe', night: '#3b3352' },
+    wall_peach:   { day: '#ffedd5', night: '#4b3a2f' },
+    floor_blue:   { day: '#bfdbfe', night: '#33415b' },
+    bedsheet_pinkd: { day: '#fb7185', night: '#9f1239' },
+    rug_yellow:   { day: '#fde68a', night: '#6b5a2f' },
+    sofa_purple:  { day: '#a78bfa', night: '#4c3f7a' },
     floor_red:    { day: '#fca5a5', night: '#5b2f2f' },
     roof_yellow:  { day: '#facc15', night: '#854d0e' },
     wall2_mint:   { day: '#a7f3d0', night: '#2f5b4a' },
@@ -640,6 +688,7 @@ const SHOP_CAT = [
     ['bedroom', '🛏 2かい'],
     ['yard', '🌳 そと'],
     ['wear', '✨ みにつける'],
+    ['health', '💊 けんこう'],
     ['style', '🎨 もようがえ']
 ];
 
@@ -826,11 +875,13 @@ function applyTime(dt) {
     } else {
         // ショップで かったものは へる はやさを ゆるめる
         const happyRate = 2.5 * (has('doll') ? 0.85 : 1) * (has('flower') ? 0.9 : 1) * (has('guitar') ? 0.9 : 1)
-            * (has('sunflower') ? 0.92 : 1) * (has('piano') ? 0.92 : 1) * (has('tower') ? 0.9 : 1);
-        const energyRate = 1.6 * (has('tree') ? 0.85 : 1) * (has('aircon') ? 0.85 : 1);
+            * (has('sunflower') ? 0.92 : 1) * (has('piano') ? 0.92 : 1) * (has('tower') ? 0.9 : 1)
+            * (has('aroma') ? 0.9 : 1);
+        const energyRate = 1.6 * (has('tree') ? 0.85 : 1) * (has('aircon') ? 0.85 : 1) * (has('warmsocks') ? 0.92 : 1);
         // トイレが あれば うんちで よごれにくい
         const dirtPerPoop = has('toilet') ? 1 : 3;
-        const cleanRate = (2 + state.poops.length * dirtPerPoop) * (has('plant') ? 0.85 : 1) * (isWorn('boots') ? 0.9 : 1);
+        const cleanRate = (2 + state.poops.length * dirtPerPoop) * (has('plant') ? 0.85 : 1)
+            * (isWorn('boots') || isWorn('boots_blue') ? 0.9 : 1) * (has('brush') ? 0.9 : 1);
         state.hunger = clamp(state.hunger - 3.2 * m, 0, 100);
         state.happy = clamp(state.happy - happyRate * m, 0, 100);
         state.energy = clamp(state.energy - energyRate * m, 0, 100);
@@ -860,7 +911,7 @@ function applyTime(dt) {
     const bad = state.clean < 12 || state.hunger < 12 || state.poops.length >= 4;
     if (!state.sick) {
         state.sickTimer = bad ? state.sickTimer + dt : Math.max(0, state.sickTimer - dt);
-        if (state.sickTimer > (isWorn('mask') ? 70 : 40)) {
+        if (state.sickTimer > (isWorn('mask') ? 70 : 40) * (has('firstaid') ? 2 : 1)) {
             state.sick = true;
             state.sickTimer = 0;
             state.stats.sick++;
@@ -874,7 +925,10 @@ function applyTime(dt) {
     } else if (state.hunger < 8 || state.happy < 5) {
         state.hp = clamp(state.hp - 2 * m, 0, 100);
     } else if (state.hunger > 40 && state.happy > 40 && state.clean > 40) {
-        state.hp = clamp(state.hp + 2.5 * m, 0, 100);
+        state.hp = clamp(state.hp + 2.5 * (has('vitamin') ? 1.6 : 1) * m, 0, 100);
+    }
+    if (state.sleeping && has('mattress')) {              // いい マットレスは ねている あいだも かいふく
+        state.hp = clamp(state.hp + 1.5 * m, 0, 100);
     }
 
     // どんなに ほうっておかれても たいりょくは 1 で ふみとどまる（おわかれは しない）
@@ -993,6 +1047,8 @@ function openPlayMenu() {
             if (a.night) note += ' / よぞらに なる';
             if (a.eg) note += ` → げんき +${a.eg}`;
             if (a.hg) note += ` → おなか +${a.hg}`;
+            if (a.hp) note += ` → たいりょく +${a.hp}`;
+            if (a.pw) note += ` → ちから +${a.pw}`;
             if (a.c) note += ` / +${a.c}🪙`;
             btn = `<div class="game-btn ${tired ? 'disabled' : 'blue'}" onclick="doActivity('${a.id}')">する</div>`;
         }
@@ -1027,6 +1083,8 @@ function doActivity(id) {
     state.happy = clamp(state.happy + a.h, 0, 100);
     state.clean = clamp(state.clean - (a.cl || 0), 0, 100);
     if (a.c) addCoins(a.c);
+    if (a.hp) state.hp = clamp(state.hp + a.hp, 0, 100);
+    if (a.pw) state.power += a.pw;
     state.care.play += 1;
     state.stats.acts++;
     setAction('activity', 2.8, a.id);
@@ -1158,7 +1216,7 @@ function doBath() {
     if (busy()) return;
     if (state.clean > 95) { addLog(`${state.name} は ぴかぴかだ！`); return; }
     state.clean = 100;
-    state.happy = clamp(state.happy + (has('pool') ? 14 : 6), 0, 100);
+    state.happy = clamp(state.happy + (has('pool') ? 14 : 6) + (has('soap') ? 8 : 0), 0, 100);
     state.care.clean += 1;
     state.stats.baths++;
     setAction('bath', 3.5);
@@ -1873,6 +1931,69 @@ function drawYard(t) {
         ctx.fillRect(x + 10 * s, y - 27 * s, 10 * s, 4 * s);
     }
 
+    if (has('swingset')) {                          // ブランコ
+        const x = W * 0.055, y = H * 0.80;
+        ctx.strokeStyle = night ? '#334155' : '#64748b';
+        ctx.lineWidth = 5 * s;
+        ctx.beginPath();
+        ctx.moveTo(x - 26 * s, y); ctx.lineTo(x - 8 * s, y - 62 * s);
+        ctx.moveTo(x + 26 * s, y); ctx.lineTo(x + 8 * s, y - 62 * s);
+        ctx.moveTo(x - 10 * s, y - 62 * s); ctx.lineTo(x + 10 * s, y - 62 * s);
+        ctx.stroke();
+        const sw = Math.sin(t * 1.5) * 6 * s;
+        ctx.lineWidth = 2 * s;
+        ctx.beginPath();
+        ctx.moveTo(x - 8 * s, y - 60 * s); ctx.lineTo(x - 8 * s + sw, y - 24 * s);
+        ctx.moveTo(x + 8 * s, y - 60 * s); ctx.lineTo(x + 8 * s + sw, y - 24 * s);
+        ctx.stroke();
+        ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';
+        ctx.fillRect(x - 12 * s + sw, y - 26 * s, 24 * s, 5 * s);
+    }
+
+    if (has('sandbox')) {                           // すなば
+        const x = W * 0.20, y = H * 0.995;
+        ctx.fillStyle = night ? '#6b5a2f' : '#fde68a';
+        ellipse(x, y - 10 * s, 40 * s, 12 * s);
+        ctx.fillStyle = night ? '#4a2c10' : '#a16207';
+        ctx.strokeStyle = night ? '#4a2c10' : '#a16207';
+        ctx.lineWidth = 5 * s;
+        ctx.beginPath();
+        ctx.ellipse(x, y - 10 * s, 40 * s, 12 * s, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';
+        ctx.beginPath();
+        ctx.moveTo(x + 22 * s, y - 12 * s);
+        ctx.lineTo(x + 32 * s, y - 12 * s);
+        ctx.lineTo(x + 27 * s, y - 24 * s);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    if (has('pinwheel')) {                          // かざぐるま
+        const x = W * 0.395, y = H * 0.80;
+        ctx.strokeStyle = night ? '#4a2c10' : '#a16207';
+        ctx.lineWidth = 3 * s;
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x, y - 40 * s);
+        ctx.stroke();
+        ctx.save();
+        ctx.translate(x, y - 42 * s);
+        ctx.rotate(t * 2.5);
+        [['#ef4444', 0], ['#facc15', 1], ['#38bdf8', 2], ['#4ade80', 3]].forEach(function (b) {
+            ctx.save();
+            ctx.rotate(b[1] * Math.PI / 2);
+            ctx.fillStyle = night ? 'rgba(255,255,255,0.35)' : b[0];
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(11 * s, -4 * s);
+            ctx.lineTo(11 * s, 6 * s);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        });
+        ctx.restore();
+    }
+
     if (has('soccer')) {                            // サッカーボール
         const x = W * 0.325, y = H * 0.99;
         ctx.fillStyle = '#f8fafc';
@@ -2503,6 +2624,24 @@ function drawRoomStuff(t) {
     const W = cw(), H = ch(), s = W / 380;
     const night = isNight();
 
+    if (has('hammock') && state.view === 'living') {        // ハンモック
+        const y = H * 0.60;
+        ctx.strokeStyle = night ? '#4a2c10' : '#78350f';
+        ctx.lineWidth = 4 * s;
+        [0.10, 0.60].forEach(function (q) {
+            ctx.beginPath();
+            ctx.moveTo(W * q, H * 0.74); ctx.lineTo(W * q, y - H * 0.04);
+            ctx.stroke();
+        });
+        ctx.fillStyle = night ? '#4a6b73' : '#7dd3fc';
+        ctx.beginPath();
+        ctx.moveTo(W * 0.10, y - H * 0.04);
+        ctx.quadraticCurveTo(W * 0.35, y + H * 0.10, W * 0.60, y - H * 0.04);
+        ctx.quadraticCurveTo(W * 0.35, y + H * 0.05, W * 0.10, y - H * 0.04);
+        ctx.closePath();
+        ctx.fill();
+    }
+
     if (has('bigart') && state.view === 'living') {         // おおきな え
         const x = W * 0.875, y = H * 0.46;
         ctx.fillStyle = night ? '#6b5a3a' : '#a16207';
@@ -2816,6 +2955,95 @@ function drawKitchenStuff(t) {
     const night = isNight();
     const cy = H * 0.62;
 
+    if (has('herbtea')) {                                   // やくそうティー
+        const x = W * 0.185, y = cy;
+        ctx.fillStyle = night ? '#166534' : '#4ade80';
+        ctx.fillRect(x - 7 * s, y - 18 * s, 14 * s, 18 * s);
+        ctx.fillStyle = night ? '#14532d' : '#22c55e';
+        ctx.fillRect(x - 8 * s, y - 22 * s, 16 * s, 5 * s);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(x - 4 * s, y - 12 * s, 8 * s, 6 * s);
+    }
+
+    if (has('protein')) {                                   // プロテイン
+        const x = W * 0.415, y = cy;
+        ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';
+        ctx.fillRect(x - 9 * s, y - 24 * s, 18 * s, 24 * s);
+        ctx.fillStyle = night ? '#450a0a' : '#b91c1c';
+        ctx.fillRect(x - 6 * s, y - 29 * s, 12 * s, 6 * s);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(x - 7 * s, y - 16 * s, 14 * s, 7 * s);
+    }
+
+    if (has('brush')) {                                     // はブラシ
+        const x = W * 0.115, y = cy - H * 0.02;
+        ctx.fillStyle = night ? '#5b7fa8' : '#38bdf8';
+        ctx.fillRect(x - 2 * s, y - 20 * s, 4 * s, 20 * s);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(x - 4 * s, y - 26 * s, 8 * s, 7 * s);
+    }
+
+    if (has('soap')) {                                      // いい せっけん
+        ctx.fillStyle = night ? '#7f5f8f' : '#fbcfe8';
+        ctx.fillRect(W * 0.135, cy - H * 0.022, W * 0.028, H * 0.018);
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ellipse(W * 0.145, cy - H * 0.026, 3 * s, 2 * s);
+    }
+
+    if (has('firstaid')) {                                  // きゅうきゅうばこ
+        const x = W * 0.60, y = H * 0.30;
+        ctx.fillStyle = night ? '#94a3b8' : '#f8fafc';
+        ctx.fillRect(x - W * 0.045, y - H * 0.05, W * 0.09, H * 0.10);
+        ctx.strokeStyle = night ? '#475569' : '#cbd5e1';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - W * 0.045, y - H * 0.05, W * 0.09, H * 0.10);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(x - W * 0.006, y - H * 0.032, W * 0.012, H * 0.064);
+        ctx.fillRect(x - W * 0.03, y - H * 0.008, W * 0.06, H * 0.016);
+    }
+
+    if (has('vitamin')) {                                   // ビタミンざい
+        const x = W * 0.335, y = cy;
+        ctx.fillStyle = night ? '#a16207' : '#facc15';
+        ctx.fillRect(x - 7 * s, y - 20 * s, 14 * s, 20 * s);
+        ctx.fillStyle = night ? '#78350f' : '#d97706';
+        ctx.fillRect(x - 5 * s, y - 25 * s, 10 * s, 6 * s);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(x - 5 * s, y - 14 * s, 10 * s, 6 * s);
+    }
+
+    if (has('takoyaki')) {                                  // たこやきき
+        const x = W * 0.53, y = H * 0.93;
+        ctx.fillStyle = night ? '#334155' : '#475569';
+        ctx.fillRect(x - 20 * s, y - 16 * s, 40 * s, 16 * s);
+        ctx.fillStyle = night ? '#1e293b' : '#1f2937';
+        ctx.fillRect(x - 17 * s, y - 20 * s, 34 * s, 6 * s);
+        [-11, -4, 3, 10].forEach(function (q) {
+            ctx.fillStyle = night ? '#7c2d12' : '#d97706';
+            ellipse(x + q * s, y - 18 * s, 3.5 * s, 2.5 * s);
+        });
+    }
+
+    if (has('juicer')) {                                    // ジューサー
+        const x = W * 0.44, y = H * 0.93;
+        ctx.fillStyle = night ? '#64748b' : '#e2e8f0';
+        ctx.fillRect(x - 10 * s, y - 12 * s, 20 * s, 12 * s);
+        ctx.fillStyle = night ? '#a16207' : '#fb923c';
+        ctx.fillRect(x - 8 * s, y - 30 * s, 16 * s, 18 * s);
+        ctx.fillStyle = night ? '#475569' : '#94a3b8';
+        ctx.fillRect(x - 10 * s, y - 34 * s, 20 * s, 5 * s);
+    }
+
+    if (has('breadmk')) {                                   // パンやきき
+        const x = W * 0.245, y = H * 0.93;
+        ctx.fillStyle = night ? '#64748b' : '#cbd5e1';
+        ctx.fillRect(x - 14 * s, y - 26 * s, 28 * s, 26 * s);
+        ctx.fillStyle = night ? '#475569' : '#94a3b8';
+        ctx.fillRect(x - 16 * s, y - 31 * s, 32 * s, 6 * s);
+        ctx.fillStyle = night ? '#7c2d12' : '#d97706';
+        ellipse(x, y - 34 * s, 9 * s, 5 * s);
+    }
+
     if (has('jug')) {                                       // みずさし
         const x = W * 0.455, y = cy;
         ctx.fillStyle = night ? '#5b7fa8' : '#bae6fd';
@@ -3126,6 +3354,47 @@ function drawKitchenStuff(t) {
 function drawRoomFloor(t) {
     const W = cw(), H = ch(), s = W / 380;
     const night = isNight();
+
+    if (has('kotatsu')) {                                   // こたつ
+        const x = W * 0.40, y = H * 0.955;
+        ctx.fillStyle = night ? '#5b4a73' : '#fbcfe8';
+        ctx.fillRect(x - 56 * s, y - 22 * s, 112 * s, 22 * s);
+        ctx.fillStyle = night ? '#4b3418' : '#a16207';
+        ctx.fillRect(x - 60 * s, y - 28 * s, 120 * s, 7 * s);
+        if (!night) {
+            ctx.fillStyle = 'rgba(251,146,60,0.35)';
+            ellipse(x, y - 12 * s, 40 * s, 10 * s);
+        }
+        ctx.fillStyle = night ? '#7f5f8f' : '#f9a8d4';
+        ellipse(x - 34 * s, y - 26 * s, 12 * s, 5 * s);
+    }
+
+    if (has('petbed')) {                                    // ペットベッド
+        const x = W * 0.20, y = H * 0.955;
+        ctx.fillStyle = night ? '#4a3f63' : '#c4b5fd';
+        ellipse(x, y - 8 * s, 26 * s, 11 * s);
+        ctx.fillStyle = night ? '#5b4a73' : '#ddd6fe';
+        ellipse(x, y - 10 * s, 19 * s, 7 * s);
+    }
+
+    if (has('aroma')) {                                     // アロマディフューザー
+        const x = W * 0.545, y = H * 0.96;
+        ctx.fillStyle = night ? '#64748b' : '#e2e8f0';
+        ctx.beginPath();
+        ctx.moveTo(x - 9 * s, y);
+        ctx.lineTo(x + 9 * s, y);
+        ctx.lineTo(x + 6 * s, y - 18 * s);
+        ctx.lineTo(x - 6 * s, y - 18 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        for (let i = 0; i < 3; i++) {
+            const q = (t * 0.5 + i * 0.33) % 1;
+            ctx.globalAlpha = (1 - q) * 0.6;
+            ellipse(x + Math.sin(q * 6) * 5 * s, y - 22 * s - q * 26 * s, (3 + q * 5) * s, (3 + q * 4) * s);
+        }
+        ctx.globalAlpha = 1;
+    }
 
     if (has('mic')) {                                       // カラオケマイク
         const x = W * 0.485, y = H * 0.965;
@@ -3872,6 +4141,43 @@ function drawBedroom(t, W, H, night, wallH) {
 
 // 2かいに おく もの
 function drawBedroomStuff(t, W, H, night, s) {
+    if (has('starlight')) {                                 // ほしの ライト
+        const x = W * 0.545, y = H * 0.48;
+        if (isNight()) {
+            ctx.fillStyle = 'rgba(253,230,138,0.25)';
+            ellipse(x, y, W * 0.10, W * 0.10);
+            ctx.fillStyle = '#fef9c3';
+            for (let i = 0; i < 7; i++) {
+                const a2 = i / 7 * Math.PI * 2 + t * 0.3;
+                star(x + Math.cos(a2) * W * 0.075, y + Math.sin(a2) * W * 0.06, 5, 4 * s, 1.8 * s);
+            }
+        }
+        ctx.fillStyle = isNight() ? '#fde68a' : '#e2e8f0';
+        ellipse(x, y, 11 * s, 11 * s);
+        ctx.fillStyle = isNight() ? '#a16207' : '#94a3b8';
+        ctx.fillRect(x - 4 * s, y + 8 * s, 8 * s, 6 * s);
+    }
+
+    if (has('musicbox')) {                                  // オルゴール
+        const x = W * 0.475, y = H * 0.79;
+        ctx.fillStyle = night ? '#6b4a24' : '#b4813f';
+        ctx.fillRect(x - 11 * s, y - 10 * s, 22 * s, 10 * s);
+        ctx.fillStyle = night ? '#4b3418' : '#8b5e34';
+        ctx.fillRect(x - 12 * s, y - 14 * s, 24 * s, 5 * s);
+        ctx.fillStyle = night ? '#7f5f8f' : '#f472b6';
+        ellipse(x, y - 18 * s, 4 * s, 5 * s);
+    }
+
+    if (has('diary')) {                                     // にっきちょう
+        const x = W * 0.075, y = H * 0.845;
+        ctx.fillStyle = night ? '#7f1d1d' : '#ef4444';
+        ctx.fillRect(x - 11 * s, y - 15 * s, 22 * s, 15 * s);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(x - 9 * s, y - 13 * s, 18 * s, 11 * s);
+        ctx.fillStyle = night ? '#a16207' : '#facc15';
+        ctx.fillRect(x + 6 * s, y - 17 * s, 3 * s, 8 * s);
+    }
+
     if (has('telescope')) {                                 // ぼうえんきょう
         const x = W * 0.685, y = H * 0.90;
         ctx.fillStyle = night ? '#334155' : '#64748b';
@@ -4716,6 +5022,30 @@ function drawCreature(t) {
         ellipse(-30, -37, 26, 7);
         ctx.fillStyle = '#fff';
         ellipse(0, -52, 6, 5);
+    }
+
+    if (isWorn('headband')) {           // はちまき
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(-42, -32, 84, 9);
+        ctx.fillStyle = '#dc2626';
+        ellipse(0, -27, 6, 6);
+        ctx.fillRect(38, -30, 16, 5);
+    }
+
+    if (isWorn('visor')) {              // サンバイザー
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(-32, -36, 64, 9);
+        ctx.fillStyle = '#16a34a';
+        ellipse(-28, -30, 28, 8);
+    }
+
+    if (isWorn('boots_blue')) {         // ながぐつ（あお）
+        ctx.fillStyle = '#3b82f6';
+        ellipse(-22, 44, 17, 12);
+        ellipse(22, 44, 17, 12);
+        ctx.fillStyle = '#1d4ed8';
+        ctx.fillRect(-33, 46, 22, 6);
+        ctx.fillRect(11, 46, 22, 6);
     }
 
     if (isWorn('hairpin')) {            // ヘアピン
