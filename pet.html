@@ -195,7 +195,7 @@
 
     <div class="grid grid-cols-4 gap-2 mb-2">
         <div class="game-btn" id="btn-feed" onclick="openFoodMenu()">🍚 ごはん</div>
-        <div class="game-btn blue" id="btn-play" onclick="startPlay()">🎾 あそぶ</div>
+        <div class="game-btn blue" id="btn-play" onclick="openPlayMenu()">🎾 あそぶ</div>
         <div class="game-btn purple" id="btn-train" onclick="doTrain()">💪 きたえる</div>
         <div class="game-btn" id="btn-job" style="background:#d97706;border-bottom-color:#92400e" onclick="openJobMenu()">💼 おしごと</div>
         <div class="game-btn green" id="btn-bath" onclick="doBath()">🛁 おふろ</div>
@@ -248,6 +248,30 @@ const FOODS = {
 };
 
 const MEDICINE_COST = 30;
+
+// かった ものが あると できる こと
+// e:げんきを つかう / hu:おなかが へる / h:きげん / x:けいけんち /
+// c:コイン / eg:げんきが ふえる / hg:おなかが ふえる / cl:きれいが へる
+const ACTIVITIES = [
+    { id: 'tv',     item: 'tv',      emoji: '📺', label: 'テレビを みる',      room: 'living',  e: 4,  hu: 2,  h: 18, x: 3 },
+    { id: 'game',   item: 'game',    emoji: '🕹', label: 'ゲームを する',      room: 'living',  e: 8,  hu: 4,  h: 24, x: 5 },
+    { id: 'guitar', item: 'guitar',  emoji: '🎸', label: 'ギターを ひく',      room: 'living',  e: 6,  hu: 3,  h: 20, x: 6 },
+    { id: 'piano',  item: 'piano',   emoji: '🎹', label: 'ピアノを ひく',      room: 'living',  e: 6,  hu: 3,  h: 20, x: 6 },
+    { id: 'read',   item: 'shelf',   emoji: '📖', label: 'ほんを よむ',        room: 'living',  e: 5,  hu: 2,  h: 8,  x: 16 },
+    { id: 'darts',  item: 'darts',   emoji: '🎯', label: 'ダーツを なげる',    room: 'living',  e: 6,  hu: 3,  h: 14, x: 4, c: 8 },
+    { id: 'tower',  item: 'tower',   emoji: '🪜', label: 'タワーに のぼる',    room: 'living',  e: 10, hu: 5,  h: 18, x: 5 },
+    { id: 'hug',    item: 'doll',    emoji: '🧸', label: 'ぬいぐるみと あそぶ', room: 'living',  e: 3,  hu: 1,  h: 14, x: 2 },
+    { id: 'cook',   item: 'pot',     emoji: '🍲', label: 'りょうりを する',    room: 'kitchen', e: 10, hu: 0,  h: 10, x: 6, hg: 26 },
+    { id: 'brew',   item: 'coffee',  emoji: '☕', label: 'コーヒーを いれる',  room: 'kitchen', e: 0,  hu: 3,  h: 8,  x: 3, eg: 18 },
+    { id: 'radio',  item: 'radio',   emoji: '🎵', label: 'ラジオを きく',      room: 'living',  e: 2,  hu: 1,  h: 12, x: 2 },
+    { id: 'swim',   item: 'pool',    emoji: '🏊', label: 'プールで あそぶ',    room: 'out',     e: 10, hu: 6,  h: 24, x: 5, cl: 12 },
+    { id: 'ride',   item: 'bike',    emoji: '🚲', label: 'サイクリングする',   room: 'out',     e: 16, hu: 10, h: 18, x: 8, c: 12 },
+    { id: 'fish',   item: 'pond',    emoji: '🎣', label: 'さかなつりを する',  room: 'out',     e: 10, hu: 6,  h: 12, x: 6, c: 22 },
+    { id: 'camp',   item: 'tent',    emoji: '⛺', label: 'キャンプごっこ',     room: 'out',     e: 8,  hu: 5,  h: 22, x: 5 },
+    { id: 'swing',  item: 'bench',   emoji: '🌤', label: 'ベンチで ひなたぼっこ', room: 'out',  e: 0,  hu: 2,  h: 12, x: 2, eg: 8 }
+];
+
+const ROOM_LABEL = { out: 'そと', living: 'リビング', kitchen: 'キッチン', bed: '2かい' };
 
 // おしごと: ちからと レベルが たかいほど おだちんが ふえる
 const JOBS = [
@@ -860,7 +884,73 @@ function feed(key) {
     save();
 }
 
+function openPlayMenu() {
+    if (busy()) return;
+    let html = `<div class="font-bold text-lg mb-1">🎾 なにして あそぶ？</div>
+        <div class="text-xs text-gray-600 mb-3">かった ものが あると できる ことが ふえるよ</div>
+        <div class="flex items-center gap-2 mb-2">
+            <div class="text-left text-sm" style="flex:1">
+                <div class="font-bold">🎾 ボールキャッチ</div>
+                <div class="text-xs text-gray-500">げんき -12 / コインが もらえる</div>
+            </div>
+            <div style="width:38%"><div class="game-btn blue" onclick="startPlay()">する</div></div>
+        </div>`;
+    ACTIVITIES.forEach(function (a) {
+        const item = SHOP.filter(function (x) { return x.id === a.item; })[0];
+        const owned = has(a.item);
+        const tired = state.energy < a.e || state.hunger < a.hu;
+        let note, btn;
+        if (!owned) {
+            note = `${item ? item.label : ''} が あると できる`;
+            btn = `<div class="game-btn gray disabled">まだ できない</div>`;
+        } else {
+            note = `${ROOM_LABEL[a.room]}で / げんき -${a.e}`;
+            if (a.eg) note += ` → げんき +${a.eg}`;
+            if (a.hg) note += ` → おなか +${a.hg}`;
+            if (a.c) note += ` / +${a.c}🪙`;
+            btn = `<div class="game-btn ${tired ? 'disabled' : 'blue'}" onclick="doActivity('${a.id}')">する</div>`;
+        }
+        html += `<div class="flex items-center gap-2 mb-2" style="${owned ? '' : 'opacity:0.55'}">
+            <div class="text-left text-sm" style="flex:1">
+                <div class="font-bold">${a.emoji} ${a.label}</div>
+                <div class="text-xs text-gray-500">${note}</div>
+            </div>
+            <div style="width:38%">${btn}</div>
+        </div>`;
+    });
+    html += `<div class="game-btn gray mt-2" onclick="hideModal()">やめる</div>`;
+    showModal(html);
+}
+
+function doActivity(id) {
+    hideModal();
+    if (busy()) return;
+    const a = ACTIVITIES.filter(function (x) { return x.id === id; })[0];
+    if (!a || !has(a.item)) return;
+    if (state.energy < a.e || state.hunger < a.hu) { addLog('げんきか おなかが たりない…'); return; }
+
+    if (state.view !== a.room) {                     // やる ばしょへ いく
+        state.view = a.room;
+        petPos = petTarget();
+        addLog(`🚶 ${ROOM_LABEL[a.room]}へ いった。`);
+        updateUI();
+    }
+
+    state.energy = clamp(state.energy - a.e + (a.eg || 0), 0, 100);
+    state.hunger = clamp(state.hunger - a.hu + (a.hg || 0), 0, 100);
+    state.happy = clamp(state.happy + a.h, 0, 100);
+    state.clean = clamp(state.clean - (a.cl || 0), 0, 100);
+    if (a.c) state.coins += a.c;
+    state.care.play += 1;
+    setAction('activity', 2.8, a.id);
+    burst('heart', 6);
+    addLog(`${a.emoji} ${a.label}！ たのしかった${a.c ? `（+${a.c}🪙）` : ''}`);
+    gainExp(a.x || 0);
+    save();
+}
+
 function startPlay() {
+    hideModal();
     if (busy()) return;
     if (state.energy < 10) { addLog(`${state.name} は つかれている… ねかせてあげよう。`); return; }
     if (state.hunger < 10) { addLog(`${state.name} は おなかが ぺこぺこだ…`); return; }
@@ -1310,7 +1400,8 @@ function ch() { return canvas.height / (window.devicePixelRatio || 1); }
 function mood() {
     if (state.sleeping) return 'sleep';
     if (action.type === 'eat') return 'eat';
-    if (action.type === 'happy' || action.type === 'play' || action.type === 'bath') return 'joy';
+    if (action.type === 'happy' || action.type === 'play' || action.type === 'bath'
+        || action.type === 'activity') return 'joy';
     if (action.type === 'train' || action.type === 'work') return 'train';
     if (state.sick) return 'sick';
     if (state.hp < 25 || state.hunger < 20 || state.happy < 20 || state.clean < 20) return 'sad';
@@ -4583,6 +4674,26 @@ function drawTubFront(t) {
     ctx.restore();
 }
 
+function drawActivityScene(t) {
+    const st = stageInfo();
+    const a = ACTIVITIES.filter(function (x) { return x.id === action.food; })[0];
+    if (!a) return;
+    const bob = Math.sin(t * 6) * 4 * st.s;
+    ctx.save();
+    ctx.font = `${Math.round(46 * st.s)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(a.emoji, st.cx - 62 * st.s, st.baseY + 14 * st.s + bob);
+    ctx.font = `${Math.round(22 * st.s)}px sans-serif`;
+    for (let i = 0; i < 3; i++) {
+        const q = (t * 0.8 + i * 0.33) % 1;
+        ctx.globalAlpha = 1 - q;
+        ctx.fillText('♪', st.cx + (48 + i * 10) * st.s, st.baseY - 30 * st.s - q * 40 * st.s);
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
+    ctx.restore();
+}
+
 function drawWorkScene(t) {
     const st = stageInfo();
     const arm = 12 + (-22 + Math.sin(t * 9) * 10);
@@ -4773,6 +4884,7 @@ function frame(ts) {
             else if (action.type === 'eat') drawFoodScene(t);
             else if (action.type === 'train') drawDumbbell(t);
             else if (action.type === 'work') drawWorkScene(t);
+            else if (action.type === 'activity') drawActivityScene(t);
             else if (action.type === 'play') drawBall(t);
         }
     }
