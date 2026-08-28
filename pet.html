@@ -261,29 +261,55 @@ const FOODS = {
 
 const MEDICINE_COST = 30;
 
-// JavaScript が きちんと かぞえられる いちばん おおきな あたり
-const MAX_COINS = 9000000000000000;   // 9000兆
+// おかねは BigInt で もつので じょうげんが ない（なんけたでも OK）
+function big(v) {
+    if (typeof v === 'bigint') return v;
+    if (typeof v === 'number') return isFinite(v) ? BigInt(Math.floor(v)) : 0n;
+    if (typeof v === 'string') {
+        const d = v.replace(/[^0-9]/g, '');
+        return d ? BigInt(d) : 0n;
+    }
+    return 0n;
+}
+const bmin = function (a, b) { return a < b ? a : b; };
+const bmax = function (a, b) { return a > b ? a : b; };
 
 function addCoins(n) {
-    state.coins = Math.min(MAX_COINS, state.coins + n);
-    if (state.stats) state.stats.earned = Math.min(MAX_COINS, state.stats.earned + n);
+    const v = big(n);
+    state.coins = big(state.coins) + v;
+    if (state.stats) state.stats.earned = big(state.stats.earned) + v;
 }
 
-// おおきな かずは 「兆」「億」「万」で よみやすく
+// おおきな かずの よびかた（万 → 無量大数 まで）
+const BIG_UNITS = [
+    [68, '無量大数'], [64, '不可思議'], [60, '那由他'], [56, '阿僧祇'], [52, '恒河沙'],
+    [48, '極'], [44, '載'], [40, '正'], [36, '澗'], [32, '溝'], [28, '穣'], [24, '𥝱'],
+    [20, '垓'], [16, '京'], [12, '兆'], [8, '億'], [4, '万']
+];
+
+// おおきな かずは よみやすい かたちに する
 function coinText(n) {
-    if (n >= 1e12) {
-        const v = n / 1e12;
-        return (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10) + '兆';
+    const v = big(n);
+    if (v < 0n) return '0';
+    const str = v.toString();
+    const len = str.length;
+    if (len <= 4) return str;
+
+    // 72けたを こえたら 「1.2×10^500（501けた）」の かたちで
+    if (len > 72) {
+        const head = str[0] + '.' + str.slice(1, 3);
+        return `${head}×10^${len - 1}（${len}けた）`;
     }
-    if (n >= 1e8) {
-        const v = n / 1e8;
-        return (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10) + '億';
+    for (let i = 0; i < BIG_UNITS.length; i++) {
+        const dg = BIG_UNITS[i][0];
+        if (len > dg) {
+            const whole = str.slice(0, len - dg);
+            const frac = str.slice(len - dg, len - dg + 1);
+            const num = whole.length >= 3 || frac === '0' ? whole : whole + '.' + frac;
+            return num + BIG_UNITS[i][1];
+        }
     }
-    if (n >= 1e4) {
-        const v = n / 1e4;
-        return (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10) + '万';
-    }
-    return String(Math.round(n));
+    return str;
 }
 
 // かった ものが あると できる こと
@@ -396,12 +422,12 @@ const JOBS = [
     { id: 'space', label: '🚀 うちゅうひこうし', energy: 45, hunger: 25, happy: 10, minPower: 20, minLevel: 15,
       base: 600, perPower: 20, perLevel: 25 },
     { id: 'legend', label: '🌠 でんせつの おしごと', energy: 60, hunger: 35, happy: 0, minPower: 30, minLevel: 20,
-      base: 0, perPower: 0, perLevel: 0, flat: 1000000000000000 }
+      base: 0, perPower: 0, perLevel: 0, flat: '1' + '0'.repeat(500) }   // 1のあとに 0が 500こ
 ];
 
 function jobPay(j) {
-    const raw = j.flat ? j.flat : j.base + state.power * j.perPower + state.level * j.perLevel;
-    return Math.round(raw * (has('bank') ? 1.2 : 1));
+    const raw = j.flat ? big(j.flat) : big(j.base + state.power * j.perPower + state.level * j.perLevel);
+    return has('bank') ? raw * 12n / 10n : raw;
 }
 
 // おさらが あると ごはんが すこし やすくなる
@@ -879,11 +905,11 @@ function newState() {
         lastTick: t,
         ageSec: 0,
         hunger: 80, happy: 80, clean: 100, energy: 100, hp: 100,
-        level: 1, exp: 0, coins: 60, power: 0,
+        level: 1, exp: 0, coins: 60n, power: 0,
         sleeping: false, sick: false, sickTimer: 0,
         poops: [], poopTimer: 90, postTimer: 180, robotTimer: 45, chatTimer: 20, jobs: 0,
-        helps: 0, lastTalk: 0, savings: 0, bankTimer: 180, bankAcct: 0, acctTimer: 180, bankLog: [],
-        stats: { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0, interest: 0 },
+        helps: 0, lastTalk: 0, savings: 0n, bankTimer: 180, bankAcct: 0n, acctTimer: 180, bankLog: [],
+        stats: { earned: 0n, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0, interest: 0n },
         view: 'out',
         owned: {},
         worn: {},
@@ -897,9 +923,14 @@ function newState() {
 function save() {
     try {
         state.lastTick = now();
-        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state, function (k, v) {
+            return typeof v === 'bigint' ? v.toString() + 'n' : v;   // BigInt は もじで のこす
+        }));
     } catch (e) { /* 保存できない環境でも遊べるようにする */ }
 }
+
+// 「123n」の かたちを かずに もどす
+function strip(v) { return typeof v === 'string' ? v.replace(/n$/, '') : v; }
 
 function load() {
     try {
@@ -915,6 +946,7 @@ function load() {
         delete s.wearing;
         if (s.view === 'in') s.view = 'living';          // へやが 1つだった ころの セーブ
         if (!s.stats) s.stats = { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0 };
+        if (s.stats.earned === undefined) s.stats.earned = 0;
         if (!s.theme) s.theme = {};
         Object.keys(s.theme).forEach(function (k) {      // 1まいだけの ころの セーブ
             if (!Array.isArray(s.theme[k])) s.theme[k] = [s.theme[k]];
@@ -926,12 +958,16 @@ function load() {
         if (typeof s.lastTalk !== 'number') s.lastTalk = 0;
         if (typeof s.stats.talks !== 'number') s.stats.talks = 0;
         if (typeof s.stats.orders !== 'number') s.stats.orders = 0;
-        if (typeof s.stats.interest !== 'number') s.stats.interest = 0;
-        if (typeof s.savings !== 'number') s.savings = 0;         // ちょきんばこが なかった ころの セーブ
+        if (s.stats.interest === undefined) s.stats.interest = 0;
+        if (s.savings === undefined) s.savings = 0;               // ちょきんばこが なかった ころの セーブ
         if (typeof s.bankTimer !== 'number') s.bankTimer = 180;
-        if (typeof s.bankAcct !== 'number') s.bankAcct = 0;       // ぎんこうが なかった ころの セーブ
+        if (s.bankAcct === undefined) s.bankAcct = 0;             // ぎんこうが なかった ころの セーブ
         if (typeof s.acctTimer !== 'number') s.acctTimer = 180;
         if (!Array.isArray(s.bankLog)) s.bankLog = [];
+        // おかねは BigInt に もどす（ふるい セーブの すうじも そのまま つかえる）
+        ['coins', 'savings', 'bankAcct'].forEach(function (k) { s[k] = big(strip(s[k])); });
+        ['earned', 'interest'].forEach(function (k) { s.stats[k] = big(strip(s.stats[k])); });
+        s.bankLog.forEach(function (e) { e.a = big(strip(e.a)); });
         return s;
     } catch (e) {
         return null;
@@ -999,12 +1035,13 @@ function applyTime(dt) {
         if (state.bankTimer <= 0) {
             const times = Math.min(20, 1 + Math.floor(-state.bankTimer / DAY_SEC));
             state.bankTimer = DAY_SEC;
-            let gain = 0;
-            for (let i = 0; i < times; i++) gain += Math.floor((state.savings + gain) * bankRate());
-            gain = Math.max(0, Math.min(gain, bankCap() - state.savings));
-            if (gain > 0) {
-                state.savings += gain;
-                state.stats.interest = Math.min(MAX_COINS, (state.stats.interest || 0) + gain);
+            let gain = 0n;
+            const r = big(Math.round(bankRate() * 100));
+            for (let i = 0; i < times; i++) gain += (big(state.savings) + gain) * r / 100n;
+            gain = bmax(0n, bmin(gain, bankCap() - big(state.savings)));
+            if (gain > 0n) {
+                state.savings = big(state.savings) + gain;
+                state.stats.interest = big(state.stats.interest) + gain;
                 addLog(`🐷 ちょきんに りそくが ついた！ +${coinText(gain)}🪙`);
                 robotSay('ちょきん、ふえてるよ！');
             }
@@ -1016,12 +1053,11 @@ function applyTime(dt) {
         if (state.acctTimer <= 0) {
             const times = Math.min(20, 1 + Math.floor(-state.acctTimer / DAY_SEC));
             state.acctTimer = DAY_SEC;
-            let gain = 0;
-            for (let i = 0; i < times; i++) gain += Math.floor((state.bankAcct + gain) * ACCT_RATE);
-            gain = Math.max(0, Math.min(gain, MAX_COINS - state.bankAcct));
-            if (gain > 0) {
-                state.bankAcct += gain;
-                state.stats.interest = Math.min(MAX_COINS, (state.stats.interest || 0) + gain);
+            let gain = 0n;
+            for (let i = 0; i < times; i++) gain += (big(state.bankAcct) + gain) * 2n / 100n;
+            if (gain > 0n) {
+                state.bankAcct = big(state.bankAcct) + gain;
+                state.stats.interest = big(state.stats.interest) + gain;
                 bankNote('ri', gain);
                 addLog(`🏦 ぎんこうの りそく +${coinText(gain)}🪙`);
             }
@@ -1143,7 +1179,7 @@ function robotHelp() {
     if (state.stage === 'egg') return;
 
     if (has('robomed') && state.sick && state.coins >= MEDICINE_COST) {
-        state.coins -= MEDICINE_COST;
+        state.coins = big(state.coins) - big(MEDICINE_COST);
         state.sick = false;
         state.sickTimer = 0;
         state.hp = clamp(state.hp + 20, 0, 100);
@@ -1158,7 +1194,7 @@ function robotHelp() {
 
     const f = FOODS.onigiri, cost = foodCost(f);
     if (has('roboarm') && state.hunger < 30 && state.coins >= cost) {
-        state.coins -= cost;
+        state.coins = big(state.coins) - big(cost);
         state.hunger = clamp(state.hunger + f.hunger, 0, 100);
         state.happy = clamp(state.happy + f.happy, 0, 100);
         state.care.eat += f.eat;
@@ -1577,7 +1613,7 @@ function feed(key) {
     if (state.coins < cost) { addLog('コインが たりない…'); return; }
     if (state.hunger > 95) { addLog(`${state.name}「おなか いっぱいだよ〜」`); return; }
 
-    state.coins -= cost;
+    state.coins = big(state.coins) - big(cost);
     state.hunger = clamp(state.hunger + f.hunger, 0, 100);
     state.happy = clamp(state.happy + f.happy, 0, 100);
     state.care.eat += f.eat;
@@ -1666,7 +1702,7 @@ function doActivity(id) {
         updateUI();
     }
 
-    if (a.fee) state.coins -= a.fee;
+    if (a.fee) state.coins = big(state.coins) - big(a.fee);
     state.energy = clamp(state.energy - a.e + (a.eg || 0), 0, 100);
     state.hunger = clamp(state.hunger - a.hu + (a.hg || 0), 0, 100);
     state.happy = clamp(state.happy + a.h, 0, 100);
@@ -1730,7 +1766,7 @@ function stopMini() {
     else if (d < 0.22) { coins = 10; happy = 12; label = 'まあまあ…'; }
     else { coins = 3; happy = 6; label = 'ざんねん…'; }
 
-    addCoins(Math.round(coins * (has('bike') ? 1.3 : 1)));
+    addCoins(Math.round(coins * (has('bike') ? 1.3 : 1)));   // BigInt に なおして たされる
     state.happy = clamp(state.happy + happy * (has('tv') ? 1.3 : 1) * (has('game') ? 1.15 : 1) * (has('toybox') ? 1.1 : 1), 0, 100);
     state.energy = clamp(state.energy - 12, 0, 100);
     state.hunger = clamp(state.hunger - 8, 0, 100);
@@ -1981,7 +2017,7 @@ function useMedicine() {
     if (busy()) return;
     if (!state.sick) { addLog(`${state.name} は げんきだ！ おくすりは いらない。`); return; }
     if (state.coins < MEDICINE_COST) { addLog(`コインが たりない…（おくすりは ${MEDICINE_COST}🪙）`); return; }
-    state.coins -= MEDICINE_COST;
+    state.coins = big(state.coins) - big(MEDICINE_COST);
     state.sick = false;
     state.sickTimer = 0;
     state.hp = clamp(state.hp + 20, 0, 100);
@@ -2058,7 +2094,7 @@ function buyItem(id) {
     const it = SHOP.filter(function (x) { return x.id === id; })[0];
     if (!it || has(id)) return;
     if (state.coins < it.cost) { addLog('コインが たりない…'); return; }
-    state.coins -= it.cost;
+    state.coins = big(state.coins) - big(it.cost);
     state.owned[id] = true;
     if (it.cat === 'wear') state.worn[id] = true;
     if (it.cat === 'style') {
@@ -2122,10 +2158,10 @@ function takeOffAll() {
 
 // いれられる かず（ショップで おおきく できる）
 function bankCap() {
-    if (has('vault')) return MAX_COINS;
-    if (has('safe')) return 10000000;
-    if (has('bank')) return 10000;
-    return 0;
+    if (has('vault')) return 9000000000000000n;
+    if (has('safe')) return 10000000n;
+    if (has('bank')) return 10000n;
+    return 0n;
 }
 
 // 1日（180びょう）ごとに つく りそく
@@ -2144,10 +2180,10 @@ function bankNote(kind, amt) {
 }
 
 function acctPut(which) {
-    const amt = Math.min(bankAmount('in', which), state.coins, MAX_COINS - state.bankAcct);
-    if (amt <= 0) { addLog('あずける コインが たりない…'); renderBank(); return; }
-    state.coins -= amt;
-    state.bankAcct += amt;
+    const amt = bmin(bankAmount('in', which), big(state.coins));   // ぎんこうは じょうげん なし
+    if (amt <= 0n) { addLog('あずける コインが たりない…'); renderBank(); return; }
+    state.coins = big(state.coins) - amt;
+    state.bankAcct = big(state.bankAcct) + amt;
     bankNote('in', amt);
     burst('star', 4);
     addLog(`🏦 ${coinText(amt)}🪙 を ぎんこうに あずけた！`);
@@ -2157,10 +2193,10 @@ function acctPut(which) {
 }
 
 function acctTake(which) {
-    const amt = Math.min(bankAmount('out', which), state.bankAcct);
-    if (amt <= 0) { addLog('こうざは からっぽ…'); renderBank(); return; }
-    state.bankAcct -= amt;
-    state.coins = Math.min(MAX_COINS, state.coins + amt);
+    const amt = bmin(bankAmount('out', which), big(state.bankAcct));
+    if (amt <= 0n) { addLog('こうざは からっぽ…'); renderBank(); return; }
+    state.bankAcct = big(state.bankAcct) - amt;
+    state.coins = big(state.coins) + amt;
     bankNote('out', amt);
     burst('heart', 3);
     addLog(`🏦 ぎんこうから ${coinText(amt)}🪙 おろした。`);
@@ -2173,22 +2209,22 @@ let bankDraft = '';
 function setBankDraft(v) { bankDraft = v; }
 
 function bankAmount(kind, which) {
-    const have = kind === 'in' ? state.coins : (bankTab === 'acct' ? state.bankAcct : state.savings);
+    const have = big(kind === 'in' ? state.coins : (bankTab === 'acct' ? state.bankAcct : state.savings));
     if (which === 'all') return have;
-    if (which === 'half') return Math.floor(have / 2);
-    return which;
+    if (which === 'half') return have / 2n;
+    return big(which);
 }
 
 function bankPut(which) {
-    const room = bankCap() - state.savings;
-    const amt = Math.min(bankAmount('in', which), state.coins, room);
-    if (amt <= 0) {
-        addLog(room <= 0 ? '🐷 ちょきんばこは もう いっぱい！' : 'いれる コインが たりない…');
+    const room = bankCap() - big(state.savings);
+    const amt = bmin(bmin(bankAmount('in', which), big(state.coins)), room);
+    if (amt <= 0n) {
+        addLog(room <= 0n ? '🐷 ちょきんばこは もう いっぱい！' : 'いれる コインが たりない…');
         renderBank();
         return;
     }
-    state.coins -= amt;
-    state.savings += amt;
+    state.coins = big(state.coins) - amt;
+    state.savings = big(state.savings) + amt;
     burst('star', 4);
     addLog(`🐷 ${coinText(amt)}🪙 を ちょきんばこに いれた！`);
     robotSay('しっかり ためようね！');
@@ -2197,10 +2233,10 @@ function bankPut(which) {
 }
 
 function bankTake(which) {
-    const amt = Math.min(bankAmount('out', which), state.savings);
-    if (amt <= 0) { addLog('ちょきんばこは からっぽ…'); renderBank(); return; }
-    state.savings -= amt;
-    state.coins = Math.min(MAX_COINS, state.coins + amt);
+    const amt = bmin(bankAmount('out', which), big(state.savings));
+    if (amt <= 0n) { addLog('ちょきんばこは からっぽ…'); renderBank(); return; }
+    state.savings = big(state.savings) - amt;
+    state.coins = big(state.coins) + amt;
     burst('heart', 3);
     addLog(`🐷 ちょきんばこから ${coinText(amt)}🪙 だした。`);
     save();
@@ -2210,10 +2246,11 @@ function bankTake(which) {
 // にゅうりょくらんの かずを つかう
 function bankTyped(dir) {
     const box = el('bank-input');
-    const raw = (box ? box.value : bankDraft).replace(/[^0-9]/g, '');
-    const n = parseInt(raw, 10);
-    if (!raw || !isFinite(n) || n <= 0) { addLog('かずを いれてね（れい: 500）'); return; }
+    // なんけたでも いいように もじの まま つかう
+    const raw = (box ? box.value : bankDraft).replace(/[^0-9]/g, '').replace(/^0+/, '');
+    if (!raw) { addLog('かずを いれてね（れい: 500）'); return; }
     bankDraft = '';
+    const n = big(raw);
     if (bankTab === 'acct') { if (dir === 'in') acctPut(n); else acctTake(n); }
     else if (dir === 'in') bankPut(n); else bankTake(n);
 }
@@ -2245,7 +2282,7 @@ function piggyHtml() {
             <div class="game-btn gray" onclick="hideModal()">とじる</div>`;
     }
     const cap = bankCap();
-    const pct = cap > 0 ? Math.min(100, state.savings / cap * 100) : 0;
+    const pct = cap > 0n ? Math.min(100, Number(big(state.savings) * 100n / cap)) : 0;
     const nextUp = !has('safe') ? '🔐 きんこ を かうと 1000ばい ためられる！'
         : !has('vault') ? '💳 キャッシュカード が あれば どこでも ぎんこうが つかえる！'
         : 'ちょきんばこは さいだい！ おおきな おかねは ぎんこうへ';
@@ -2333,7 +2370,7 @@ function acctHtml() {
 
 function openReport() {
     const c = state.care;
-    const st = state.stats || { earned: 0, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0 };
+    const st = state.stats || { earned: 0n, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0, interest: 0n };
     const days = Math.floor(state.ageSec / DAY_SEC);
     const total = Math.max(1, c.eat + c.play + c.train + c.clean);
     const ownedCount = SHOP.filter(function (i) { return has(i.id); }).length;
@@ -5677,7 +5714,7 @@ function drawRoomFloor(t) {
 
     if (has('bank')) {                                      // ちょきんばこ
         const x = W * 0.66, y = H * 0.96;
-        const fill = bankCap() > 0 ? Math.min(1, (state.savings || 0) / bankCap()) : 0;
+        const fill = bankCap() > 0n ? Math.min(1, Number(big(state.savings) * 100n / bankCap()) / 100) : 0;
         if (fill > 0) {                                     // ためた ぶんだけ コインが つみあがる
             const n = 1 + Math.floor(fill * 4.99);
             for (let i = 0; i < n; i++) {
