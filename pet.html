@@ -154,10 +154,13 @@
             <div class="game-btn" id="btn-view-school" style="background:#2563eb;border-bottom-color:#1e40af" onclick="setView('school')">🏫 がっこう</div>
         </div>
         <div class="grid grid-cols-4 gap-1 mt-1">
+            <div class="game-btn" id="btn-view-bank" style="background:#ca8a04;border-bottom-color:#854d0e" onclick="setView('bank')">🏦 ぎんこう</div>
             <div class="game-btn" id="btn-view-living" style="background:#a16207;border-bottom-color:#713f12" onclick="setView('living')">🛋 リビング</div>
             <div class="game-btn" id="btn-view-kitchen" style="background:#0d9488;border-bottom-color:#115e59" onclick="setView('kitchen')">🍳 キッチン</div>
             <div class="game-btn purple" id="btn-view-bed" onclick="setView('bed')">🛏 2かい</div>
-            <div class="game-btn" id="btn-map" style="background:#0891b2;border-bottom-color:#155e75" onclick="openMap()">🗺 おでかけ</div>
+        </div>
+        <div class="grid grid-cols-1 gap-1 mt-1">
+            <div class="game-btn" id="btn-map" style="background:#0891b2;border-bottom-color:#155e75" onclick="openMap()">🗺 おでかけマップ（ぜんぶの ばしょ）</div>
         </div>
         <div class="flex justify-between text-xs font-bold mt-2 text-gray-600">
             <span id="stage-view">たまご</span>
@@ -7713,11 +7716,11 @@ function updateUI() {
 
     el('btn-sleep').textContent = state.sleeping ? '☀ おこす' : '💤 ねる';
     [['btn-view-out', 'out'], ['btn-view-park', 'park'], ['btn-view-shop', 'shop'], ['btn-view-school', 'school'],
-     ['btn-view-living', 'living'], ['btn-view-kitchen', 'kitchen'], ['btn-view-bed', 'bed']].forEach(function (pair) {
+     ['btn-view-bank', 'bank'], ['btn-view-living', 'living'], ['btn-view-kitchen', 'kitchen'], ['btn-view-bed', 'bed']].forEach(function (pair) {
         el(pair[0]).classList.toggle('view-off', (state.view || 'out') !== pair[1]);
     });
     // クイックボタンに ない ばしょに いるときは 「おでかけ」を ひからせる
-    const quick = ['out', 'park', 'shop', 'school', 'living', 'kitchen', 'bed'];
+    const quick = ['out', 'park', 'shop', 'school', 'bank', 'living', 'kitchen', 'bed'];
     el('btn-map').classList.toggle('view-off', quick.indexOf(state.view || 'out') >= 0);
 
     const locked = state.stage === 'egg' || state.sleeping;
