@@ -3788,7 +3788,7 @@ function openShop() {
 
 /* ---------------- 🎲 むげんショップ（10^120こ） ---------------- */
 
-const INF_TOTAL = 10n ** 120n;          // うっている かずは 1のあとに 0が 120こ
+const INF_TOTAL = 9n * 10n ** 5000n;    // うっている かずは 9のあとに 0が 5000こ
 const INF_PER = 8n;                     // 1ページに 8こ
 
 const INF_A = ['ふしぎな', 'キラキラの', 'ふわふわの', 'ぴかぴかの', 'まほうの', 'ちいさな', 'おおきな', 'ゆめの', 'にじいろの', 'ほしぞらの'];
@@ -3856,9 +3856,10 @@ function infJump() {
 }
 
 function infRandom() {
-    let d = '';
-    for (let k = 0; k < 118; k++) d += Math.floor(Math.random() * 10);
-    infPage = BigInt('1' + d) / INF_PER;
+    const len = INF_TOTAL.toString().length - 1;     // ばんごうの けたすう
+    let d = String(1 + Math.floor(Math.random() * 8));
+    for (let k = 1; k < len; k++) d += Math.floor(Math.random() * 10);
+    infPage = BigInt(d) / INF_PER;
     openShop();
 }
 
