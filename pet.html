@@ -299,7 +299,27 @@ const FOODS = {
     flan:       { label: '🍮 とろけるプリン', emoji: '🍮', cost: 22, hunger: 16, happy: 26, exp: 4, eat: 1 },
     lolly:      { label: '🍭 ぺろぺろキャンディ', emoji: '🍭', cost: 8, hunger: 4, happy: 18, exp: 1, eat: 1 },
     nuts:       { label: '🌰 くり', emoji: '🌰', cost: 10, hunger: 16, happy: 8, exp: 3, eat: 1 },
-    tealeaf:    { label: '🫖 あったかい こうちゃ', emoji: '🫖', cost: 10, hunger: 8, happy: 14, exp: 2, eat: 1 }
+    tealeaf:    { label: '🫖 あったかい こうちゃ', emoji: '🫖', cost: 10, hunger: 8, happy: 14, exp: 2, eat: 1 },
+    omurice:    { label: '🍳 オムライス', emoji: '🍳', cost: 26, hunger: 40, happy: 18, exp: 6, eat: 2 },
+    gratin:     { label: '🧀 グラタン', emoji: '🧀', cost: 28, hunger: 38, happy: 18, exp: 6, eat: 2 },
+    yakisoba:   { label: '🍜 やきそば', emoji: '🍜', cost: 24, hunger: 36, happy: 14, exp: 5, eat: 1 },
+    sushi2:     { label: '🍥 なると', emoji: '🍥', cost: 10, hunger: 12, happy: 8, exp: 2, eat: 1 },
+    anpan:      { label: '🥐 あんパン', emoji: '🥐', cost: 16, hunger: 22, happy: 16, exp: 3, eat: 1 },
+    melonpan:   { label: '🍞 メロンパン', emoji: '🍞', cost: 18, hunger: 24, happy: 18, exp: 3, eat: 1 },
+    crepe:      { label: '🥞 クレープ', emoji: '🥞', cost: 24, hunger: 18, happy: 26, exp: 4, eat: 1 },
+    cotton:     { label: '🍡 わたあめ', emoji: '🍡', cost: 10, hunger: 6, happy: 22, exp: 2, eat: 1 },
+    macaron:    { label: '🍬 マカロン', emoji: '🍬', cost: 20, hunger: 8, happy: 24, exp: 3, eat: 1 },
+    tart:       { label: '🥧 タルト', emoji: '🥧', cost: 26, hunger: 16, happy: 28, exp: 4, eat: 1 },
+    smoothie:   { label: '🥤 スムージー', emoji: '🥤', cost: 18, hunger: 12, happy: 20, exp: 3, eat: 1 },
+    cocoa2:     { label: '☕ ココア', emoji: '☕', cost: 14, hunger: 10, happy: 18, exp: 2, eat: 1 },
+    soba:       { label: '🍲 おそば', emoji: '🍲', cost: 22, hunger: 34, happy: 12, exp: 5, eat: 1 },
+    gyudon:     { label: '🍚 ぎゅうどん', emoji: '🍚', cost: 30, hunger: 46, happy: 16, exp: 7, eat: 2 },
+    karaage:    { label: '🍗 からあげ', emoji: '🍗', cost: 26, hunger: 38, happy: 20, exp: 6, eat: 2 },
+    corn2:      { label: '🌽 やきとうもろこし', emoji: '🌽', cost: 14, hunger: 20, happy: 14, exp: 3, eat: 1 },
+    mango:      { label: '🥭 マンゴー', emoji: '🥭', cost: 22, hunger: 16, happy: 22, exp: 4, eat: 1 },
+    cherry2:    { label: '🍒 さくらんぼ', emoji: '🍒', cost: 12, hunger: 10, happy: 16, exp: 3, eat: 1 },
+    avocado:    { label: '🥑 アボカド', emoji: '🥑', cost: 18, hunger: 20, happy: 10, exp: 4, eat: 1 },
+    honeytoast: { label: '🍞 ハニートースト', emoji: '🍞', cost: 24, hunger: 26, happy: 24, exp: 4, eat: 1 }
 };
 
 const MEDICINE_COST = 30;
@@ -399,6 +419,36 @@ const ACTIVITIES = [
     { id: 'music',  item: 'musicbox',emoji: '🎶', label: 'オルゴールを きく',  room: 'bed',     e: 1,  hu: 1,  h: 18, x: 3 },
     { id: 'swing2', item: 'swingset',emoji: '🎠', label: 'ブランコに のる',    room: 'out',     e: 9,  hu: 6,  h: 22, x: 5 },
     { id: 'sand',   item: 'sandbox', emoji: '🏖', label: 'すなあそびを する',  room: 'out',     e: 8,  hu: 5,  h: 20, x: 5, cl: 14 },
+    { id: 'atkite', item: 'ty_kite', emoji: '🪁', label: 'たこあげを する', room: 'out', e: 10, hu: 6, h: 20, x: 6 },
+    { id: 'atbubbles', item: 'ty_bubbles', emoji: '🫧', label: 'シャボンだまを とばす', room: 'out', e: 6, hu: 3, h: 22, x: 4 },
+    { id: 'atkendama', item: 'ty_kendama', emoji: '🪀', label: 'けんだまで あそぶ', room: 'living', e: 7, hu: 4, h: 18, x: 6 },
+    { id: 'atchess', item: 'ty_chess', emoji: '♟', label: 'しょうぎを さす', room: 'living', e: 6, hu: 3, h: 14, x: 16 },
+    { id: 'atkaruta', item: 'ty_karuta', emoji: '🎴', label: 'かるたを する', room: 'living', e: 5, hu: 3, h: 20, x: 8 },
+    { id: 'atorigami', item: 'ty_origami', emoji: '📄', label: 'おりがみを おる', room: 'living', e: 4, hu: 2, h: 16, x: 10 },
+    { id: 'atclay', item: 'ty_clay', emoji: '🧱', label: 'ねんどで つくる', room: 'living', e: 6, hu: 3, h: 20, x: 8 },
+    { id: 'atmagic', item: 'ty_magic', emoji: '🎩', label: 'マジックを する', room: 'living', e: 7, hu: 4, h: 26, x: 7 },
+    { id: 'atdrum', item: 'ty_drum', emoji: '🥁', label: 'たいこを たたく', room: 'living', e: 9, hu: 5, h: 24, x: 5 },
+    { id: 'atviolin', item: 'ty_violin', emoji: '🎻', label: 'バイオリンを ひく', room: 'living', e: 8, hu: 4, h: 24, x: 9 },
+    { id: 'atcamera', item: 'ty_camera', emoji: '📷', label: 'しゃしんを とる', room: 'out', e: 5, hu: 3, h: 18, x: 8 },
+    { id: 'atskate', item: 'ty_skate', emoji: '🛼', label: 'スケートを する', room: 'out', e: 14, hu: 8, h: 24, x: 8 },
+    { id: 'atsurf', item: 'ty_surf', emoji: '🏄', label: 'サーフィンを する', room: 'beach', e: 18, hu: 10, h: 30, x: 10 },
+    { id: 'atsnorkel', item: 'ty_snorkel', emoji: '🤿', label: 'うみに もぐる', room: 'beach', e: 12, hu: 7, h: 26, x: 9 },
+    { id: 'atbinocular', item: 'ty_binocular', emoji: '🔭', label: 'とりを かんさつする', room: 'mountain', e: 5, hu: 3, h: 16, x: 10 },
+    { id: 'atbackpack2', item: 'ty_backpack2', emoji: '🎒', label: 'ハイキングを する', room: 'mountain', e: 16, hu: 10, h: 20, x: 12, pw: 1 },
+    { id: 'atball', item: 'ty_ball', emoji: '🏀', label: 'バスケを する', room: 'park', e: 13, hu: 8, h: 22, x: 8 },
+    { id: 'atbadminton', item: 'ty_badminton', emoji: '🏸', label: 'バドミントンを する', room: 'park', e: 12, hu: 7, h: 22, x: 7 },
+    { id: 'atfrisbee', item: 'ty_frisbee', emoji: '🥏', label: 'フリスビーで あそぶ', room: 'park', e: 10, hu: 6, h: 20, x: 6 },
+    { id: 'atscooter', item: 'ty_scooter', emoji: '🛴', label: 'キックボードで はしる', room: 'park', e: 12, hu: 7, h: 20, x: 7 },
+    { id: 'atteaset', item: 'ty_teaset', emoji: '🫖', label: 'おちゃかいを する', room: 'kitchen', e: 3, hu: 2, h: 20, x: 5, hg: 10 },
+    { id: 'aticecream2', item: 'ty_icecream2', emoji: '🍦', label: 'アイスを つくる', room: 'kitchen', e: 5, hu: 2, h: 24, x: 5, hg: 14 },
+    { id: 'atbread', item: 'ty_bread', emoji: '🥖', label: 'パンを やく', room: 'kitchen', e: 7, hu: 0, h: 18, x: 6, hg: 24 },
+    { id: 'atcandy2', item: 'ty_candy2', emoji: '🍬', label: 'キャンディを つくる', room: 'kitchen', e: 5, hu: 2, h: 22, x: 4, hg: 10 },
+    { id: 'atstarmap', item: 'ty_starmap', emoji: '🌌', label: 'ほしを さがす', room: 'bed', e: 4, hu: 2, h: 22, x: 10 },
+    { id: 'atpillowfight', item: 'ty_pillowfight', emoji: '🛏', label: 'まくら なげを する', room: 'bed', e: 9, hu: 5, h: 24, x: 5 },
+    { id: 'atlego', item: 'ty_lego', emoji: '🧩', label: 'ブロックで つくる', room: 'bed', e: 6, hu: 3, h: 20, x: 12 },
+    { id: 'atpuppet', item: 'ty_puppet', emoji: '🎭', label: 'にんぎょうげきを する', room: 'bed', e: 5, hu: 3, h: 22, x: 7 },
+    { id: 'atfishing2', item: 'ty_fishing2', emoji: '🎣', label: 'おおものを つる', room: 'beach', e: 12, hu: 7, h: 16, x: 8, c: 60 },
+    { id: 'atmetal', item: 'ty_metal', emoji: '🔍', label: 'たからを さがす', room: 'park', e: 10, hu: 6, h: 14, x: 6, c: 80 },
     // こうえんの ゆうぐは かわなくても あそべる
     { id: 'pswing', free: true, emoji: '🎠', label: 'こうえんの ブランコ',   room: 'park', e: 8,  hu: 5, h: 16, x: 4 },
     { id: 'pslide', free: true, emoji: '🛝', label: 'すべりだいで あそぶ',   room: 'park', e: 7,  hu: 4, h: 15, x: 4 },
@@ -472,6 +522,7 @@ function jobPay(j) {
     const raw = j.flat ? big(j.flat) : big(j.base + state.power * j.perPower + state.level * j.perLevel);
     let pay = has('bank') ? raw * 12n / 10n : raw;
     if (has('suit')) pay = pay * 115n / 100n;        // おしごとスーツ
+    if (has('wallet')) pay = pay * 110n / 100n;      // おさいふ
     return pay;
 }
 
@@ -480,6 +531,7 @@ function foodCost(f) {
     let c = f.cost;
     if (has('dish')) c *= 0.8;
     if (has('coupon')) c *= 0.9;
+    if (has('bento2')) c *= 0.9;
     return Math.max(1, Math.round(c));
 }
 
@@ -842,46 +894,46 @@ const SHOP = [
     { id: 'scarf_black', cat: 'wear', label: '🧣 マフラー（くろ）', cost: 150, note: 'みため だけ' },
     { id: 'scarf_white', cat: 'wear', label: '🧣 マフラー（しろ）', cost: 150, note: 'みため だけ' },
     { id: 'scarf_gold', cat: 'wear', label: '🧣 マフラー（ゴールド）', cost: 150, note: 'みため だけ' },
-{ id: 'dc_room1', cat: 'room', label: '🪴 かんようしょくぶつ', cost: 90, note: 'かざりだなに かざる', deco: '🪴' },
-    { id: 'dc_room2', cat: 'room', label: '🖼 え', cost: 120, note: 'かざりだなに かざる', deco: '🖼' },
-    { id: 'dc_room3', cat: 'room', label: '🕯 キャンドル', cost: 80, note: 'かざりだなに かざる', deco: '🕯' },
-    { id: 'dc_room4', cat: 'room', label: '🏺 つぼ', cost: 140, note: 'かざりだなに かざる', deco: '🏺' },
-    { id: 'dc_room5', cat: 'room', label: '🎈 ふうせん', cost: 60, note: 'かざりだなに かざる', deco: '🎈' },
-    { id: 'dc_room6', cat: 'room', label: '🪩 ミラーボール', cost: 300, note: 'かざりだなに かざる', deco: '🪩' },
-    { id: 'dc_room7', cat: 'room', label: '🧿 おまもり', cost: 110, note: 'かざりだなに かざる', deco: '🧿' },
-    { id: 'dc_room8', cat: 'room', label: '🎏 こいのぼり', cost: 150, note: 'かざりだなに かざる', deco: '🎏' },
-    { id: 'dc_room9', cat: 'room', label: '🪆 マトリョーシカ', cost: 180, note: 'かざりだなに かざる', deco: '🪆' },
-    { id: 'dc_room10', cat: 'room', label: '🗿 モアイぞう', cost: 260, note: 'かざりだなに かざる', deco: '🗿' },
-    { id: 'dc_room11', cat: 'room', label: '🏆 トロフィー', cost: 400, note: 'かざりだなに かざる', deco: '🏆' },
-    { id: 'dc_room12', cat: 'room', label: '🎁 プレゼントばこ', cost: 120, note: 'かざりだなに かざる', deco: '🎁' },
-    { id: 'dc_kitchen1', cat: 'kitchen', label: '🫖 ティーポット', cost: 110, note: 'かざりだなに かざる', deco: '🫖' },
-    { id: 'dc_kitchen2', cat: 'kitchen', label: '🧂 しお と こしょう', cost: 60, note: 'かざりだなに かざる', deco: '🧂' },
-    { id: 'dc_kitchen3', cat: 'kitchen', label: '🍯 はちみつびん', cost: 90, note: 'かざりだなに かざる', deco: '🍯' },
-    { id: 'dc_kitchen4', cat: 'kitchen', label: '🧺 バスケット', cost: 100, note: 'かざりだなに かざる', deco: '🧺' },
-    { id: 'dc_kitchen5', cat: 'kitchen', label: '🥫 かんづめ', cost: 70, note: 'かざりだなに かざる', deco: '🥫' },
-    { id: 'dc_kitchen6', cat: 'kitchen', label: '🫙 ガラスびん', cost: 80, note: 'かざりだなに かざる', deco: '🫙' },
-    { id: 'dc_kitchen7', cat: 'kitchen', label: '🍶 とっくり', cost: 130, note: 'かざりだなに かざる', deco: '🍶' },
-    { id: 'dc_kitchen8', cat: 'kitchen', label: '🧇 ワッフルメーカー', cost: 220, note: 'かざりだなに かざる', deco: '🧇' },
-    { id: 'dc_bedroom1', cat: 'bedroom', label: '🪄 まほうの つえ', cost: 260, note: 'かざりだなに かざる', deco: '🪄' },
-    { id: 'dc_bedroom2', cat: 'bedroom', label: '🔮 すいしょうだま', cost: 300, note: 'かざりだなに かざる', deco: '🔮' },
-    { id: 'dc_bedroom3', cat: 'bedroom', label: '🧸 くまの ぬいぐるみ', cost: 140, note: 'かざりだなに かざる', deco: '🧸' },
-    { id: 'dc_bedroom4', cat: 'bedroom', label: '🎐 ふうりん', cost: 90, note: 'かざりだなに かざる', deco: '🎐' },
-    { id: 'dc_bedroom5', cat: 'bedroom', label: '🕰 おきどけい', cost: 160, note: 'かざりだなに かざる', deco: '🕰' },
-    { id: 'dc_bedroom6', cat: 'bedroom', label: '🪁 たこ', cost: 120, note: 'かざりだなに かざる', deco: '🪁' },
-    { id: 'dc_bedroom7', cat: 'bedroom', label: '📷 カメラ', cost: 280, note: 'かざりだなに かざる', deco: '📷' },
-    { id: 'dc_bedroom8', cat: 'bedroom', label: '🧦 くつしたの かざり', cost: 70, note: 'かざりだなに かざる', deco: '🧦' },
-    { id: 'dc_yard1', cat: 'yard', label: '🌷 チューリップ', cost: 70, note: 'かざりだなに かざる', deco: '🌷' },
-    { id: 'dc_yard2', cat: 'yard', label: '🌻 ひまわりの はち', cost: 80, note: 'かざりだなに かざる', deco: '🌻' },
-    { id: 'dc_yard3', cat: 'yard', label: '🍄 きのこ', cost: 60, note: 'かざりだなに かざる', deco: '🍄' },
-    { id: 'dc_yard4', cat: 'yard', label: '🪵 まるた', cost: 90, note: 'かざりだなに かざる', deco: '🪵' },
-    { id: 'dc_yard5', cat: 'yard', label: '🗿 にわの せきぞう', cost: 240, note: 'かざりだなに かざる', deco: '🗿' },
-    { id: 'dc_yard6', cat: 'yard', label: '⛲ ミニふんすい', cost: 360, note: 'かざりだなに かざる', deco: '⛲' },
-    { id: 'dc_yard7', cat: 'yard', label: '🦩 フラミンゴの おきもの', cost: 180, note: 'かざりだなに かざる', deco: '🦩' },
-    { id: 'dc_yard8', cat: 'yard', label: '🐢 かめの おきもの', cost: 150, note: 'かざりだなに かざる', deco: '🐢' },
-    { id: 'dc_yard9', cat: 'yard', label: '🎋 たなばたの ささ', cost: 130, note: 'かざりだなに かざる', deco: '🎋' },
-    { id: 'dc_yard10', cat: 'yard', label: '🪺 ことりの す', cost: 110, note: 'かざりだなに かざる', deco: '🪺' },
-    { id: 'dc_yard11', cat: 'yard', label: '🛎 にわの ベル', cost: 100, note: 'かざりだなに かざる', deco: '🛎' },
-    { id: 'dc_yard12', cat: 'yard', label: '🚲 じてんしゃおきば', cost: 200, note: 'かざりだなに かざる', deco: '🚲' },
+{ id: 'dc_room1', cat: 'room', label: '🪴 かんようしょくぶつ', cost: 90, note: 'かざると きげんが へりにくい', deco: '🪴' },
+    { id: 'dc_room2', cat: 'room', label: '🖼 え', cost: 120, note: 'かざると きげんが へりにくい', deco: '🖼' },
+    { id: 'dc_room3', cat: 'room', label: '🕯 キャンドル', cost: 80, note: 'かざると きげんが へりにくい', deco: '🕯' },
+    { id: 'dc_room4', cat: 'room', label: '🏺 つぼ', cost: 140, note: 'かざると きげんが へりにくい', deco: '🏺' },
+    { id: 'dc_room5', cat: 'room', label: '🎈 ふうせん', cost: 60, note: 'かざると きげんが へりにくい', deco: '🎈' },
+    { id: 'dc_room6', cat: 'room', label: '🪩 ミラーボール', cost: 300, note: 'かざると きげんが へりにくい', deco: '🪩' },
+    { id: 'dc_room7', cat: 'room', label: '🧿 おまもり', cost: 110, note: 'かざると きげんが へりにくい', deco: '🧿' },
+    { id: 'dc_room8', cat: 'room', label: '🎏 こいのぼり', cost: 150, note: 'かざると きげんが へりにくい', deco: '🎏' },
+    { id: 'dc_room9', cat: 'room', label: '🪆 マトリョーシカ', cost: 180, note: 'かざると きげんが へりにくい', deco: '🪆' },
+    { id: 'dc_room10', cat: 'room', label: '🗿 モアイぞう', cost: 260, note: 'かざると きげんが へりにくい', deco: '🗿' },
+    { id: 'dc_room11', cat: 'room', label: '🏆 トロフィー', cost: 400, note: 'かざると きげんが へりにくい', deco: '🏆' },
+    { id: 'dc_room12', cat: 'room', label: '🎁 プレゼントばこ', cost: 120, note: 'かざると きげんが へりにくい', deco: '🎁' },
+    { id: 'dc_kitchen1', cat: 'kitchen', label: '🫖 ティーポット', cost: 110, note: 'かざると きげんが へりにくい', deco: '🫖' },
+    { id: 'dc_kitchen2', cat: 'kitchen', label: '🧂 しお と こしょう', cost: 60, note: 'かざると きげんが へりにくい', deco: '🧂' },
+    { id: 'dc_kitchen3', cat: 'kitchen', label: '🍯 はちみつびん', cost: 90, note: 'かざると きげんが へりにくい', deco: '🍯' },
+    { id: 'dc_kitchen4', cat: 'kitchen', label: '🧺 バスケット', cost: 100, note: 'かざると きげんが へりにくい', deco: '🧺' },
+    { id: 'dc_kitchen5', cat: 'kitchen', label: '🥫 かんづめ', cost: 70, note: 'かざると きげんが へりにくい', deco: '🥫' },
+    { id: 'dc_kitchen6', cat: 'kitchen', label: '🫙 ガラスびん', cost: 80, note: 'かざると きげんが へりにくい', deco: '🫙' },
+    { id: 'dc_kitchen7', cat: 'kitchen', label: '🍶 とっくり', cost: 130, note: 'かざると きげんが へりにくい', deco: '🍶' },
+    { id: 'dc_kitchen8', cat: 'kitchen', label: '🧇 ワッフルメーカー', cost: 220, note: 'かざると きげんが へりにくい', deco: '🧇' },
+    { id: 'dc_bedroom1', cat: 'bedroom', label: '🪄 まほうの つえ', cost: 260, note: 'かざると きげんが へりにくい', deco: '🪄' },
+    { id: 'dc_bedroom2', cat: 'bedroom', label: '🔮 すいしょうだま', cost: 300, note: 'かざると きげんが へりにくい', deco: '🔮' },
+    { id: 'dc_bedroom3', cat: 'bedroom', label: '🧸 くまの ぬいぐるみ', cost: 140, note: 'かざると きげんが へりにくい', deco: '🧸' },
+    { id: 'dc_bedroom4', cat: 'bedroom', label: '🎐 ふうりん', cost: 90, note: 'かざると きげんが へりにくい', deco: '🎐' },
+    { id: 'dc_bedroom5', cat: 'bedroom', label: '🕰 おきどけい', cost: 160, note: 'かざると きげんが へりにくい', deco: '🕰' },
+    { id: 'dc_bedroom6', cat: 'bedroom', label: '🪁 たこ', cost: 120, note: 'かざると きげんが へりにくい', deco: '🪁' },
+    { id: 'dc_bedroom7', cat: 'bedroom', label: '📷 カメラ', cost: 280, note: 'かざると きげんが へりにくい', deco: '📷' },
+    { id: 'dc_bedroom8', cat: 'bedroom', label: '🧦 くつしたの かざり', cost: 70, note: 'かざると きげんが へりにくい', deco: '🧦' },
+    { id: 'dc_yard1', cat: 'yard', label: '🌷 チューリップ', cost: 70, note: 'かざると きげんが へりにくい', deco: '🌷' },
+    { id: 'dc_yard2', cat: 'yard', label: '🌻 ひまわりの はち', cost: 80, note: 'かざると きげんが へりにくい', deco: '🌻' },
+    { id: 'dc_yard3', cat: 'yard', label: '🍄 きのこ', cost: 60, note: 'かざると きげんが へりにくい', deco: '🍄' },
+    { id: 'dc_yard4', cat: 'yard', label: '🪵 まるた', cost: 90, note: 'かざると きげんが へりにくい', deco: '🪵' },
+    { id: 'dc_yard5', cat: 'yard', label: '🗿 にわの せきぞう', cost: 240, note: 'かざると きげんが へりにくい', deco: '🗿' },
+    { id: 'dc_yard6', cat: 'yard', label: '⛲ ミニふんすい', cost: 360, note: 'かざると きげんが へりにくい', deco: '⛲' },
+    { id: 'dc_yard7', cat: 'yard', label: '🦩 フラミンゴの おきもの', cost: 180, note: 'かざると きげんが へりにくい', deco: '🦩' },
+    { id: 'dc_yard8', cat: 'yard', label: '🐢 かめの おきもの', cost: 150, note: 'かざると きげんが へりにくい', deco: '🐢' },
+    { id: 'dc_yard9', cat: 'yard', label: '🎋 たなばたの ささ', cost: 130, note: 'かざると きげんが へりにくい', deco: '🎋' },
+    { id: 'dc_yard10', cat: 'yard', label: '🪺 ことりの す', cost: 110, note: 'かざると きげんが へりにくい', deco: '🪺' },
+    { id: 'dc_yard11', cat: 'yard', label: '🛎 にわの ベル', cost: 100, note: 'かざると きげんが へりにくい', deco: '🛎' },
+    { id: 'dc_yard12', cat: 'yard', label: '🚲 じてんしゃおきば', cost: 200, note: 'かざると きげんが へりにくい', deco: '🚲' },
 { id: 'mop', cat: 'health', label: '🧹 モップ', cost: 120, note: 'きれいが へりにくい' },
     { id: 'humid', cat: 'health', label: '🌫 かしつき', cost: 200, note: 'きれいが へりにくい' },
     { id: 'incense', cat: 'health', label: '🕯 アロマキャンドル', cost: 180, note: 'きげんが へりにくい' },
@@ -986,44 +1038,44 @@ const SHOP = [
     { id: 'scarf_violet', cat: 'wear', label: '🧣 マフラー（バイオレット）', cost: 150, note: 'みため だけ' },
     { id: 'scarf_rose', cat: 'wear', label: '🧣 マフラー（ローズ）', cost: 150, note: 'みため だけ' },
     { id: 'scarf_silver', cat: 'wear', label: '🧣 マフラー（シルバー）', cost: 150, note: 'みため だけ' },
-    { id: 'dcb_room1', cat: 'room', label: '🪟 ステンドグラス', cost: 200, note: 'かざりだなに かざる', deco: '🪟' },
-    { id: 'dcb_room2', cat: 'room', label: '🎺 かざりトランペット', cost: 180, note: 'かざりだなに かざる', deco: '🎺' },
-    { id: 'dcb_room3', cat: 'room', label: '🧭 ほうい じしん', cost: 150, note: 'かざりだなに かざる', deco: '🧭' },
-    { id: 'dcb_room4', cat: 'room', label: '🪬 おまもりの て', cost: 130, note: 'かざりだなに かざる', deco: '🪬' },
-    { id: 'dcb_room5', cat: 'room', label: '🎠 メリーゴーランドの もけい', cost: 280, note: 'かざりだなに かざる', deco: '🎠' },
-    { id: 'dcb_room6', cat: 'room', label: '🛼 ローラースケート', cost: 160, note: 'かざりだなに かざる', deco: '🛼' },
-    { id: 'dcb_room7', cat: 'room', label: '🪀 ヨーヨー', cost: 70, note: 'かざりだなに かざる', deco: '🪀' },
-    { id: 'dcb_room8', cat: 'room', label: '🎳 ボウリングのピン', cost: 120, note: 'かざりだなに かざる', deco: '🎳' },
-    { id: 'dcb_room9', cat: 'room', label: '🪃 ブーメラン', cost: 90, note: 'かざりだなに かざる', deco: '🪃' },
-    { id: 'dcb_room10', cat: 'room', label: '🎯 かざりダーツ', cost: 140, note: 'かざりだなに かざる', deco: '🎯' },
-    { id: 'dcb_kitchen1', cat: 'kitchen', label: '🍳 かざりフライパン', cost: 90, note: 'かざりだなに かざる', deco: '🍳' },
-    { id: 'dcb_kitchen2', cat: 'kitchen', label: '🥄 おおきな スプーン', cost: 60, note: 'かざりだなに かざる', deco: '🥄' },
-    { id: 'dcb_kitchen3', cat: 'kitchen', label: '🫕 チーズフォンデュ', cost: 210, note: 'かざりだなに かざる', deco: '🫕' },
-    { id: 'dcb_kitchen4', cat: 'kitchen', label: '🧁 カップケーキの おきもの', cost: 100, note: 'かざりだなに かざる', deco: '🧁' },
-    { id: 'dcb_kitchen5', cat: 'kitchen', label: '🍉 すいかの おきもの', cost: 110, note: 'かざりだなに かざる', deco: '🍉' },
-    { id: 'dcb_kitchen6', cat: 'kitchen', label: '🥖 フランスパン', cost: 80, note: 'かざりだなに かざる', deco: '🥖' },
-    { id: 'dcb_kitchen7', cat: 'kitchen', label: '🫑 やさいの かご', cost: 70, note: 'かざりだなに かざる', deco: '🫑' },
-    { id: 'dcb_kitchen8', cat: 'kitchen', label: '🍋 レモンの はち', cost: 85, note: 'かざりだなに かざる', deco: '🍋' },
-    { id: 'dcb_bedroom1', cat: 'bedroom', label: '🌙 つきの ランプ', cost: 220, note: 'かざりだなに かざる', deco: '🌙' },
-    { id: 'dcb_bedroom2', cat: 'bedroom', label: '⭐ ほしの モビール', cost: 180, note: 'かざりだなに かざる', deco: '⭐' },
-    { id: 'dcb_bedroom3', cat: 'bedroom', label: '🎹 ミニピアノ', cost: 260, note: 'かざりだなに かざる', deco: '🎹' },
-    { id: 'dcb_bedroom4', cat: 'bedroom', label: '🧵 てあみセット', cost: 120, note: 'かざりだなに かざる', deco: '🧵' },
-    { id: 'dcb_bedroom5', cat: 'bedroom', label: '📚 ほんの タワー', cost: 140, note: 'かざりだなに かざる', deco: '📚' },
-    { id: 'dcb_bedroom6', cat: 'bedroom', label: '🪞 スタンドミラー', cost: 200, note: 'かざりだなに かざる', deco: '🪞' },
-    { id: 'dcb_bedroom7', cat: 'bedroom', label: '🛎 よびりん', cost: 80, note: 'かざりだなに かざる', deco: '🛎' },
-    { id: 'dcb_bedroom8', cat: 'bedroom', label: '🕯 ナイトキャンドル', cost: 90, note: 'かざりだなに かざる', deco: '🕯' },
-    { id: 'dcb_yard1', cat: 'yard', label: '🌵 サボテン', cost: 90, note: 'かざりだなに かざる', deco: '🌵' },
-    { id: 'dcb_yard2', cat: 'yard', label: '🌴 やしのき', cost: 260, note: 'かざりだなに かざる', deco: '🌴' },
-    { id: 'dcb_yard3', cat: 'yard', label: '🪴 はちうえ', cost: 80, note: 'かざりだなに かざる', deco: '🪴' },
-    { id: 'dcb_yard4', cat: 'yard', label: '🦔 はりねずみの おきもの', cost: 150, note: 'かざりだなに かざる', deco: '🦔' },
-    { id: 'dcb_yard5', cat: 'yard', label: '🐿 りすの おきもの', cost: 140, note: 'かざりだなに かざる', deco: '🐿' },
-    { id: 'dcb_yard6', cat: 'yard', label: '🦋 ちょうの かざり', cost: 110, note: 'かざりだなに かざる', deco: '🦋' },
-    { id: 'dcb_yard7', cat: 'yard', label: '🐝 はちの す', cost: 120, note: 'かざりだなに かざる', deco: '🐝' },
-    { id: 'dcb_yard8', cat: 'yard', label: '🌾 いねの たば', cost: 70, note: 'かざりだなに かざる', deco: '🌾' },
-    { id: 'dcb_yard9', cat: 'yard', label: '🎪 ミニテント', cost: 300, note: 'かざりだなに かざる', deco: '🎪' },
-    { id: 'dcb_yard10', cat: 'yard', label: '🚿 みずまき ホース', cost: 130, note: 'かざりだなに かざる', deco: '🚿' },
-    { id: 'dcb_yard11', cat: 'yard', label: '🪤 ピクニックシート', cost: 150, note: 'かざりだなに かざる', deco: '🪤' },
-    { id: 'dcb_yard12', cat: 'yard', label: '🧺 ピクニックかご', cost: 160, note: 'かざりだなに かざる', deco: '🧺' },
+    { id: 'dcb_room1', cat: 'room', label: '🪟 ステンドグラス', cost: 200, note: 'かざると きげんが へりにくい', deco: '🪟' },
+    { id: 'dcb_room2', cat: 'room', label: '🎺 かざりトランペット', cost: 180, note: 'かざると きげんが へりにくい', deco: '🎺' },
+    { id: 'dcb_room3', cat: 'room', label: '🧭 ほうい じしん', cost: 150, note: 'かざると きげんが へりにくい', deco: '🧭' },
+    { id: 'dcb_room4', cat: 'room', label: '🪬 おまもりの て', cost: 130, note: 'かざると きげんが へりにくい', deco: '🪬' },
+    { id: 'dcb_room5', cat: 'room', label: '🎠 メリーゴーランドの もけい', cost: 280, note: 'かざると きげんが へりにくい', deco: '🎠' },
+    { id: 'dcb_room6', cat: 'room', label: '🛼 ローラースケート', cost: 160, note: 'かざると きげんが へりにくい', deco: '🛼' },
+    { id: 'dcb_room7', cat: 'room', label: '🪀 ヨーヨー', cost: 70, note: 'かざると きげんが へりにくい', deco: '🪀' },
+    { id: 'dcb_room8', cat: 'room', label: '🎳 ボウリングのピン', cost: 120, note: 'かざると きげんが へりにくい', deco: '🎳' },
+    { id: 'dcb_room9', cat: 'room', label: '🪃 ブーメラン', cost: 90, note: 'かざると きげんが へりにくい', deco: '🪃' },
+    { id: 'dcb_room10', cat: 'room', label: '🎯 かざりダーツ', cost: 140, note: 'かざると きげんが へりにくい', deco: '🎯' },
+    { id: 'dcb_kitchen1', cat: 'kitchen', label: '🍳 かざりフライパン', cost: 90, note: 'かざると きげんが へりにくい', deco: '🍳' },
+    { id: 'dcb_kitchen2', cat: 'kitchen', label: '🥄 おおきな スプーン', cost: 60, note: 'かざると きげんが へりにくい', deco: '🥄' },
+    { id: 'dcb_kitchen3', cat: 'kitchen', label: '🫕 チーズフォンデュ', cost: 210, note: 'かざると きげんが へりにくい', deco: '🫕' },
+    { id: 'dcb_kitchen4', cat: 'kitchen', label: '🧁 カップケーキの おきもの', cost: 100, note: 'かざると きげんが へりにくい', deco: '🧁' },
+    { id: 'dcb_kitchen5', cat: 'kitchen', label: '🍉 すいかの おきもの', cost: 110, note: 'かざると きげんが へりにくい', deco: '🍉' },
+    { id: 'dcb_kitchen6', cat: 'kitchen', label: '🥖 フランスパン', cost: 80, note: 'かざると きげんが へりにくい', deco: '🥖' },
+    { id: 'dcb_kitchen7', cat: 'kitchen', label: '🫑 やさいの かご', cost: 70, note: 'かざると きげんが へりにくい', deco: '🫑' },
+    { id: 'dcb_kitchen8', cat: 'kitchen', label: '🍋 レモンの はち', cost: 85, note: 'かざると きげんが へりにくい', deco: '🍋' },
+    { id: 'dcb_bedroom1', cat: 'bedroom', label: '🌙 つきの ランプ', cost: 220, note: 'かざると きげんが へりにくい', deco: '🌙' },
+    { id: 'dcb_bedroom2', cat: 'bedroom', label: '⭐ ほしの モビール', cost: 180, note: 'かざると きげんが へりにくい', deco: '⭐' },
+    { id: 'dcb_bedroom3', cat: 'bedroom', label: '🎹 ミニピアノ', cost: 260, note: 'かざると きげんが へりにくい', deco: '🎹' },
+    { id: 'dcb_bedroom4', cat: 'bedroom', label: '🧵 てあみセット', cost: 120, note: 'かざると きげんが へりにくい', deco: '🧵' },
+    { id: 'dcb_bedroom5', cat: 'bedroom', label: '📚 ほんの タワー', cost: 140, note: 'かざると きげんが へりにくい', deco: '📚' },
+    { id: 'dcb_bedroom6', cat: 'bedroom', label: '🪞 スタンドミラー', cost: 200, note: 'かざると きげんが へりにくい', deco: '🪞' },
+    { id: 'dcb_bedroom7', cat: 'bedroom', label: '🛎 よびりん', cost: 80, note: 'かざると きげんが へりにくい', deco: '🛎' },
+    { id: 'dcb_bedroom8', cat: 'bedroom', label: '🕯 ナイトキャンドル', cost: 90, note: 'かざると きげんが へりにくい', deco: '🕯' },
+    { id: 'dcb_yard1', cat: 'yard', label: '🌵 サボテン', cost: 90, note: 'かざると きげんが へりにくい', deco: '🌵' },
+    { id: 'dcb_yard2', cat: 'yard', label: '🌴 やしのき', cost: 260, note: 'かざると きげんが へりにくい', deco: '🌴' },
+    { id: 'dcb_yard3', cat: 'yard', label: '🪴 はちうえ', cost: 80, note: 'かざると きげんが へりにくい', deco: '🪴' },
+    { id: 'dcb_yard4', cat: 'yard', label: '🦔 はりねずみの おきもの', cost: 150, note: 'かざると きげんが へりにくい', deco: '🦔' },
+    { id: 'dcb_yard5', cat: 'yard', label: '🐿 りすの おきもの', cost: 140, note: 'かざると きげんが へりにくい', deco: '🐿' },
+    { id: 'dcb_yard6', cat: 'yard', label: '🦋 ちょうの かざり', cost: 110, note: 'かざると きげんが へりにくい', deco: '🦋' },
+    { id: 'dcb_yard7', cat: 'yard', label: '🐝 はちの す', cost: 120, note: 'かざると きげんが へりにくい', deco: '🐝' },
+    { id: 'dcb_yard8', cat: 'yard', label: '🌾 いねの たば', cost: 70, note: 'かざると きげんが へりにくい', deco: '🌾' },
+    { id: 'dcb_yard9', cat: 'yard', label: '🎪 ミニテント', cost: 300, note: 'かざると きげんが へりにくい', deco: '🎪' },
+    { id: 'dcb_yard10', cat: 'yard', label: '🚿 みずまき ホース', cost: 130, note: 'かざると きげんが へりにくい', deco: '🚿' },
+    { id: 'dcb_yard11', cat: 'yard', label: '🪤 ピクニックシート', cost: 150, note: 'かざると きげんが へりにくい', deco: '🪤' },
+    { id: 'dcb_yard12', cat: 'yard', label: '🧺 ピクニックかご', cost: 160, note: 'かざると きげんが へりにくい', deco: '🧺' },
     { id: 'bigtowel', cat: 'health', label: '🧻 ふかふかタオル', cost: 140, note: 'おふろの きげんアップ' },
     { id: 'slipper', cat: 'health', label: '🥿 スリッパ', cost: 110, note: 'きれいが へりにくい' },
     { id: 'nightlamp', cat: 'health', label: '🔦 よるの ライト', cost: 160, note: 'ねると げんきが もどる' },
@@ -1033,7 +1085,141 @@ const SHOP = [
     { id: 'drink', cat: 'health', label: '🧃 スポーツドリンク', cost: 150, note: 'げんきが へりにくい' },
     { id: 'relax', cat: 'health', label: '🎧 リラックス おんがく', cost: 200, note: 'きげんが へりにくい' },
     { id: 'gift', cat: 'health', label: '🎁 ともだちへの プレゼント', cost: 400, note: 'ともだちと なかよくなりやすい' },
-    { id: 'album', cat: 'health', label: '📔 おもいでアルバム', cost: 350, note: 'けいけんちが ふえる' }
+    { id: 'album', cat: 'health', label: '📔 おもいでアルバム', cost: 350, note: 'けいけんちが ふえる' },
+    { id: 'wall_bubble', cat: 'style', label: '🎨 かべ（しゃぼんだま）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_peach3', cat: 'style', label: '🎨 かべ（ピーチ）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_mintcream', cat: 'style', label: '🎨 かべ（ミントクリーム）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_sunflower', cat: 'style', label: '🎨 かべ（ひまわり）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_sea', cat: 'style', label: '🎨 かべ（うみのいろ）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_wine', cat: 'style', label: '🎨 かべ（ワイン）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_clay', cat: 'style', label: '🎨 かべ（ねんど）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_linen', cat: 'style', label: '🎨 かべ（リネン）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_pine', cat: 'style', label: '🎨 かべ（まつ）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_coffee', cat: 'style', label: '🎨 かべ（コーヒー）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_bluebell', cat: 'style', label: '🎨 かべ（ブルーベル）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_salmon', cat: 'style', label: '🎨 かべ（サーモン）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_lime2', cat: 'style', label: '🎨 かべ（ライム）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_smoke', cat: 'style', label: '🎨 かべ（スモーク）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_melon', cat: 'style', label: '🎨 かべ（メロン）', cost: 70, note: 'へやの かべ' },
+    { id: 'wall_cotton', cat: 'style', label: '🎨 かべ（コットン）', cost: 70, note: 'へやの かべ' },
+    { id: 'floor_herring', cat: 'style', label: '🟫 ゆか（ヘリンボーン）', cost: 90, note: 'へやの ゆか' },
+    { id: 'floor_dot', cat: 'style', label: '🟫 ゆか（みずたま）', cost: 90, note: 'へやの ゆか' },
+    { id: 'floor_stripe', cat: 'style', label: '🟫 ゆか（ストライプ）', cost: 90, note: 'へやの ゆか' },
+    { id: 'floor_grass', cat: 'style', label: '🟫 ゆか（くさ）', cost: 90, note: 'へやの ゆか' },
+    { id: 'floor_space', cat: 'style', label: '🟫 ゆか（うちゅう）', cost: 90, note: 'へやの ゆか' },
+    { id: 'floor_bamboo', cat: 'style', label: '🟫 ゆか（たけ）', cost: 90, note: 'へやの ゆか' },
+    { id: 'floor_shellfloor', cat: 'style', label: '🟫 ゆか（かいがら）', cost: 90, note: 'へやの ゆか' },
+    { id: 'floor_lagoonf', cat: 'style', label: '🟫 ゆか（ラグーン）', cost: 90, note: 'へやの ゆか' },
+    { id: 'floor_cherryf', cat: 'style', label: '🟫 ゆか（さくら）', cost: 90, note: 'へやの ゆか' },
+    { id: 'floor_walnut', cat: 'style', label: '🟫 ゆか（くるみ）', cost: 90, note: 'へやの ゆか' },
+    { id: 'floor_pebble', cat: 'style', label: '🟫 ゆか（こいし）', cost: 90, note: 'へやの ゆか' },
+    { id: 'floor_sunnyf', cat: 'style', label: '🟫 ゆか（サニー）', cost: 90, note: 'へやの ゆか' },
+    { id: 'roof_sunny', cat: 'style', label: '🏠 やね（サニー）', cost: 110, note: 'おうちの やね' },
+    { id: 'roof_forest', cat: 'style', label: '🏠 やね（フォレスト）', cost: 110, note: 'おうちの やね' },
+    { id: 'roof_berry', cat: 'style', label: '🏠 やね（ベリー）', cost: 110, note: 'おうちの やね' },
+    { id: 'roof_ocean', cat: 'style', label: '🏠 やね（オーシャン）', cost: 110, note: 'おうちの やね' },
+    { id: 'roof_sand', cat: 'style', label: '🏠 やね（サンド）', cost: 110, note: 'おうちの やね' },
+    { id: 'roof_grape', cat: 'style', label: '🏠 やね（グレープ）', cost: 110, note: 'おうちの やね' },
+    { id: 'roof_steel', cat: 'style', label: '🏠 やね（スチール）', cost: 110, note: 'おうちの やね' },
+    { id: 'roof_flame', cat: 'style', label: '🏠 やね（フレイム）', cost: 110, note: 'おうちの やね' },
+    { id: 'roof_leaf', cat: 'style', label: '🏠 やね（リーフ）', cost: 110, note: 'おうちの やね' },
+    { id: 'roof_pearl', cat: 'style', label: '🏠 やね（パール）', cost: 110, note: 'おうちの やね' },
+    { id: 'wall2_mint3', cat: 'style', label: '🧱 そとかべ（ミント）', cost: 110, note: 'おうちの そとかべ' },
+    { id: 'wall2_honey2', cat: 'style', label: '🧱 そとかべ（はちみつ）', cost: 110, note: 'おうちの そとかべ' },
+    { id: 'wall2_sky3', cat: 'style', label: '🧱 そとかべ（そら）', cost: 110, note: 'おうちの そとかべ' },
+    { id: 'wall2_rose3', cat: 'style', label: '🧱 そとかべ（ローズ）', cost: 110, note: 'おうちの そとかべ' },
+    { id: 'wall2_leaf2', cat: 'style', label: '🧱 そとかべ（はっぱ）', cost: 110, note: 'おうちの そとかべ' },
+    { id: 'wall2_stone2', cat: 'style', label: '🧱 そとかべ（いし）', cost: 110, note: 'おうちの そとかべ' },
+    { id: 'wall2_plum2', cat: 'style', label: '🧱 そとかべ（プラム）', cost: 110, note: 'おうちの そとかべ' },
+    { id: 'wall2_clay2', cat: 'style', label: '🧱 そとかべ（ねんど）', cost: 110, note: 'おうちの そとかべ' },
+    { id: 'wall2_linen2', cat: 'style', label: '🧱 そとかべ（リネン）', cost: 110, note: 'おうちの そとかべ' },
+    { id: 'wall2_smoke2', cat: 'style', label: '🧱 そとかべ（スモーク）', cost: 110, note: 'おうちの そとかべ' },
+    { id: 'bedsheet_mint2', cat: 'style', label: '🛏 ふとん（ミント）', cost: 130, note: 'ベッドの ふとん' },
+    { id: 'bedsheet_grape', cat: 'style', label: '🛏 ふとん（グレープ）', cost: 130, note: 'ベッドの ふとん' },
+    { id: 'bedsheet_peach', cat: 'style', label: '🛏 ふとん（ピーチ）', cost: 130, note: 'ベッドの ふとん' },
+    { id: 'bedsheet_sky2', cat: 'style', label: '🛏 ふとん（そら）', cost: 130, note: 'ベッドの ふとん' },
+    { id: 'bedsheet_sunny', cat: 'style', label: '🛏 ふとん（サニー）', cost: 130, note: 'ベッドの ふとん' },
+    { id: 'bedsheet_rose2', cat: 'style', label: '🛏 ふとん（ローズ）', cost: 130, note: 'ベッドの ふとん' },
+    { id: 'bedsheet_forest', cat: 'style', label: '🛏 ふとん（フォレスト）', cost: 130, note: 'ベッドの ふとん' },
+    { id: 'bedsheet_smoke', cat: 'style', label: '🛏 ふとん（スモーク）', cost: 130, note: 'ベッドの ふとん' },
+    { id: 'rug_berry', cat: 'style', label: '🟦 ラグ（ベリー）', cost: 110, note: 'へやの ラグ' },
+    { id: 'rug_sand', cat: 'style', label: '🟦 ラグ（サンド）', cost: 110, note: 'へやの ラグ' },
+    { id: 'rug_forest', cat: 'style', label: '🟦 ラグ（フォレスト）', cost: 110, note: 'へやの ラグ' },
+    { id: 'rug_ocean', cat: 'style', label: '🟦 ラグ（オーシャン）', cost: 110, note: 'へやの ラグ' },
+    { id: 'rug_clay', cat: 'style', label: '🟦 ラグ（ねんど）', cost: 110, note: 'へやの ラグ' },
+    { id: 'rug_smoke', cat: 'style', label: '🟦 ラグ（スモーク）', cost: 110, note: 'へやの ラグ' },
+    { id: 'rug_grape', cat: 'style', label: '🟦 ラグ（グレープ）', cost: 110, note: 'へやの ラグ' },
+    { id: 'rug_flame', cat: 'style', label: '🟦 ラグ（フレイム）', cost: 110, note: 'へやの ラグ' },
+    { id: 'sofa_berry', cat: 'style', label: '🛋 ソファ（ベリー）', cost: 150, note: 'リビングの ソファ' },
+    { id: 'sofa_sand', cat: 'style', label: '🛋 ソファ（サンド）', cost: 150, note: 'リビングの ソファ' },
+    { id: 'sofa_forest', cat: 'style', label: '🛋 ソファ（フォレスト）', cost: 150, note: 'リビングの ソファ' },
+    { id: 'sofa_ocean', cat: 'style', label: '🛋 ソファ（オーシャン）', cost: 150, note: 'リビングの ソファ' },
+    { id: 'sofa_clay', cat: 'style', label: '🛋 ソファ（ねんど）', cost: 150, note: 'リビングの ソファ' },
+    { id: 'sofa_smoke', cat: 'style', label: '🛋 ソファ（スモーク）', cost: 150, note: 'リビングの ソファ' },
+    { id: 'cape_ocean', cat: 'wear', label: '🦸 マント（オーシャン）', cost: 260, note: 'ペットも ともだちも つけられる' },
+    { id: 'cape_flame', cat: 'wear', label: '🦸 マント（フレイム）', cost: 260, note: 'ペットも ともだちも つけられる' },
+    { id: 'cape_forest', cat: 'wear', label: '🦸 マント（フォレスト）', cost: 260, note: 'ペットも ともだちも つけられる' },
+    { id: 'cape_berry', cat: 'wear', label: '🦸 マント（ベリー）', cost: 260, note: 'ペットも ともだちも つけられる' },
+    { id: 'cape_sand', cat: 'wear', label: '🦸 マント（サンド）', cost: 260, note: 'ペットも ともだちも つけられる' },
+    { id: 'cape_smoke', cat: 'wear', label: '🦸 マント（スモーク）', cost: 260, note: 'ペットも ともだちも つけられる' },
+    { id: 'cape_grape', cat: 'wear', label: '🦸 マント（グレープ）', cost: 260, note: 'ペットも ともだちも つけられる' },
+    { id: 'cape_pearl', cat: 'wear', label: '🦸 マント（パール）', cost: 260, note: 'ペットも ともだちも つけられる' },
+    { id: 'ribbon_ocean', cat: 'wear', label: '🎀 リボン（オーシャン）', cost: 90, note: 'ペットも ともだちも つけられる' },
+    { id: 'ribbon_flame', cat: 'wear', label: '🎀 リボン（フレイム）', cost: 90, note: 'ペットも ともだちも つけられる' },
+    { id: 'ribbon_forest', cat: 'wear', label: '🎀 リボン（フォレスト）', cost: 90, note: 'ペットも ともだちも つけられる' },
+    { id: 'ribbon_berry', cat: 'wear', label: '🎀 リボン（ベリー）', cost: 90, note: 'ペットも ともだちも つけられる' },
+    { id: 'ribbon_sand', cat: 'wear', label: '🎀 リボン（サンド）', cost: 90, note: 'ペットも ともだちも つけられる' },
+    { id: 'ribbon_smoke', cat: 'wear', label: '🎀 リボン（スモーク）', cost: 90, note: 'ペットも ともだちも つけられる' },
+    { id: 'ribbon_grape', cat: 'wear', label: '🎀 リボン（グレープ）', cost: 90, note: 'ペットも ともだちも つけられる' },
+    { id: 'ribbon_pearl', cat: 'wear', label: '🎀 リボン（パール）', cost: 90, note: 'ペットも ともだちも つけられる' },
+    { id: 'scarf_ocean', cat: 'wear', label: '🧣 マフラー（オーシャン）', cost: 150, note: 'ペットも ともだちも つけられる' },
+    { id: 'scarf_flame', cat: 'wear', label: '🧣 マフラー（フレイム）', cost: 150, note: 'ペットも ともだちも つけられる' },
+    { id: 'scarf_forest', cat: 'wear', label: '🧣 マフラー（フォレスト）', cost: 150, note: 'ペットも ともだちも つけられる' },
+    { id: 'scarf_berry', cat: 'wear', label: '🧣 マフラー（ベリー）', cost: 150, note: 'ペットも ともだちも つけられる' },
+    { id: 'scarf_sand', cat: 'wear', label: '🧣 マフラー（サンド）', cost: 150, note: 'ペットも ともだちも つけられる' },
+    { id: 'scarf_smoke', cat: 'wear', label: '🧣 マフラー（スモーク）', cost: 150, note: 'ペットも ともだちも つけられる' },
+    { id: 'scarf_grape', cat: 'wear', label: '🧣 マフラー（グレープ）', cost: 150, note: 'ペットも ともだちも つけられる' },
+    { id: 'scarf_pearl', cat: 'wear', label: '🧣 マフラー（パール）', cost: 150, note: 'ペットも ともだちも つけられる' },
+    { id: 'ty_kite', cat: 'yard', label: '🪁 たこあげセット', cost: 420, note: 'たこあげを する（あそべる）', deco: '🪁' },
+    { id: 'ty_bubbles', cat: 'yard', label: '🫧 シャボンだま', cost: 260, note: 'シャボンだまを とばす（あそべる）', deco: '🫧' },
+    { id: 'ty_kendama', cat: 'room', label: '🪀 けんだま', cost: 300, note: 'けんだまで あそぶ（あそべる）', deco: '🪀' },
+    { id: 'ty_chess', cat: 'room', label: '♟ しょうぎばん', cost: 480, note: 'しょうぎを さす（あそべる）', deco: '♟' },
+    { id: 'ty_karuta', cat: 'room', label: '🎴 かるた', cost: 280, note: 'かるたを する（あそべる）', deco: '🎴' },
+    { id: 'ty_origami', cat: 'room', label: '📄 おりがみ', cost: 180, note: 'おりがみを おる（あそべる）', deco: '📄' },
+    { id: 'ty_clay', cat: 'room', label: '🧱 ねんど', cost: 220, note: 'ねんどで つくる（あそべる）', deco: '🧱' },
+    { id: 'ty_magic', cat: 'room', label: '🎩 マジックセット', cost: 520, note: 'マジックを する（あそべる）', deco: '🎩' },
+    { id: 'ty_drum', cat: 'room', label: '🥁 たいこ', cost: 360, note: 'たいこを たたく（あそべる）', deco: '🥁' },
+    { id: 'ty_violin', cat: 'room', label: '🎻 バイオリン', cost: 700, note: 'バイオリンを ひく（あそべる）', deco: '🎻' },
+    { id: 'ty_camera', cat: 'yard', label: '📷 カメラ', cost: 560, note: 'しゃしんを とる（あそべる）', deco: '📷' },
+    { id: 'ty_skate', cat: 'yard', label: '🛼 ローラースケート', cost: 480, note: 'スケートを する（あそべる）', deco: '🛼' },
+    { id: 'ty_surf', cat: 'yard', label: '🏄 サーフボード', cost: 900, note: 'サーフィンを する（あそべる）', deco: '🏄' },
+    { id: 'ty_snorkel', cat: 'yard', label: '🤿 シュノーケル', cost: 640, note: 'うみに もぐる（あそべる）', deco: '🤿' },
+    { id: 'ty_binocular', cat: 'yard', label: '🔭 そうがんきょう', cost: 420, note: 'とりを かんさつする（あそべる）', deco: '🔭' },
+    { id: 'ty_backpack2', cat: 'yard', label: '🎒 とざんリュック', cost: 520, note: 'ハイキングを する（あそべる）', deco: '🎒' },
+    { id: 'ty_ball', cat: 'yard', label: '🏀 バスケットボール', cost: 340, note: 'バスケを する（あそべる）', deco: '🏀' },
+    { id: 'ty_badminton', cat: 'yard', label: '🏸 バドミントン', cost: 300, note: 'バドミントンを する（あそべる）', deco: '🏸' },
+    { id: 'ty_frisbee', cat: 'yard', label: '🥏 フリスビー', cost: 220, note: 'フリスビーで あそぶ（あそべる）', deco: '🥏' },
+    { id: 'ty_scooter', cat: 'yard', label: '🛴 キックボード', cost: 380, note: 'キックボードで はしる（あそべる）', deco: '🛴' },
+    { id: 'ty_teaset', cat: 'kitchen', label: '🫖 ティーセット', cost: 320, note: 'おちゃかいを する（あそべる）', deco: '🫖' },
+    { id: 'ty_icecream2', cat: 'kitchen', label: '🍦 アイスメーカー', cost: 540, note: 'アイスを つくる（あそべる）', deco: '🍦' },
+    { id: 'ty_bread', cat: 'kitchen', label: '🥖 パンやきき', cost: 480, note: 'パンを やく（あそべる）', deco: '🥖' },
+    { id: 'ty_candy2', cat: 'kitchen', label: '🍬 キャンディメーカー', cost: 420, note: 'キャンディを つくる（あそべる）', deco: '🍬' },
+    { id: 'ty_starmap', cat: 'bedroom', label: '🌌 ほしの ちず', cost: 380, note: 'ほしを さがす（あそべる）', deco: '🌌' },
+    { id: 'ty_pillowfight', cat: 'bedroom', label: '🛏 おおきな まくら', cost: 260, note: 'まくら なげを する（あそべる）', deco: '🛏' },
+    { id: 'ty_lego', cat: 'bedroom', label: '🧩 ブロック', cost: 340, note: 'ブロックで つくる（あそべる）', deco: '🧩' },
+    { id: 'ty_puppet', cat: 'bedroom', label: '🎭 ゆびにんぎょう', cost: 300, note: 'にんぎょうげきを する（あそべる）', deco: '🎭' },
+    { id: 'ty_fishing2', cat: 'yard', label: '🎣 いい つりざお', cost: 700, note: 'おおものを つる（あそべる）', deco: '🎣' },
+    { id: 'ty_metal', cat: 'yard', label: '🔍 きんぞく たんちき', cost: 800, note: 'たからを さがす（あそべる）', deco: '🔍' },
+    { id: 'yogamat2', cat: 'health', label: '🧘 ヨガマット2', cost: 180, note: 'きげんが へりにくい' },
+    { id: 'vitc', cat: 'health', label: '🍊 ビタミンC', cost: 260, note: 'びょうきに なりにくい' },
+    { id: 'runshoes', cat: 'health', label: '👟 ランニングシューズ', cost: 320, note: 'げんきが へりにくい' },
+    { id: 'shampoo', cat: 'health', label: '🧴 いい シャンプー', cost: 150, note: 'きれいが へりにくい' },
+    { id: 'honeypot', cat: 'health', label: '🍯 はちみつつぼ', cost: 300, note: 'たいりょくが かいふく しやすい' },
+    { id: 'cushion2', cat: 'health', label: '🛋 ふかふかクッション', cost: 200, note: 'ねると げんきが もどる' },
+    { id: 'planner', cat: 'health', label: '🗓 よていちょう', cost: 280, note: 'けいけんちが ふえる' },
+    { id: 'wallet', cat: 'health', label: '👛 おさいふ', cost: 450, note: 'おだちんが ふえる' },
+    { id: 'bento2', cat: 'health', label: '🍱 おべんとうばこ', cost: 260, note: 'ごはんが やすくなる' },
+    { id: 'friendbook', cat: 'health', label: '📖 ともだちノート', cost: 500, note: 'ともだちと なかよくなりやすい' }
 ];
 
 // もようがえ: スロットごとに 1つ えらぶ
@@ -1224,7 +1410,77 @@ const STYLE_COLORS = {
     sofa_lime:            { day: '#a3e635', night: '#3f6212' },
     sofa_amber:           { day: '#c8a882', night: '#41332a' },
     sofa_navy:            { day: '#6366f1', night: '#312e81' },
-    sofa_cream:           { day: '#fef3c7', night: '#a16207' }
+    sofa_cream:           { day: '#fef3c7', night: '#a16207' },
+    wall_bubble:            { day: '#e0f7fa', night: '#25454b' },
+    wall_peach3:            { day: '#ffe4c4', night: '#4b3a2a' },
+    wall_mintcream:         { day: '#f0fff4', night: '#2b4436' },
+    wall_sunflower:         { day: '#fef08a', night: '#4b452b' },
+    wall_sea:               { day: '#a5f3fc', night: '#26414b' },
+    wall_wine:              { day: '#e9d5ff', night: '#3b2b4b' },
+    wall_clay:              { day: '#fbcfa5', night: '#4b3a2a' },
+    wall_linen:             { day: '#faf5ef', night: '#4b4740' },
+    wall_pine:              { day: '#bbf7d0', night: '#22402f' },
+    wall_coffee:            { day: '#d4a373', night: '#41332a' },
+    wall_bluebell:          { day: '#c7d2fe', night: '#2b3550' },
+    wall_salmon:            { day: '#fecaca', night: '#4b2f2f' },
+    wall_lime2:             { day: '#ecfccb', night: '#3d4429' },
+    wall_smoke:             { day: '#e5e7eb', night: '#3f4348' },
+    wall_melon:             { day: '#d9f99d', night: '#3a4429' },
+    wall_cotton:            { day: '#fff1f2', night: '#4b4245' },
+    floor_herring:          { day: '#e7d7b8', night: '#453a29' },
+    floor_dot:              { day: '#fde68a', night: '#4b442f' },
+    floor_stripe:           { day: '#fecdd3', night: '#4b2f36' },
+    floor_grass:            { day: '#a7f3d0', night: '#2a4b3a' },
+    floor_space:            { day: '#c4b5fd', night: '#232b45' },
+    floor_bamboo:           { day: '#d9f99d', night: '#3a4429' },
+    floor_shellfloor:       { day: '#fff7ed', night: '#4b4238' },
+    floor_lagoonf:          { day: '#a5f3fc', night: '#26414b' },
+    floor_cherryf:          { day: '#fbcfe8', night: '#4b3040' },
+    floor_walnut:           { day: '#c8a882', night: '#41332a' },
+    floor_pebble:           { day: '#e7e5e4', night: '#44403c' },
+    floor_sunnyf:           { day: '#fef3c7', night: '#4b4429' },
+    roof_sunny:             { day: '#fbbf24', night: '#78350f' },
+    roof_forest:            { day: '#16a34a', night: '#14532d' },
+    roof_berry:             { day: '#e879f9', night: '#701a75' },
+    roof_ocean:             { day: '#0ea5e9', night: '#075985' },
+    roof_sand:              { day: '#fcd34d', night: '#78350f' },
+    roof_grape:             { day: '#c084fc', night: '#581c87' },
+    roof_steel:             { day: '#94a3b8', night: '#334155' },
+    roof_flame:             { day: '#f97316', night: '#7c2d12' },
+    roof_leaf:              { day: '#4ade80', night: '#166534' },
+    roof_pearl:             { day: '#f5f5f4', night: '#a8a29e' },
+    wall2_mint3:            { day: '#ccfbf1', night: '#274b46' },
+    wall2_honey2:           { day: '#fde68a', night: '#4b4229' },
+    wall2_sky3:             { day: '#bae6fd', night: '#25384b' },
+    wall2_rose3:            { day: '#fecdd3', night: '#4b2f36' },
+    wall2_leaf2:            { day: '#bbf7d0', night: '#2b4436' },
+    wall2_stone2:           { day: '#e7e5e4', night: '#44403c' },
+    wall2_plum2:            { day: '#e9d5ff', night: '#3b2b4b' },
+    wall2_clay2:            { day: '#fbcfa5', night: '#4b3a2a' },
+    wall2_linen2:           { day: '#faf5ef', night: '#4b4740' },
+    wall2_smoke2:           { day: '#e5e7eb', night: '#3f4348' },
+    bedsheet_mint2:         { day: '#a7f3d0', night: '#a7f3d0' },
+    bedsheet_grape:         { day: '#d8b4fe', night: '#d8b4fe' },
+    bedsheet_peach:         { day: '#fed7aa', night: '#fed7aa' },
+    bedsheet_sky2:          { day: '#bae6fd', night: '#bae6fd' },
+    bedsheet_sunny:         { day: '#fef08a', night: '#fef08a' },
+    bedsheet_rose2:         { day: '#fecdd3', night: '#fecdd3' },
+    bedsheet_forest:        { day: '#86efac', night: '#86efac' },
+    bedsheet_smoke:         { day: '#e5e7eb', night: '#e5e7eb' },
+    rug_berry:              { day: '#f5d0fe', night: '#412b4b' },
+    rug_sand:               { day: '#fde68a', night: '#4b442f' },
+    rug_forest:             { day: '#86efac', night: '#2c4a35' },
+    rug_ocean:              { day: '#7dd3fc', night: '#25384b' },
+    rug_clay:               { day: '#fbcfa5', night: '#4b3a2a' },
+    rug_smoke:              { day: '#e5e7eb', night: '#3f4348' },
+    rug_grape:              { day: '#d8b4fe', night: '#3b2b4b' },
+    rug_flame:              { day: '#fdba74', night: '#4b3526' },
+    sofa_berry:             { day: '#e879f9', night: '#701a75' },
+    sofa_sand:              { day: '#fcd34d', night: '#78350f' },
+    sofa_forest:            { day: '#4ade80', night: '#166534' },
+    sofa_ocean:             { day: '#38bdf8', night: '#075985' },
+    sofa_clay:              { day: '#fbcfa5', night: '#4b3a2a' },
+    sofa_smoke:             { day: '#cbd5e1', night: '#475569' }
 };
 
 function styleSlot(id) { return id.split('_')[0]; }
@@ -1356,7 +1612,31 @@ const WEAR_COLOR = {
     scarf_jade:    ['#34d399', '#047857', '#a7f3d0'],
     scarf_violet:  ['#a78bfa', '#6d28d9', '#ddd6fe'],
     scarf_rose:    ['#fda4af', '#be123c', '#ffe4e6'],
-    scarf_silver:  ['#e2e8f0', '#94a3b8', '#f8fafc']
+    scarf_silver:  ['#e2e8f0', '#94a3b8', '#f8fafc'],
+    cape_ocean:    ['#38bdf8', '#075985'],
+    cape_flame:    ['#f97316', '#7c2d12'],
+    cape_forest:   ['#4ade80', '#166534'],
+    cape_berry:    ['#e879f9', '#701a75'],
+    cape_sand:     ['#fcd34d', '#78350f'],
+    cape_smoke:    ['#cbd5e1', '#475569'],
+    cape_grape:    ['#c084fc', '#581c87'],
+    cape_pearl:    ['#f5f5f4', '#a8a29e'],
+    ribbon_ocean:  ['#38bdf8', '#0369a1'],
+    ribbon_flame:  ['#f97316', '#c2410c'],
+    ribbon_forest: ['#4ade80', '#15803d'],
+    ribbon_berry:  ['#e879f9', '#a21caf'],
+    ribbon_sand:   ['#fcd34d', '#a16207'],
+    ribbon_smoke:  ['#cbd5e1', '#64748b'],
+    ribbon_grape:  ['#c084fc', '#7e22ce'],
+    ribbon_pearl:  ['#f5f5f4', '#a8a29e'],
+    scarf_ocean:   ['#38bdf8', '#0369a1', '#bae6fd'],
+    scarf_flame:   ['#f97316', '#c2410c', '#fed7aa'],
+    scarf_forest:  ['#4ade80', '#15803d', '#bbf7d0'],
+    scarf_berry:   ['#e879f9', '#a21caf', '#f5d0fe'],
+    scarf_sand:    ['#fcd34d', '#a16207', '#fef08a'],
+    scarf_smoke:   ['#cbd5e1', '#64748b', '#f1f5f9'],
+    scarf_grape:   ['#c084fc', '#7e22ce', '#e9d5ff'],
+    scarf_pearl:   ['#f5f5f4', '#a8a29e', '#ffffff']
 };
 
 function wornVariant(ids) {
@@ -1513,7 +1793,7 @@ function applyTime(dt) {
 
     if (state.sleeping) {
         state.energy = clamp(state.energy + (has('curtain') ? 20 : 16) * (has('tent') ? 1.25 : 1)
-            * (has('pillow') ? 1.2 : 1) * (has('nightlamp') ? 1.1 : 1) * m, 0, 100);
+            * (has('pillow') ? 1.2 : 1) * (has('nightlamp') ? 1.1 : 1) * (has('cushion2') ? 1.1 : 1) * m, 0, 100);
         state.hunger = clamp(state.hunger - 2 * m, 0, 100);
         state.happy = clamp(state.happy - 0.5 * m, 0, 100);
         if (state.energy >= 100) {
@@ -1525,15 +1805,17 @@ function applyTime(dt) {
         const happyRate = 2.5 * (has('doll') ? 0.85 : 1) * (has('flower') ? 0.9 : 1) * (has('guitar') ? 0.9 : 1)
             * (has('sunflower') ? 0.92 : 1) * (has('piano') ? 0.92 : 1) * (has('tower') ? 0.9 : 1)
             * (has('aroma') ? 0.9 : 1) * (has('incense') ? 0.92 : 1) * (has('relax') ? 0.93 : 1)
-            * Math.max(0.7, Math.pow(0.94, roomieCount()));   // いっしょに すむ ともだちが いると さみしくない
+            * Math.max(0.7, Math.pow(0.94, roomieCount()))    // いっしょに すむ ともだちが いると さみしくない
+            * Math.max(0.6, Math.pow(0.995, decorCount()))    // かざりが あると きげんが へりにくい
+            * (has('yogamat2') ? 0.95 : 1);
         const energyRate = 1.6 * (has('tree') ? 0.85 : 1) * (has('aircon') ? 0.85 : 1) * (has('warmsocks') ? 0.92 : 1)
-            * (has('heater') ? 0.9 : 1) * (has('drink') ? 0.93 : 1);
+            * (has('heater') ? 0.9 : 1) * (has('drink') ? 0.93 : 1) * (has('runshoes') ? 0.93 : 1);
         // トイレが あれば うんちで よごれにくい
         const dirtPerPoop = has('toilet') ? 1 : 3;
         const cleanRate = (2 + state.poops.length * dirtPerPoop) * (has('plant') ? 0.85 : 1)
             * (isWorn('boots') || isWorn('boots_blue') ? 0.9 : 1) * (has('brush') ? 0.9 : 1)
             * (has('robot') ? 0.85 : 1) * (has('mop') ? 0.9 : 1) * (has('humid') ? 0.93 : 1)
-            * (has('slipper') ? 0.93 : 1);
+            * (has('slipper') ? 0.93 : 1) * (has('shampoo') ? 0.93 : 1);
         state.hunger = clamp(state.hunger - 3.2 * m, 0, 100);
         state.happy = clamp(state.happy - happyRate * m, 0, 100);
         state.energy = clamp(state.energy - energyRate * m, 0, 100);
@@ -1613,7 +1895,8 @@ function applyTime(dt) {
     if (!state.sick) {
         state.sickTimer = bad ? state.sickTimer + dt : Math.max(0, state.sickTimer - dt);
         if (state.sickTimer > (isWorn('mask') ? 70 : 40) * (has('firstaid') ? 2 : 1) * (has('airpur') ? 1.5 : 1)
-            * (isWorn('mask2') || has('mask2') ? 1.2 : 1) * (has('band') ? 1.2 : 1)) {
+            * (isWorn('mask2') || has('mask2') ? 1.2 : 1) * (has('band') ? 1.2 : 1)
+            * (has('vitc') ? 1.3 : 1)) {
             state.sick = true;
             state.sickTimer = 0;
             state.stats.sick++;
@@ -1628,7 +1911,7 @@ function applyTime(dt) {
         state.hp = clamp(state.hp - 2 * m, 0, 100);
     } else if (state.hunger > 40 && state.happy > 40 && state.clean > 40) {
         state.hp = clamp(state.hp + 2.5 * (has('vitamin') ? 1.6 : 1) * (has('royal') ? 1.4 : 1)
-            * (has('jelly') ? 1.25 : 1) * m, 0, 100);
+            * (has('jelly') ? 1.25 : 1) * (has('honeypot') ? 1.2 : 1) * m, 0, 100);
     }
     if (state.sleeping && has('mattress')) {              // いい マットレスは ねている あいだも かいふく
         state.hp = clamp(state.hp + 1.5 * m, 0, 100);
@@ -1739,6 +2022,15 @@ function moveOut(id) {
     openFriends();
 }
 
+// ともだちが きょう みにつける もの（かった ものを ともだちも つかえる）
+function friendWear(f) {
+    if (!state.owned) return null;
+    const ids = Object.keys(WEAR_COLOR).filter(function (k) { return has(k); });
+    if (!ids.length) return null;
+    const day = Math.floor(state.ageSec / DAY_SEC);
+    return ids[(f.seed * 5 + day) % ids.length];
+}
+
 // ともだちを えがく
 function drawFriend(f, x, y, s, t, i, sc) {
     const night = isNight();
@@ -1748,6 +2040,28 @@ function drawFriend(f, x, y, s, t, i, sc) {
 
     ctx.fillStyle = 'rgba(0,0,0,0.16)';
     ellipse(x, y + 1 * s, r * 0.8, r * 0.22);
+
+    // かった マントは からだの うしろに
+    const wid = friendWear(f);
+    if (wid && wid.indexOf('cape') === 0) {
+        const cc = WEAR_COLOR[wid];
+        ctx.fillStyle = cc[1];
+        ctx.beginPath();
+        ctx.moveTo(x - r * 0.90, cy - r * 0.30);
+        ctx.quadraticCurveTo(x, cy + r * 0.20, x + r * 0.90, cy - r * 0.30);
+        ctx.lineTo(x + r * 1.10, cy + r * 1.00);
+        ctx.quadraticCurveTo(x, cy + r * 0.70, x - r * 1.10, cy + r * 1.00);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = cc[0];
+        ctx.beginPath();
+        ctx.moveTo(x - r * 0.80, cy - r * 0.26);
+        ctx.quadraticCurveTo(x, cy + r * 0.16, x + r * 0.80, cy - r * 0.26);
+        ctx.lineTo(x + r * 0.96, cy + r * 0.86);
+        ctx.quadraticCurveTo(x, cy + r * 0.58, x - r * 0.96, cy + r * 0.86);
+        ctx.closePath();
+        ctx.fill();
+    }
 
     // みみ
     ctx.fillStyle = f.dark;
@@ -1828,6 +2142,31 @@ function drawFriend(f, x, y, s, t, i, sc) {
     ctx.arc(x, cy + r * 0.10, r * 0.20, 0.15 * Math.PI, 0.85 * Math.PI);
     ctx.stroke();
 
+    // かった ものを ともだちも つける
+    if (wid && wid.indexOf('cape') !== 0) {
+        const col = WEAR_COLOR[wid];
+        if (wid.indexOf('ribbon') === 0) {                 // リボン
+            ctx.fillStyle = col[0];
+            [-1, 1].forEach(function (d) {
+                ctx.beginPath();
+                ctx.moveTo(x + r * 0.60, cy - r * 0.72);
+                ctx.lineTo(x + r * 0.60 + d * r * 0.34, cy - r * 0.98);
+                ctx.lineTo(x + r * 0.60 + d * r * 0.34, cy - r * 0.46);
+                ctx.closePath();
+                ctx.fill();
+            });
+            ctx.fillStyle = col[1];
+            ellipse(x + r * 0.60, cy - r * 0.72, r * 0.11, r * 0.11);
+        } else if (wid.indexOf('scarf') === 0) {           // マフラー
+            ctx.fillStyle = col[0];
+            ctx.fillRect(x - r * 0.72, cy + r * 0.34, r * 1.44, r * 0.26);
+            ctx.fillStyle = col[1];
+            ctx.fillRect(x + r * 0.24, cy + r * 0.50, r * 0.26, r * 0.52);
+            ctx.fillStyle = col[2] || col[0];
+            ctx.fillRect(x - r * 0.72, cy + r * 0.34, r * 1.44, r * 0.08);
+        }
+    }
+
     // しるし
     if (f.mark === 'star') {
         ctx.fillStyle = '#fde047';
@@ -1900,7 +2239,7 @@ function meetFriend(id) {
     if (!state.friends) state.friends = {};
     const rec = state.friends[id] || { lv: 0, times: 0 };
     const first = rec.lv === 0;
-    rec.lv = Math.min(10, rec.lv + (has('gift') ? 2 : 1));   // プレゼントが あると はやく なかよしに
+    rec.lv = Math.min(10, rec.lv + (has('gift') ? 2 : 1) + (has('friendbook') ? 1 : 0));
     rec.times++;
     state.friends[id] = rec;
 
@@ -2602,7 +2941,8 @@ function runOrder(key, txt) {
 /* ---------------- growth ---------------- */
 
 function gainExp(n) {
-    state.exp += Math.round(n * (has('notebook') ? 1.2 : 1) * (has('album') ? 1.15 : 1));
+    state.exp += Math.round(n * (has('notebook') ? 1.2 : 1) * (has('album') ? 1.15 : 1)
+        * (has('planner') ? 1.15 : 1));
     let need = expNeeded(state.level);
     while (state.exp >= need) {
         state.exp -= need;
@@ -7730,7 +8070,7 @@ function drawCreature(t) {
 
     drawEars(sp);
 
-    const capeId = wornVariant(['cape', 'cape_blue', 'cape_gold', 'cape_purple', 'cape_white', 'cape_orange', 'cape_mint', 'cape_pink', 'cape_black', 'cape_silver', 'cape_green', 'cape_brown', 'cape_sky', 'cape_rainbow', 'cape_lime', 'cape_navy', 'cape_cream', 'cape_coral', 'cape_jade', 'cape_violet', 'cape_rose']);
+    const capeId = wornVariant(['cape', 'cape_blue', 'cape_gold', 'cape_purple', 'cape_white', 'cape_orange', 'cape_mint', 'cape_pink', 'cape_black', 'cape_silver', 'cape_green', 'cape_brown', 'cape_sky', 'cape_rainbow', 'cape_lime', 'cape_navy', 'cape_cream', 'cape_coral', 'cape_jade', 'cape_violet', 'cape_rose', 'cape_ocean', 'cape_flame', 'cape_forest', 'cape_berry', 'cape_sand', 'cape_smoke', 'cape_grape', 'cape_pearl']);
     if (capeId) {                              // マント（からだの うしろ）
         const sway = Math.sin(t * 2) * 6;
         ctx.fillStyle = WEAR_COLOR[capeId][0];
@@ -7843,7 +8183,7 @@ function drawCreature(t) {
         ctx.fillStyle = '#ef4444';
         ctx.fillRect(-26, -47, 52, 7);
     }
-    const ribbonId = wornVariant(['ribbon', 'ribbon_blue', 'ribbon_yellow', 'ribbon_green', 'ribbon_white', 'ribbon_purple', 'ribbon_orange', 'ribbon_mint', 'ribbon_black', 'ribbon_red', 'ribbon_sky', 'ribbon_brown', 'ribbon_gold', 'ribbon_lime', 'ribbon_navy', 'ribbon_cream', 'ribbon_coral', 'ribbon_jade', 'ribbon_violet', 'ribbon_rose', 'ribbon_silver']);
+    const ribbonId = wornVariant(['ribbon', 'ribbon_blue', 'ribbon_yellow', 'ribbon_green', 'ribbon_white', 'ribbon_purple', 'ribbon_orange', 'ribbon_mint', 'ribbon_black', 'ribbon_red', 'ribbon_sky', 'ribbon_brown', 'ribbon_gold', 'ribbon_lime', 'ribbon_navy', 'ribbon_cream', 'ribbon_coral', 'ribbon_jade', 'ribbon_violet', 'ribbon_rose', 'ribbon_silver', 'ribbon_ocean', 'ribbon_flame', 'ribbon_forest', 'ribbon_berry', 'ribbon_sand', 'ribbon_smoke', 'ribbon_grape', 'ribbon_pearl']);
     if (ribbonId) {                     // リボン
         ctx.fillStyle = WEAR_COLOR[ribbonId][0];
         ctx.beginPath();
@@ -7923,7 +8263,7 @@ function drawCreature(t) {
         ctx.moveTo(31, -10); ctx.lineTo(44, -14);
         ctx.stroke();
     }
-    const scarfId = wornVariant(['scarf', 'scarf_blue', 'scarf_green', 'scarf_purple', 'scarf_pink', 'scarf_yellow', 'scarf_orange', 'scarf_brown', 'scarf_gray', 'scarf_mint', 'scarf_black', 'scarf_white', 'scarf_gold', 'scarf_lime', 'scarf_navy', 'scarf_cream', 'scarf_coral', 'scarf_jade', 'scarf_violet', 'scarf_rose', 'scarf_silver']);
+    const scarfId = wornVariant(['scarf', 'scarf_blue', 'scarf_green', 'scarf_purple', 'scarf_pink', 'scarf_yellow', 'scarf_orange', 'scarf_brown', 'scarf_gray', 'scarf_mint', 'scarf_black', 'scarf_white', 'scarf_gold', 'scarf_lime', 'scarf_navy', 'scarf_cream', 'scarf_coral', 'scarf_jade', 'scarf_violet', 'scarf_rose', 'scarf_silver', 'scarf_ocean', 'scarf_flame', 'scarf_forest', 'scarf_berry', 'scarf_sand', 'scarf_smoke', 'scarf_grape', 'scarf_pearl']);
     if (scarfId) {                      // マフラー
         ctx.fillStyle = WEAR_COLOR[scarfId][0];
         ctx.fillRect(-42, 26, 84, 14);
@@ -8794,6 +9134,14 @@ const DECOR_SPOT = {
     bedroom: { x0: 0.03, x1: 0.52, y: 0.11, dy: 0.085 },
     yard:    { x0: 0.02, x1: 0.55, y: 0.80, dy: 0.075 }
 };
+
+// かざって ある ものの かず（きげんが へりにくく なる）
+function decorCount() {
+    if (!state.owned) return 0;
+    let n = 0;
+    SHOP.forEach(function (it) { if (it.deco && has(it.id)) n++; });
+    return n;
+}
 
 function drawDecor(cat) {
     const spot = DECOR_SPOT[cat];
