@@ -2404,11 +2404,11 @@ const HOME_VIEW = { out: 1, living: 1, kitchen: 1, bed: 1 };
 function isRoomie(id) { return !!(state.roomies && state.roomies[id]); }
 function roomieCount() { return FRIENDS.filter(function (f) { return isRoomie(f.id); }).length; }
 
-// いっしょに すんでいる ともだちは おうちの どこにでも ついてくる
+// いっしょに すんでいる ともだちは どこへでも ついてくる
 function friendsHere() {
     const v = state.view || 'out';
     return FRIENDS.filter(function (f) {
-        if (isRoomie(f.id)) return !!HOME_VIEW[v];
+        if (isRoomie(f.id)) return true;          // おでかけ さきにも ついてくる
         return friendPlace(f) === v;
     });
 }
@@ -2688,12 +2688,13 @@ function drawFriends(t) {
         return;
     }
 
-    // おおぜいの ときは まえ・うしろ こうごに ならぶ
+    // おおぜいの ときは まえ・うしろ こうごに ならぶ（ふえるほど ちいさく）
     const n = here.length;
+    const base = Math.max(0.5, Math.min(0.92, 7.4 / n));
     here.forEach(function (f, i) {
         const fx = 0.06 + (0.88 * i) / (n - 1);
         const back = (i % 2 === 0);
-        drawFriend(f, W * fx, back ? y - 32 * s : y, s, t, i, back ? 0.72 : 0.92);
+        drawFriend(f, W * fx, back ? y - 34 * s * base : y, s, t, i, back ? base * 0.8 : base);
     });
     ctx.textAlign = 'center';
 }
@@ -2764,7 +2765,7 @@ function openFriends() {
             <div class="text-left text-sm">
                 <div class="font-bold">${f.likes} ${f.name}${live ? '　🏠 いっしょに すんでる' : (here ? '　📍いま ここ' : '')}</div>
                 <div class="text-xs" style="color:#ef4444;letter-spacing:1px">${hearts}</div>
-                <div class="text-xs text-gray-500">${live ? 'おうちに いる' : ROOM_LABEL[place] + 'に いる'}${lv ? ` / なかよし ${lv}` : ''}</div>
+                <div class="text-xs text-gray-500">${live ? 'いつも いっしょ（どこへでも ついてくる）' : ROOM_LABEL[place] + 'に いる'}${lv ? ` / なかよし ${lv}` : ''}</div>
                 ${houseNote}
             </div>
             <div class="grid grid-cols-${houseBtn ? 3 : 2} gap-1">
