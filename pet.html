@@ -3488,8 +3488,11 @@ function setShopTab(cat) {
 
 function openShop() {
     goPlace('shop');                                  // おみせまで あるいて いく
+    const allMine = SHOP.every(function (it) { return has(it.id); });
     let html = `<div class="font-bold text-lg mb-1">🛒 ショップ</div>
         <div class="text-sm font-bold text-amber-700 mb-2">もっているコイン ${coinText(state.coins)}🪙</div>
+        <div class="game-btn ${allMine ? 'gray disabled' : 'pink'} mb-2"
+            onclick="${allMine ? '' : 'confirmGetAll()'}">🎁 ぜんぶ もらう（${SHOP.filter(function (it) { return has(it.id); }).length}／${SHOP.length}）</div>
         <div class="grid grid-cols-3 gap-1 mb-3">`;
     SHOP_CAT.forEach(function (pair) {
         const cat = pair[0];
@@ -3673,6 +3676,37 @@ function infShopHtml() {
     <div class="game-btn mb-2" onclick="infJump()">🔎 その ばんごうへ</div>
     <div class="text-xs text-gray-500 text-left mb-2">もっている ふしぎな もの ${Object.keys(state.inf || {}).length}こ</div>`;
     return html;
+}
+
+/* ---------------- ぜんぶ もらう ---------------- */
+
+function confirmGetAll() {
+    const left = SHOP.filter(function (it) { return !has(it.id); }).length;
+    showModal(`
+        <div class="font-bold text-lg mb-2">🎁 ぜんぶ もらう</div>
+        <div class="text-left text-sm mb-3" style="background:#fef3c7;border-radius:12px;padding:10px;line-height:1.7">
+            ショップの しなもの <b>${SHOP.length}ひん</b>を ぜんぶ もらえるよ！<br>
+            （まだ もっていないのは ${left}ひん）<br>
+            🎲 ふしぎな ものも <b>120こ</b> ついてくる。<br>
+            コインは へらないよ。
+        </div>
+        <div class="game-btn pink mb-2" onclick="getAllItems()">🎁 ぜんぶ もらう！</div>
+        <div class="game-btn gray" onclick="openShop()">やめる</div>
+    `);
+}
+
+function getAllItems() {
+    hideModal();
+    if (!state.owned) state.owned = {};
+    if (!state.inf) state.inf = {};
+    SHOP.forEach(function (it) { state.owned[it.id] = true; });
+    for (let k = 0; k < 120; k++) state.inf[String(k)] = true;
+    state.happy = clamp(state.happy + 20, 0, 100);
+    burst('star', 20);
+    addLog(`🎁 ショップの ${SHOP.length}ひんと ふしぎな もの 120こを ぜんぶ てに いれた！`);
+    robotSay('わあ！ ぜんぶ そろったね！', 6);
+    save();
+    openShop();
 }
 
 function buyItem(id) {
