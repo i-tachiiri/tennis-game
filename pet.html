@@ -1596,6 +1596,8 @@ function applyTime(dt) {
         }
     }
 
+    if (state.stage !== 'egg' && Math.random() < 0.002) checkRoomieWishes();   // ときどき おもいだす
+
     if (has('post')) {                      // ポストに ときどき コインが とどく
         state.postTimer -= dt;
         if (state.postTimer <= 0) {
@@ -1686,6 +1688,27 @@ function friendsHere() {
         if (isRoomie(f.id)) return !!HOME_VIEW[v];
         return friendPlace(f) === v;
     });
+}
+
+const ROOMIE_LV = 5;                                 // なかよし 5で ペットが よびたがる
+
+// なかよく なったら ペットが じぶんから 「いっしょに すみたい」と いう
+function petWantsRoomie(f) {
+    if (!state.invites) state.invites = {};
+    if (state.invites[f.id] || isRoomie(f.id)) return false;
+    if (friendLv(f.id) < ROOMIE_LV) return false;
+    state.invites[f.id] = true;
+    addLog(`💭 ${state.name}「${f.name} と いっしょに すみたいな！」`);
+    robotSay(`${state.name} が ${f.name} と すみたいって！`, 5);
+    return true;
+}
+
+// もう なかよしなのに いいそびれて いた ぶんも まとめて
+function checkRoomieWishes() {
+    let said = false;
+    FRIENDS.forEach(function (f) { if (petWantsRoomie(f)) said = true; });
+    if (said) save();
+    return said;
 }
 
 // おうちに よぶ
@@ -1878,6 +1901,7 @@ function meetFriend(id) {
     if (first) addLog(`🎉 ${f.name} と ともだちに なった！`);
     addLog(`👫 ${f.name} と あそんだ！ とても たのしい（なかよし ${rec.lv}）`);
     robotSay(`${f.name} と なかよしだね！`);
+    petWantsRoomie(f);                              // なかよく なったら すみたいと いう
 
     // なかよしが すすむと プレゼントが もらえる
     const gift = { 3: 200, 5: 800, 8: 3000, 10: 20000 }[rec.lv];
@@ -1891,6 +1915,7 @@ function meetFriend(id) {
 }
 
 function openFriends() {
+    checkRoomieWishes();                            // なかよしなら ペットが すみたいと いう
     let html = `<div class="font-bold text-lg mb-1">👫 ともだち</div>
         <div class="text-xs text-gray-600 mb-2">いる ばしょは 1日ごとに かわるよ</div>
         <div class="game-btn blue mb-3" onclick="openChat('pet')">💬 ${state.name} と おはなしする</div>`;
@@ -1904,11 +1929,15 @@ function openFriends() {
         let houseBtn = '';
         if (live) houseBtn = `<div class="game-btn gray" style="font-size:0.7rem" onclick="moveOut('${f.id}')">🏠 でていく</div>`;
         else if (invited) houseBtn = `<div class="game-btn" style="font-size:0.7rem;background:#f59e0b;border-bottom-color:#b45309" onclick="moveIn('${f.id}')">🏠 よぶ</div>`;
+        const houseNote = live ? '' : invited
+            ? `<div class="text-xs" style="color:#b45309">🏠 ${state.name}が「いっしょに すみたい」と いってるよ！</div>`
+            : `<div class="text-xs text-gray-400">なかよし ${ROOMIE_LV}に なると おうちに よべるよ</div>`;
         html += `<div class="mb-3" style="border-bottom:1px dashed #e7e5e4;padding-bottom:6px">
             <div class="text-left text-sm">
                 <div class="font-bold">${f.likes} ${f.name}${live ? '　🏠 いっしょに すんでる' : (here ? '　📍いま ここ' : '')}</div>
                 <div class="text-xs" style="color:#ef4444;letter-spacing:1px">${hearts}</div>
-                <div class="text-xs text-gray-500 mb-1">${live ? 'おうちに いる' : ROOM_LABEL[place] + 'に いる'}${lv ? ` / なかよし ${lv}` : ''}</div>
+                <div class="text-xs text-gray-500">${live ? 'おうちに いる' : ROOM_LABEL[place] + 'に いる'}${lv ? ` / なかよし ${lv}` : ''}</div>
+                ${houseNote}
             </div>
             <div class="grid grid-cols-${houseBtn ? 3 : 2} gap-1">
                 <div class="game-btn ${here ? 'pink' : 'green'}" style="font-size:0.7rem"
@@ -2066,6 +2095,7 @@ function sendChat(preset) {
             burst('heart', 4);
         }
         state.friends[chatWho.id] = rec;
+        petWantsRoomie(chatWho.f);
     }
     // じぶんの ペットは ときどき ともだちを おうちに さそいたがる
     if (chatWho.kind === 'pet' && Math.random() < 0.3) {
