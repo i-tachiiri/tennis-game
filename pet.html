@@ -1433,7 +1433,7 @@ function newState() {
         sleeping: false, sick: false, sickTimer: 0,
         poops: [], poopTimer: 90, postTimer: 180, robotTimer: 45, chatTimer: 20, jobs: 0,
         helps: 0, lastTalk: 0, savings: 0n, bankTimer: 180, bankAcct: 0n, acctTimer: 180, bankLog: [],
-        friends: {},
+        friends: {}, roomies: {}, invites: {},
         stats: { earned: 0n, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0, interest: 0n },
         view: 'out',
         owned: {},
@@ -1490,6 +1490,8 @@ function load() {
         if (typeof s.acctTimer !== 'number') s.acctTimer = 180;
         if (!Array.isArray(s.bankLog)) s.bankLog = [];
         if (!s.friends) s.friends = {};                           // ともだちが いなかった ころの セーブ
+        if (!s.roomies) s.roomies = {};                           // いっしょに すんでいる ともだち
+        if (!s.invites) s.invites = {};
         // おかねは BigInt に もどす（ふるい セーブの すうじも そのまま つかえる）
         ['coins', 'savings', 'bankAcct'].forEach(function (k) { s[k] = big(strip(s[k])); });
         ['earned', 'interest'].forEach(function (k) { s.stats[k] = big(strip(s.stats[k])); });
@@ -1522,7 +1524,8 @@ function applyTime(dt) {
         // ショップで かったものは へる はやさを ゆるめる
         const happyRate = 2.5 * (has('doll') ? 0.85 : 1) * (has('flower') ? 0.9 : 1) * (has('guitar') ? 0.9 : 1)
             * (has('sunflower') ? 0.92 : 1) * (has('piano') ? 0.92 : 1) * (has('tower') ? 0.9 : 1)
-            * (has('aroma') ? 0.9 : 1) * (has('incense') ? 0.92 : 1) * (has('relax') ? 0.93 : 1);
+            * (has('aroma') ? 0.9 : 1) * (has('incense') ? 0.92 : 1) * (has('relax') ? 0.93 : 1)
+            * Math.pow(0.92, roomieCount());        // いっしょに すむ ともだちが いると さみしくない
         const energyRate = 1.6 * (has('tree') ? 0.85 : 1) * (has('aircon') ? 0.85 : 1) * (has('warmsocks') ? 0.92 : 1)
             * (has('heater') ? 0.9 : 1) * (has('drink') ? 0.93 : 1);
         // トイレが あれば うんちで よごれにくい
@@ -1671,8 +1674,46 @@ function friendPlace(f) {
 
 function friendLv(id) { return (state.friends && state.friends[id]) ? state.friends[id].lv : 0; }
 
+const HOME_VIEW = { out: 1, living: 1, kitchen: 1, bed: 1 };
+
+function isRoomie(id) { return !!(state.roomies && state.roomies[id]); }
+function roomieCount() { return FRIENDS.filter(function (f) { return isRoomie(f.id); }).length; }
+
+// いっしょに すんでいる ともだちは おうちの どこにでも ついてくる
 function friendsHere() {
-    return FRIENDS.filter(function (f) { return friendPlace(f) === (state.view || 'out'); });
+    const v = state.view || 'out';
+    return FRIENDS.filter(function (f) {
+        if (isRoomie(f.id)) return !!HOME_VIEW[v];
+        return friendPlace(f) === v;
+    });
+}
+
+// おうちに よぶ
+function moveIn(id) {
+    const f = FRIENDS.filter(function (x) { return x.id === id; })[0];
+    if (!f) return;
+    if (!state.invites || !state.invites[id]) {
+        addLog(`${state.name}「まだ ${f.name} を さそって ないよ」`);
+        return;
+    }
+    if (roomieCount() >= 3) { addLog('おうちは 3にんまで いっしょに すめるよ。'); return; }
+    state.roomies[id] = true;
+    addLog(`🏠 ${f.name} が おうちに ひっこして きた！ いっしょに くらそう！`);
+    robotSay(`${f.name} が なかまに なったよ！`);
+    burst('heart', 10);
+    state.happy = clamp(state.happy + 15, 0, 100);
+    hideModal();
+    setView('living');
+    save();
+}
+
+function moveOut(id) {
+    const f = FRIENDS.filter(function (x) { return x.id === id; })[0];
+    if (!f) return;
+    delete state.roomies[id];
+    addLog(`👋 ${f.name} は じぶんの おうちに かえった。またね！`);
+    save();
+    openFriends();
 }
 
 // ともだちを えがく
@@ -1851,24 +1892,229 @@ function meetFriend(id) {
 
 function openFriends() {
     let html = `<div class="font-bold text-lg mb-1">👫 ともだち</div>
-        <div class="text-xs text-gray-600 mb-3">いる ばしょは 1日ごとに かわるよ</div>`;
+        <div class="text-xs text-gray-600 mb-2">いる ばしょは 1日ごとに かわるよ</div>
+        <div class="game-btn blue mb-3" onclick="openChat('pet')">💬 ${state.name} と おはなしする</div>`;
     FRIENDS.forEach(function (f) {
         const place = friendPlace(f);
         const here = (state.view || 'out') === place;
         const lv = friendLv(f.id);
         const hearts = lv ? '♥'.repeat(lv) + '♡'.repeat(10 - lv) : '♡'.repeat(10);
-        html += `<div class="flex items-center gap-2 mb-2">
-            <div class="text-left text-sm" style="flex:1">
-                <div class="font-bold">${f.likes} ${f.name}${here ? '　📍いま ここ' : ''}</div>
+        const live = isRoomie(f.id);
+        const invited = !!(state.invites && state.invites[f.id]);
+        let houseBtn = '';
+        if (live) houseBtn = `<div class="game-btn gray" style="font-size:0.7rem" onclick="moveOut('${f.id}')">🏠 でていく</div>`;
+        else if (invited) houseBtn = `<div class="game-btn" style="font-size:0.7rem;background:#f59e0b;border-bottom-color:#b45309" onclick="moveIn('${f.id}')">🏠 よぶ</div>`;
+        html += `<div class="mb-3" style="border-bottom:1px dashed #e7e5e4;padding-bottom:6px">
+            <div class="text-left text-sm">
+                <div class="font-bold">${f.likes} ${f.name}${live ? '　🏠 いっしょに すんでる' : (here ? '　📍いま ここ' : '')}</div>
                 <div class="text-xs" style="color:#ef4444;letter-spacing:1px">${hearts}</div>
-                <div class="text-xs text-gray-500">${ROOM_LABEL[place]}に いる${lv ? ` / なかよし ${lv}` : ''}</div>
+                <div class="text-xs text-gray-500 mb-1">${live ? 'おうちに いる' : ROOM_LABEL[place] + 'に いる'}${lv ? ` / なかよし ${lv}` : ''}</div>
             </div>
-            <div style="width:34%"><div class="game-btn ${here ? 'pink' : 'green'}"
-                onclick="meetFriend('${f.id}')">${here ? 'あそぶ' : 'あいに いく'}</div></div>
+            <div class="grid grid-cols-${houseBtn ? 3 : 2} gap-1">
+                <div class="game-btn ${here ? 'pink' : 'green'}" style="font-size:0.7rem"
+                    onclick="meetFriend('${f.id}')">${here ? '🎾 あそぶ' : '🚶 あいに いく'}</div>
+                <div class="game-btn blue" style="font-size:0.7rem" onclick="openChat('friend','${f.id}')">💬 はなす</div>
+                ${houseBtn}
+            </div>
         </div>`;
     });
     html += `<div class="game-btn gray mt-2" onclick="hideModal()">とじる</div>`;
     showModal(html);
+}
+
+/* ---------------- キーボードで おしゃべり ---------------- */
+
+// ともだちごとの しゃべりかた（さいごに つく くちぐせ）
+const TONE = {
+    puni:   { tail: '　えへへ', emo: '🍰' },
+    kuro:   { tail: '　…ふん', emo: '🐟' },
+    piyo:   { tail: '　ぴよっ！', emo: '🌽' },
+    moko:   { tail: '　のんびり〜', emo: '🍯' },
+    aoba:   { tail: '　ふふ', emo: '🍡' },
+    kira:   { tail: '　キラッ✨', emo: '🍭' },
+    daifu:  { tail: '　もぐもぐ', emo: '🍙' },
+    koharu: { tail: '　あらあら', emo: '🍓' },
+    pet:    { tail: '　えへへ', emo: '🐾' },
+    robot:  { tail: '　ピピッ', emo: '🤖' }
+};
+
+// いま はなしている あいて
+let chatWho = null;          // { id, name, tone, kind }
+let chatLog = [];            // { me: true/false, text }
+let chatDraft = '';
+
+function setChatDraft(v) { chatDraft = v; }
+
+function chatSpeaker(kind, id) {
+    if (kind === 'friend') {
+        const f = FRIENDS.filter(function (x) { return x.id === id; })[0];
+        return { id: f.id, name: f.name, tone: TONE[f.id], kind: 'friend', likes: f.likes, f: f };
+    }
+    if (kind === 'robot') return { id: 'robot', name: 'ロボット', tone: TONE.robot, kind: 'robot', likes: '🔋' };
+    return { id: 'pet', name: state.name, tone: TONE.pet, kind: 'pet', likes: '🍚' };
+}
+
+// ことばを みて へんじを かんがえる
+function chatAnswer(sp, text) {
+    const t = text;
+    const n = state.name;
+    const has_ = function () {
+        for (let i = 0; i < arguments.length; i++) if (t.indexOf(arguments[i]) >= 0) return true;
+        return false;
+    };
+    const say = function (line) { return line + sp.tone.tail; };
+
+    // じぶんの ペットに ともだちの なまえを いうと 「いっしょに すみたい」と いう
+    if (sp.kind === 'pet') {
+        for (let i = 0; i < FRIENDS.length; i++) {
+            const f = FRIENDS[i];
+            if (t.indexOf(f.name) < 0) continue;
+            if (isRoomie(f.id)) return say(`${f.name} と いっしょに すめて うれしい！`);
+            if (friendLv(f.id) >= 3) {
+                if (!state.invites) state.invites = {};
+                if (!state.invites[f.id]) {
+                    state.invites[f.id] = true;
+                    addLog(`💭 ${state.name}「${f.name} と いっしょに すみたいな！」`);
+                }
+                return say(`${f.name}！ だいすき！ いっしょに すみたいな！（「👫 ともだち」から よべるよ）`);
+            }
+            return say(`${f.name} とは まだ あんまり あそんでないの… もっと なかよく なりたい！`);
+        }
+    }
+
+    if (has_('こんにちは', 'やあ', 'はろー', 'ハロー', 'やっほ', 'おーい'))
+        return say('こんにちは！ あえて うれしいよ！');
+    if (has_('おはよう')) return say('おはよう！ きょうも いい ひに なるね！');
+    if (has_('こんばんは')) return say('こんばんは。ほしが きれいだね。');
+    if (has_('おやすみ')) return say('おやすみ！ いい ゆめ みてね。');
+    if (has_('なまえ', 'だれ', 'きみは')) return say(`ぼくの なまえは ${sp.name}！ よろしくね！`);
+    if (has_('すき', 'だいすき', 'かわいい', 'きれい')) return say(`ぼくも ${n} の こと だいすき！`);
+    if (has_('ありがと', 'あんがと')) return say('どういたしまして！');
+    if (has_('ごめん', 'すまん')) return say('きにしないで！ なかよく しようね。');
+    if (has_('あそぼ', 'あそぶ', 'いっしょ', 'あそび')) return say('いいね！ あそぼう！「あそぶ」ボタンでも あそべるよ。');
+    if (has_('たべ', 'ごはん', 'おなか', 'おやつ')) return say(`ぼくの すきな たべものは ${sp.likes} だよ！ ${n} は なにが すき？`);
+    if (has_('どこ', 'ばしょ', 'いるの'))
+        return say(sp.kind === 'friend' && !isRoomie(sp.id)
+            ? `きょうは ${ROOM_LABEL[friendPlace(sp.f)]}に いるよ！`
+            : `いまは ${ROOM_LABEL[state.view || 'out']}に いるよ！`);
+    if (has_('なんさい', 'とし', 'たんじょう')) return say(`いま ${Math.floor(state.ageSec / DAY_SEC)}日目 だよ！`);
+    if (has_('てんき', 'はれ', 'あめ', 'ゆき', 'あつ', 'さむ'))
+        return say(isNight() ? 'そとは まっくら。ほしが きれいだね。' : 'きょうは いい てんきだね！');
+    if (has_('げんき', 'ちょうし', 'だいじょうぶ')) return say(`げんきだよ！ ${n} は たいりょく ${Math.round(state.hp)} だね！`);
+    if (has_('ばいばい', 'またね', 'じゃあ', 'さようなら')) return say('またね！ また はなそうね。');
+    if (has_('すごい', 'かっこい', 'つよい', 'えらい')) return say('ありがとう！ うれしいなあ。');
+    if (has_('なかよし', 'ともだち'))
+        return say(sp.kind === 'friend'
+            ? `${n} とは なかよし ${friendLv(sp.id)} だね。もっと なかよく なろう！`
+            : 'ともだちが いっぱいで うれしいな！');
+    if (has_('すむ', 'すみたい', 'いっしょにすみ', 'ひっこ', 'おうちに'))
+        return say(sp.kind === 'friend'
+            ? `${n} の おうちに すめたら うれしいなあ！（なかよし 3から よべるよ）`
+            : 'なかよしの ともだちなら おうちに よべるよ！');
+    if (has_('うた', 'おんがく', 'ダンス')) return say('ラララ〜♪ いっしょに うたおう！');
+    if (has_('ねむ', 'つかれ')) return say('むりしないで ゆっくり やすんでね。');
+    if (has_('おかね', 'コイン', 'ちょきん')) return say(`${n} は ${coinText(state.coins)}🪙 もってるね。すごい！`);
+    if (has_('しごと', 'はたらく')) return say('おしごと えらいね！ おうえん するよ。');
+    if (has_('がっこう', 'べんきょう')) return say('べんきょう、いっしょに がんばろう！');
+    if (has_('うみ', 'やま', 'こうえん', 'おでかけ')) return say('おでかけ たのしいよね！ また いこうね。');
+    if (has_('なぞなぞ', 'クイズ', 'もんだい')) return say('じゃあ もんだい！「あかくて まるくて あまい くだものは？」…こたえは 🍎！');
+    if (has_(sp.name)) return say('よんだ？ なあに？');
+    if (has_('?', '？')) return say('うーん、なんだろう… いっしょに かんがえよう！');
+
+    const talk = [
+        'そうなんだ！ おしえて くれて ありがとう。',
+        `${n} と はなすの たのしいなあ。`,
+        'へえ！ もっと きかせて。',
+        'なるほどね〜。',
+        'うんうん、それで それで？',
+        `きょうも ${n} は すてきだね。`,
+        `${sp.likes} たべながら はなそうか。`,
+        'そう おもって いたんだ！'
+    ];
+    return say(talk[Math.floor(Math.random() * talk.length)]);
+}
+
+const CHAT_CHIPS = ['こんにちは', 'すき！', 'あそぼう', 'げんき？', 'ありがとう', 'またね'];
+
+function openChat(kind, id) {
+    chatWho = chatSpeaker(kind, id);
+    chatLog = [{ me: false, text: `やっほー！ ${state.name}、はなしかけて くれて ありがとう${chatWho.tone.end}` }];
+    renderChat();
+}
+
+function sendChat(preset) {
+    if (!chatWho) return;
+    const box = el('chat-input');
+    const txt = (preset !== undefined ? preset : (box ? box.value : chatDraft)).trim();
+    if (!txt) return;
+    chatDraft = '';
+    chatLog.push({ me: true, text: txt });
+    chatLog.push({ me: false, text: chatAnswer(chatWho, txt) });
+    chatLog = chatLog.slice(-16);
+
+    state.stats.talks = (state.stats.talks || 0) + 1;
+    state.happy = clamp(state.happy + 1, 0, 100);
+
+    // ともだちとは はなすほど なかよくなる
+    if (chatWho.kind === 'friend') {
+        if (!state.friends) state.friends = {};
+        const rec = state.friends[chatWho.id] || { lv: 0, times: 0, said: 0 };
+        rec.said = (rec.said || 0) + 1;
+        if (rec.said % 4 === 0 && rec.lv < 10) {
+            rec.lv++;
+            addLog(`💬 ${chatWho.name} と たくさん はなした！（なかよし ${rec.lv}）`);
+            burst('heart', 4);
+        }
+        state.friends[chatWho.id] = rec;
+    }
+    // じぶんの ペットは ときどき ともだちを おうちに さそいたがる
+    if (chatWho.kind === 'pet' && Math.random() < 0.3) {
+        const want = FRIENDS.filter(function (f) {
+            return friendLv(f.id) >= 5 && !isRoomie(f.id) && !(state.invites && state.invites[f.id]);
+        })[0];
+        if (want) {
+            if (!state.invites) state.invites = {};
+            state.invites[want.id] = true;
+            chatLog.push({ me: false, text: `ねえねえ、${want.name} を おうちに よびたいな！ いっしょに すみたい！` });
+            addLog(`💭 ${state.name}「${want.name} を おうちに よびたいな！」`);
+        }
+    }
+    save();
+    renderChat();
+}
+
+function renderChat() {
+    const sp = chatWho;
+    const bubbles = chatLog.map(function (m) {
+        return m.me
+            ? `<div style="text-align:right;margin:4px 0">
+                 <span style="display:inline-block;max-width:80%;background:#fde68a;border-radius:14px 14px 4px 14px;
+                              padding:7px 10px;font-size:0.86rem;text-align:left">${escAttr(m.text)}</span></div>`
+            : `<div style="text-align:left;margin:4px 0">
+                 <span style="display:inline-block;max-width:80%;background:#e0f2fe;border-radius:14px 14px 14px 4px;
+                              padding:7px 10px;font-size:0.86rem">${sp.tone.emo} ${escAttr(m.text)}</span></div>`;
+    }).join('');
+    const chips = CHAT_CHIPS.map(function (c) {
+        return `<div class="game-btn green" style="font-size:0.7rem;padding:7px 2px" onclick="sendChat('${c}')">${c}</div>`;
+    }).join('');
+
+    showModal(`
+        <div class="font-bold text-lg mb-2">💬 ${sp.tone.emo} ${sp.name} と おはなし</div>
+        <div id="chat-box" style="background:#fffdf7;border:3px solid #d6d3d1;border-radius:12px;
+             padding:8px;height:240px;overflow-y:auto;text-align:left">${bubbles}</div>
+        <input id="chat-input" value="${escAttr(chatDraft)}" placeholder="キーボードで はなしかけてね"
+            oninput="setChatDraft(this.value)"
+            onkeydown="if(event.key==='Enter'){sendChat();}"
+            style="width:100%;box-sizing:border-box;font-family:inherit;font-size:0.95rem;padding:9px 10px;
+                   border:3px solid #78350f;border-radius:12px;background:#fff;margin:8px 0 6px">
+        <div class="game-btn mb-2" onclick="sendChat()">💬 はなす</div>
+        <div class="grid grid-cols-3 gap-1 mb-3">${chips}</div>
+        <div class="game-btn gray" onclick="hideModal()">またね</div>
+    `);
+    const boxEl = el('chat-box');
+    if (boxEl) boxEl.scrollTop = boxEl.scrollHeight;
+    const inp = el('chat-input');
+    if (inp) inp.focus();
 }
 
 /* ---------------- robot ---------------- */
@@ -2052,12 +2298,12 @@ function renderTalk() {
         return `<div class="game-btn blue mb-2" onclick="talkTo('${m.key}')">${m.label}</div>`;
     }).join('');
 
-    let ask;
+    let ask = `<div class="game-btn blue mb-3" onclick="openChat('robot')">💬 キーボードで おはなしする</div>`;
     if (canOrder()) {
         const chips = ORDER_CHIPS.map(function (c) {
             return `<div class="game-btn green" style="font-size:0.68rem;padding:7px 2px" onclick="sendOrder('${c[1]}')">${c[0]}</div>`;
         }).join('');
-        ask = `<div class="text-xs font-bold text-gray-600 text-left mb-1">🎙 「〜して」と おねがい</div>
+        ask += `<div class="text-xs font-bold text-gray-600 text-left mb-1">🎙 「〜して」と おねがい</div>
             <input id="order-input" value="${escAttr(orderDraft)}" placeholder="れい: ごはんを あげて"
                 oninput="setOrderDraft(this.value)"
                 onkeydown="if(event.key==='Enter'){sendOrder();}"
@@ -2066,7 +2312,7 @@ function renderTalk() {
             <div class="game-btn mb-2" onclick="sendOrder()">🎙 おねがい！</div>
             <div class="grid grid-cols-3 gap-1 mb-3">${chips}</div>`;
     } else {
-        ask = `<div class="text-left text-xs mb-3" style="background:#fef3c7;border-radius:10px;padding:8px;line-height:1.6">
+        ask += `<div class="text-left text-xs mb-3" style="background:#fef3c7;border-radius:10px;padding:8px;line-height:1.6">
             🎙 ショップ（おへや）の <b>おねがいマイク</b>を かうと、<br>
             「ごはんを あげて」のように たのめるように なるよ！
         </div>`;
@@ -2197,9 +2443,9 @@ function sendOrder(preset) {
     const key = findOrder(txt);
     state.stats.orders = (state.stats.orders || 0) + 1;
 
-    if (!key) {
-        talkText = 'うーん、わからなかった… 「ごはん」「おふろ」「そうじ」「あそんで」とか いってみて！';
-        robotSay('うーん、わからなかった…');
+    if (!key) {                                       // おねがいで なければ おしゃべりの へんじ
+        talkText = chatAnswer(chatSpeaker('robot'), txt);
+        robotSay(talkText);
         renderTalk();
         save();
         return;
@@ -3196,6 +3442,7 @@ function openReport() {
             🛁 おふろ ${st.baths} ／ 💊 おくすり ${st.meds} ／ 🤒 びょうき ${st.sick}<br>
             💼 おしごと ${state.jobs || 0}かい<br>
             👫 ともだち ${FRIENDS.filter(function (f) { return friendLv(f.id) > 0; }).length}／${FRIENDS.length}（なかよし ごうけい ${FRIENDS.reduce(function (a, f) { return a + friendLv(f.id); }, 0)}）<br>
+            🏠 いっしょに すんでいる ともだち ${roomieCount()}／3<br>
             🤖 ロボットの おてつだい ${state.helps || 0}かい ／ 💬 おしゃべり ${st.talks || 0}かい<br>
             🎙 ロボットへの おねがい ${st.orders || 0}かい<br>
             🪙 これまでに かせいだ コイン ${coinText(st.earned)}<br>
