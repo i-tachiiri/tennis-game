@@ -1525,7 +1525,7 @@ function applyTime(dt) {
         const happyRate = 2.5 * (has('doll') ? 0.85 : 1) * (has('flower') ? 0.9 : 1) * (has('guitar') ? 0.9 : 1)
             * (has('sunflower') ? 0.92 : 1) * (has('piano') ? 0.92 : 1) * (has('tower') ? 0.9 : 1)
             * (has('aroma') ? 0.9 : 1) * (has('incense') ? 0.92 : 1) * (has('relax') ? 0.93 : 1)
-            * Math.pow(0.92, roomieCount());        // いっしょに すむ ともだちが いると さみしくない
+            * Math.max(0.7, Math.pow(0.94, roomieCount()));   // いっしょに すむ ともだちが いると さみしくない
         const energyRate = 1.6 * (has('tree') ? 0.85 : 1) * (has('aircon') ? 0.85 : 1) * (has('warmsocks') ? 0.92 : 1)
             * (has('heater') ? 0.9 : 1) * (has('drink') ? 0.93 : 1);
         // トイレが あれば うんちで よごれにくい
@@ -1719,7 +1719,7 @@ function moveIn(id) {
         addLog(`${state.name}「まだ ${f.name} を さそって ないよ」`);
         return;
     }
-    if (roomieCount() >= 3) { addLog('おうちは 3にんまで いっしょに すめるよ。'); return; }
+    if (roomieCount() >= FRIENDS.length) { addLog('もう みんな いっしょに すんでいるよ！'); return; }
     state.roomies[id] = true;
     addLog(`🏠 ${f.name} が おうちに ひっこして きた！ いっしょに くらそう！`);
     robotSay(`${f.name} が なかまに なったよ！`);
@@ -1740,9 +1740,9 @@ function moveOut(id) {
 }
 
 // ともだちを えがく
-function drawFriend(f, x, y, s, t, i) {
+function drawFriend(f, x, y, s, t, i, sc) {
     const night = isNight();
-    const r = 26 * s;
+    const r = 26 * s * (sc || 1);
     const bob = Math.sin(t * 1.6 + i * 1.3) * 2.5 * s;
     const cy = y - r - bob;
 
@@ -1845,14 +1845,15 @@ function drawFriend(f, x, y, s, t, i) {
 
     // なまえ（あたまの うえ）
     const lv = friendLv(f.id);
+    const few = friendsHere().length <= 4;
     ctx.textAlign = 'center';
     ctx.fillStyle = night ? '#e2e8f0' : '#1f2937';
-    ctx.font = 'bold ' + (8.5 * s) + 'px sans-serif';
-    ctx.fillText(f.name, x, cy - r * 1.75);
-    if (lv > 0) {
+    ctx.font = 'bold ' + (8.5 * s * (sc || 1)) + 'px sans-serif';
+    ctx.fillText(f.name, x, cy - r * 1.7);
+    if (lv > 0 && few) {
         ctx.fillStyle = '#ef4444';
         ctx.font = (8 * s) + 'px sans-serif';
-        ctx.fillText('♥'.repeat(Math.min(5, Math.ceil(lv / 2))), x, cy - r * 2.25);
+        ctx.fillText('♥'.repeat(Math.min(5, Math.ceil(lv / 2))), x, cy - r * 2.2);
     }
 }
 
@@ -1864,8 +1865,21 @@ function drawFriends(t) {
     if (!here.length) return;
     const W = cw(), H = ch(), s = W / 380;
     const y = isOutside() ? H * 0.945 : H * 0.965;
+
+    if (here.length <= 4) {                       // すくないときは きまった ばしょに
+        here.forEach(function (f, i) {
+            drawFriend(f, W * FRIEND_X[i], y, s, t, i, 1);
+        });
+        ctx.textAlign = 'center';
+        return;
+    }
+
+    // おおぜいの ときは まえ・うしろ こうごに ならぶ
+    const n = here.length;
     here.forEach(function (f, i) {
-        drawFriend(f, W * FRIEND_X[i % FRIEND_X.length], y, s, t, i);
+        const fx = 0.06 + (0.88 * i) / (n - 1);
+        const back = (i % 2 === 0);
+        drawFriend(f, W * fx, back ? y - 32 * s : y, s, t, i, back ? 0.72 : 0.92);
     });
     ctx.textAlign = 'center';
 }
@@ -3472,7 +3486,7 @@ function openReport() {
             🛁 おふろ ${st.baths} ／ 💊 おくすり ${st.meds} ／ 🤒 びょうき ${st.sick}<br>
             💼 おしごと ${state.jobs || 0}かい<br>
             👫 ともだち ${FRIENDS.filter(function (f) { return friendLv(f.id) > 0; }).length}／${FRIENDS.length}（なかよし ごうけい ${FRIENDS.reduce(function (a, f) { return a + friendLv(f.id); }, 0)}）<br>
-            🏠 いっしょに すんでいる ともだち ${roomieCount()}／3<br>
+            🏠 いっしょに すんでいる ともだち ${roomieCount()}／${FRIENDS.length}<br>
             🤖 ロボットの おてつだい ${state.helps || 0}かい ／ 💬 おしゃべり ${st.talks || 0}かい<br>
             🎙 ロボットへの おねがい ${st.orders || 0}かい<br>
             🪙 これまでに かせいだ コイン ${coinText(st.earned)}<br>
@@ -8915,6 +8929,7 @@ function frame(ts) {
     if (state.stage === 'egg') {
         drawEgg(t);
     } else {
+        drawFriends(t);                            // ともだちは ペットの うしろに
         drawPoops();
         if (!petHidden) {
             if (action.type === 'bath') drawTubBack(t);
@@ -8928,7 +8943,7 @@ function frame(ts) {
             else if (action.type === 'play') drawBall(t);
         }
     }
-    if (state.stage !== 'egg') { drawFriends(t); drawRobot(t); }
+    if (state.stage !== 'egg') drawRobot(t);
     drawParticles(dt, t);
     updateUI();
 
