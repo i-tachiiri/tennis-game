@@ -3729,6 +3729,8 @@ function openShop() {
         <div class="text-sm font-bold text-amber-700 mb-2">もっているコイン ${coinText(state.coins)}🪙</div>
         <div class="game-btn ${allMine ? 'gray disabled' : 'pink'} mb-2"
             onclick="${allMine ? '' : 'confirmGetAll()'}">🎁 ぜんぶ もらう（${allMine ? 'ぜんぶ そろった！' : SHOP.filter(function (it) { return has(it.id); }).length + '／' + SHOP.length}）</div>
+        ${(state.infAll || allMine) ? `<div class="game-btn mb-2" style="background:#059669;border-bottom-color:#065f46"
+            onclick="confirmShopReset()">🔁 また かえるように する</div>` : ''}
         <div class="grid grid-cols-3 gap-1 mb-3">`;
     SHOP_CAT.forEach(function (pair) {
         const cat = pair[0];
@@ -3884,6 +3886,7 @@ function infShopHtml() {
     let html = `<div class="text-left text-xs mb-2" style="background:#ede9fe;border-radius:10px;padding:8px;line-height:1.6">
         🎲 <b>むげんショップ</b>には ${coinText(INF_TOTAL)}こ の しなものが あるよ！<br>
         ぜんぶ ちがう なまえと こうかを もっていて、ばんごうで さがせる。
+        ${state.infAll ? '<br><b>いまは ぜんぶ もっているよ。</b>また かいたい ときは うえの 🔁 ボタン！' : ''}
     </div>
     <div class="text-xs font-bold text-gray-600 text-left mb-1">ページ ${coinText(infPage + 1n)}</div>`;
     for (let k = 0n; k < INF_PER; k++) {
@@ -3947,6 +3950,34 @@ function getAllItems() {
     burst('star', 20);
     addLog(`🎁 ショップの ${SHOP.length}ひんと ふしぎな もの ${coinText(INF_TOTAL)}こを ぜんぶ てに いれた！`);
     robotSay('わあ！ ぜんぶ そろったね！', 6);
+    save();
+    openShop();
+}
+
+// ぜんぶ もらった あとで、また かえるように もどす
+function confirmShopReset() {
+    showModal(`
+        <div class="font-bold text-lg mb-2">🔁 また かえるように する</div>
+        <div class="text-left text-sm mb-3" style="background:#fee2e2;border-radius:12px;padding:10px;line-height:1.7">
+            いま もっている しなものを <b>ぜんぶ てばなして</b>、ショップで また かえるように するよ。<br>
+            ・コインは へらないよ<br>
+            ・ともだちや なかよしは そのまま<br>
+            ・つけているもの／はっている もようも はずれるよ
+        </div>
+        <div class="game-btn pink mb-2" onclick="shopReset()">🔁 また かえるように する</div>
+        <div class="game-btn gray" onclick="openShop()">やめる</div>
+    `);
+}
+
+function shopReset() {
+    hideModal();
+    state.owned = {};
+    state.worn = {};
+    state.theme = {};
+    state.inf = {};
+    state.infAll = false;
+    addLog('🔁 しなものを ぜんぶ てばなした。また ショップで かえるよ！');
+    robotSay('また かいものが たのしめるね！');
     save();
     openShop();
 }
