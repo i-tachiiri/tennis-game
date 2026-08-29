@@ -1714,7 +1714,7 @@ function newState() {
         sleeping: false, sick: false, sickTimer: 0,
         poops: [], poopTimer: 90, postTimer: 180, robotTimer: 45, chatTimer: 20, jobs: 0,
         helps: 0, lastTalk: 0, savings: 0n, bankTimer: 180, bankAcct: 0n, acctTimer: 180, bankLog: [],
-        friends: {}, roomies: {}, invites: {}, inf: {},
+        friends: {}, roomies: {}, invites: {}, inf: {}, infAll: false,
         stats: { earned: 0n, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0, interest: 0n },
         view: 'out',
         owned: {},
@@ -1774,6 +1774,7 @@ function load() {
         if (!s.roomies) s.roomies = {};                           // いっしょに すんでいる ともだち
         if (!s.invites) s.invites = {};
         if (!s.inf) s.inf = {};                                   // むげんショップの もちもの
+        if (typeof s.infAll !== 'boolean') s.infAll = false;
         // おかねは BigInt に もどす（ふるい セーブの すうじも そのまま つかえる）
         ['coins', 'savings', 'bankAcct'].forEach(function (k) { s[k] = big(strip(s[k])); });
         ['earned', 'interest'].forEach(function (k) { s.stats[k] = big(strip(s.stats[k])); });
@@ -3488,18 +3489,18 @@ function setShopTab(cat) {
 
 function openShop() {
     goPlace('shop');                                  // おみせまで あるいて いく
-    const allMine = SHOP.every(function (it) { return has(it.id); });
+    const allMine = state.infAll && SHOP.every(function (it) { return has(it.id); });
     let html = `<div class="font-bold text-lg mb-1">🛒 ショップ</div>
         <div class="text-sm font-bold text-amber-700 mb-2">もっているコイン ${coinText(state.coins)}🪙</div>
         <div class="game-btn ${allMine ? 'gray disabled' : 'pink'} mb-2"
-            onclick="${allMine ? '' : 'confirmGetAll()'}">🎁 ぜんぶ もらう（${SHOP.filter(function (it) { return has(it.id); }).length}／${SHOP.length}）</div>
+            onclick="${allMine ? '' : 'confirmGetAll()'}">🎁 ぜんぶ もらう（${allMine ? 'ぜんぶ そろった！' : SHOP.filter(function (it) { return has(it.id); }).length + '／' + SHOP.length}）</div>
         <div class="grid grid-cols-3 gap-1 mb-3">`;
     SHOP_CAT.forEach(function (pair) {
         const cat = pair[0];
         if (cat === 'inf') {
             html += `<div class="game-btn ${shopTab === cat ? '' : 'gray'}" onclick="setShopTab('${cat}')">
                 <div style="font-size:0.8em">${pair[1]}</div>
-                <div style="font-size:0.72em">${Object.keys(state.inf || {}).length}/∞</div></div>`;
+                <div style="font-size:0.72em">${state.infAll ? 'ぜんぶ' : Object.keys(state.inf || {}).length + '/∞'}</div></div>`;
             return;
         }
         const list = SHOP.filter(function (it) { return it.cat === cat; });
@@ -3577,10 +3578,14 @@ function infName(i) {
 function infEmoji(i) { return INF_E[infDigit(i, 4)]; }
 function infFx(i) { return INF_FX[Number(i % 6n)]; }
 function infCost(i) { return 60 + Number(i % 4941n); }
-function infOwned(i) { return !!(state.inf && state.inf[i.toString()]); }
+function infOwned(i) { return !!state.infAll || !!(state.inf && state.inf[i.toString()]); }
+
+// もっている ふしぎな ものの かず（ぜんぶの ときは 10^120）
+function infHave() { return state.infAll ? coinText(INF_TOTAL) : String(Object.keys(state.inf || {}).length); }
 
 // もっている かずを こうかごとに かぞえる
 function infBonus(key) {
+    if (state.infAll) return 999;                 // ぜんぶ もっている ときは さいだい
     if (!state.inf) return 0;
     let n = 0;
     Object.keys(state.inf).forEach(function (k) {
@@ -3589,7 +3594,7 @@ function infBonus(key) {
     return n;
 }
 function infMul(key) { return Math.max(0.7, Math.pow(0.99, infBonus(key))); }
-function infUp(key) { return 1 + infBonus(key) * 0.01; }
+function infUp(key) { return 1 + Math.min(50, infBonus(key)) * 0.01; }
 
 let infPage = 0n;
 let infDraft = '';
@@ -3674,7 +3679,7 @@ function infShopHtml() {
         style="width:100%;box-sizing:border-box;font-family:inherit;font-size:0.95rem;padding:9px 10px;
                border:3px solid #78350f;border-radius:12px;background:#fff;margin-bottom:6px">
     <div class="game-btn mb-2" onclick="infJump()">🔎 その ばんごうへ</div>
-    <div class="text-xs text-gray-500 text-left mb-2">もっている ふしぎな もの ${Object.keys(state.inf || {}).length}こ</div>`;
+    <div class="text-xs text-gray-500 text-left mb-2">もっている ふしぎな もの ${infHave()}こ</div>`;
     return html;
 }
 
@@ -3687,7 +3692,7 @@ function confirmGetAll() {
         <div class="text-left text-sm mb-3" style="background:#fef3c7;border-radius:12px;padding:10px;line-height:1.7">
             ショップの しなもの <b>${SHOP.length}ひん</b>を ぜんぶ もらえるよ！<br>
             （まだ もっていないのは ${left}ひん）<br>
-            🎲 ふしぎな ものも <b>120こ</b> ついてくる。<br>
+            🎲 むげんショップの <b>${coinText(INF_TOTAL)}こ</b>も ぜんぶ ついてくる！<br>
             コインは へらないよ。
         </div>
         <div class="game-btn pink mb-2" onclick="getAllItems()">🎁 ぜんぶ もらう！</div>
@@ -3700,10 +3705,11 @@ function getAllItems() {
     if (!state.owned) state.owned = {};
     if (!state.inf) state.inf = {};
     SHOP.forEach(function (it) { state.owned[it.id] = true; });
+    state.infAll = true;                          // ふしぎな ものも ぜんぶ
     for (let k = 0; k < 120; k++) state.inf[String(k)] = true;
     state.happy = clamp(state.happy + 20, 0, 100);
     burst('star', 20);
-    addLog(`🎁 ショップの ${SHOP.length}ひんと ふしぎな もの 120こを ぜんぶ てに いれた！`);
+    addLog(`🎁 ショップの ${SHOP.length}ひんと ふしぎな もの ${coinText(INF_TOTAL)}こを ぜんぶ てに いれた！`);
     robotSay('わあ！ ぜんぶ そろったね！', 6);
     save();
     openShop();
@@ -4045,7 +4051,7 @@ function openReport() {
             🪙 これまでに かせいだ コイン ${coinText(st.earned)}<br>
             🐷 ちょきん ${coinText(state.savings || 0)}／${coinText(bankCap())}<br>
             🏦 ぎんこうの こうざ ${coinText(state.bankAcct || 0)}（りそくで +${coinText(st.interest || 0)}）<br>
-            🎲 ふしぎな もの ${Object.keys(state.inf || {}).length}こ（ぜんぶで ${coinText(INF_TOTAL)}こ から）<br>
+            🎲 ふしぎな もの ${infHave()}こ（ぜんぶで ${coinText(INF_TOTAL)}こ）<br>
             🛒 もちもの ${ownedCount}／${SHOP.length}（みにつけ ${wornCount}）<br>
             🎪 できる あそび ${actCount}／${ACTIVITIES.length}
         </div>
