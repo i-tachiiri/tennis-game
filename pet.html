@@ -1903,7 +1903,8 @@ const SHOP_CAT = [
     ['wear', '✨ みにつける'],
     ['health', '💊 けんこう'],
     ['style', '🎨 もようがえ'],
-    ['inf', '🎲 ふしぎ']
+    ['inf', '🎲 ふしぎ'],
+    ['sweet', '🍬 おかし']
 ];
 
 let state = null;
@@ -2148,7 +2149,7 @@ function newState() {
         poops: [], poopTimer: 90, postTimer: 180, robotTimer: 45, chatTimer: 20, jobs: 0,
         helps: 0, lastTalk: 0, savings: 0n, bankTimer: 180, bankAcct: 0n, acctTimer: 180, bankLog: [],
         friends: {}, roomies: {}, invites: {}, inf: {}, infAll: false,
-        stats: { earned: 0n, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0, interest: 0n },
+        stats: { earned: 0n, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0, interest: 0n, sweets: 0 },
         view: 'out',
         owned: {},
         worn: {},
@@ -2197,6 +2198,7 @@ function load() {
         if (typeof s.lastTalk !== 'number') s.lastTalk = 0;
         if (typeof s.stats.talks !== 'number') s.stats.talks = 0;
         if (typeof s.stats.orders !== 'number') s.stats.orders = 0;
+        if (typeof s.stats.sweets !== 'number') s.stats.sweets = 0;
         if (s.stats.interest === undefined) s.stats.interest = 0;
         if (s.savings === undefined) s.savings = 0;               // ちょきんばこが なかった ころの セーブ
         if (typeof s.bankTimer !== 'number') s.bankTimer = 180;
@@ -2653,6 +2655,7 @@ const ACT_EMOJI = { eat: '🍚', bath: '🫧', play: '🎾', train: '💪', work
 function actEmoji() {
     if (!action.type || now() > action.until) return null;
     if (action.type === 'eat') {
+        if (action.food === '__sweet') return sweetNow;
         const f = FOODS[action.food];
         return (f && f.emoji) ? f.emoji : '🍚';
     }
@@ -3936,6 +3939,12 @@ function openShop() {
         <div class="grid grid-cols-3 gap-1 mb-3">`;
     SHOP_CAT.forEach(function (pair) {
         const cat = pair[0];
+        if (cat === 'sweet') {
+            html += `<div class="game-btn ${shopTab === cat ? '' : 'gray'}" onclick="setShopTab('${cat}')">
+                <div style="font-size:0.8em">${pair[1]}</div>
+                <div style="font-size:0.72em">${coinText(SWEET_TOTAL)}</div></div>`;
+            return;
+        }
         if (cat === 'inf') {
             html += `<div class="game-btn ${shopTab === cat ? '' : 'gray'}" onclick="setShopTab('${cat}')">
                 <div style="font-size:0.8em">${pair[1]}</div>
@@ -3950,7 +3959,10 @@ function openShop() {
     });
     html += `</div>`;
     if (shopTab === 'inf') html += infShopHtml();
-    SHOP_CAT.filter(function (pair) { return pair[0] === shopTab && pair[0] !== 'inf'; }).forEach(function (pair) {
+    if (shopTab === 'sweet') html += sweetShopHtml();
+    SHOP_CAT.filter(function (pair) {
+        return pair[0] === shopTab && pair[0] !== 'inf' && pair[0] !== 'sweet';
+    }).forEach(function (pair) {
         const cat = pair[0];
         SHOP.filter(function (it) { return it.cat === cat; }).forEach(function (it) {
             const owned = has(it.id);
@@ -4121,6 +4133,121 @@ function infShopHtml() {
                border:3px solid #78350f;border-radius:12px;background:#fff;margin-bottom:6px">
     <div class="game-btn mb-2" onclick="infJump()">🔎 その ばんごうへ</div>
     <div class="text-xs text-gray-500 text-left mb-2">もっている ふしぎな もの ${infHave()}こ</div>`;
+    return html;
+}
+
+/* ---------------- 🍬 おかしやさん（9おくこ） ---------------- */
+
+const SWEET_TOTAL = 900000000n;         // 9おくこ の おかし
+const SW_PER = 8n;
+
+const SW_A = ['いちごの', 'チョコの', 'まっちゃの', 'ミルクの', 'レモンの',
+              'ぶどうの', 'はちみつの', 'メロンの', 'キャラメルの', 'ラムネの'];
+const SW_B = ['ふわふわ', 'とろとろ', 'さくさく', 'もちもち', 'ぷるぷる',
+              'ひんやり', 'あつあつ', 'しゅわしゅわ', 'ころころ', 'きらきら'];
+const SW_C = ['ケーキ', 'プリン', 'クッキー', 'ドーナツ', 'アイス',
+              'ゼリー', 'パフェ', 'クレープ', 'マカロン', 'おだんご'];
+const SW_E = ['🍰', '🍮', '🍪', '🍩', '🍨', '🍧', '🍭', '🥞', '🧁', '🍡'];
+
+function swDigit(i, place) { return Number((i / (10n ** BigInt(place))) % 10n); }
+function sweetName(i) { return SW_A[swDigit(i, 0)] + SW_B[swDigit(i, 1)] + SW_C[swDigit(i, 2)]; }
+function sweetEmoji(i) { return SW_E[swDigit(i, 2)]; }
+function sweetCost(i) { return 20 + Number(i % 481n); }
+function sweetHunger(i) { return 8 + Number(i % 33n); }
+function sweetHappy(i) { return 10 + Number(i % 29n); }
+function sweetExp(i) { return 1 + Number(i % 6n); }
+
+let swPage = 0n;
+let swDraft = '';
+let sweetNow = '🍬';
+
+function setSwDraft(v) { swDraft = v; }
+
+function swGo(dir) {
+    const last = SWEET_TOTAL / SW_PER - 1n;
+    swPage += BigInt(dir);
+    if (swPage < 0n) swPage = 0n;
+    if (swPage > last) swPage = last;
+    openShop();
+}
+
+function swJump() {
+    const box = el('sw-input');
+    const raw = (box ? box.value : swDraft).replace(/[^0-9]/g, '').replace(/^0+/, '');
+    if (!raw) { addLog('ばんごうを いれてね（れい: 12345）'); return; }
+    let n = BigInt(raw);
+    if (n >= SWEET_TOTAL) n = SWEET_TOTAL - 1n;
+    swDraft = '';
+    swPage = n / SW_PER;
+    openShop();
+}
+
+function swRandom() {
+    swPage = BigInt(Math.floor(Math.random() * 900000000)) / SW_PER;
+    openShop();
+}
+
+// かって そのばで たべる
+function eatSweet(key) {
+    const i = BigInt(key);
+    if (busy()) return;
+    const cost = big(sweetCost(i));
+    if (state.coins < cost) { addLog('コインが たりない…'); return; }
+    if (state.hunger > 96) { addLog(`${state.name}「おなか いっぱいだよ〜」`); return; }
+
+    state.coins = big(state.coins) - cost;
+    state.hunger = clamp(state.hunger + sweetHunger(i), 0, 100);
+    state.happy = clamp(state.happy + sweetHappy(i), 0, 100);
+    state.care.eat += 1;
+    state.stats.meals++;
+    state.stats.sweets = (state.stats.sweets || 0) + 1;
+    state.poopTimer = Math.min(state.poopTimer, 45);
+    sweetNow = sweetEmoji(i);
+    setAction('eat', 3, '__sweet');
+    burst('heart', 6);
+    addLog(`${sweetEmoji(i)} ${sweetName(i)} を たべた！ おいしい〜（-${sweetCost(i)}🪙）`);
+    friendsJoin('おかしを たべた');
+    robotSay('おいしそう！ いい かおだね');
+    gainExp(sweetExp(i));
+    hideModal();
+    save();
+}
+
+// ショップの 🍬 タブ
+function sweetShopHtml() {
+    const start = swPage * SW_PER;
+    let html = `<div class="text-left text-xs mb-2" style="background:#fce7f3;border-radius:10px;padding:8px;line-height:1.6">
+        🍬 <b>おかしやさん</b>には ${coinText(SWEET_TOTAL)}こ の おかしが あるよ！<br>
+        かうと その ばで たべられる。あじも おおきさも ぜんぶ ちがう。
+    </div>
+    <div class="text-xs font-bold text-gray-600 text-left mb-1">ページ ${coinText(swPage + 1n)}</div>`;
+    for (let k = 0n; k < SW_PER; k++) {
+        const i = start + k;
+        if (i >= SWEET_TOTAL) break;
+        const key = i.toString();
+        const cost = sweetCost(i);
+        const poor = state.coins < big(cost);
+        html += `<div class="flex items-center gap-2 mb-2">
+            <div class="text-left text-sm" style="flex:1">
+                <div class="font-bold">${sweetEmoji(i)} ${sweetName(i)}</div>
+                <div class="text-xs text-gray-500">No.${key} / おなか +${sweetHunger(i)} / きげん +${sweetHappy(i)}</div>
+            </div>
+            <div style="width:40%"><div class="game-btn ${poor ? 'disabled' : 'pink'}"
+                onclick="eatSweet('${key}')">${cost}🪙 で たべる</div></div>
+        </div>`;
+    }
+    html += `<div class="grid grid-cols-3 gap-1 mb-2">
+        <div class="game-btn gray" onclick="swGo(-1)">◀ まえ</div>
+        <div class="game-btn green" onclick="swRandom()">🎲 ランダム</div>
+        <div class="game-btn gray" onclick="swGo(1)">つぎ ▶</div>
+    </div>
+    <div class="text-xs font-bold text-gray-600 text-left mb-1">すきな ばんごうへ（0〜${coinText(SWEET_TOTAL - 1n)}）</div>
+    <input id="sw-input" value="${escAttr(swDraft)}" placeholder="れい: 1234567" inputmode="numeric"
+        oninput="setSwDraft(this.value)" onkeydown="if(event.key==='Enter'){swJump();}"
+        style="width:100%;box-sizing:border-box;font-family:inherit;font-size:0.95rem;padding:9px 10px;
+               border:3px solid #78350f;border-radius:12px;background:#fff;margin-bottom:6px">
+    <div class="game-btn mb-2" onclick="swJump()">🔎 その ばんごうへ</div>
+    <div class="text-xs text-gray-500 text-left mb-2">たべた おかし ${state.stats.sweets || 0}こ</div>`;
     return html;
 }
 
@@ -4521,6 +4648,7 @@ function openReport() {
             🐷 ちょきん ${coinText(state.savings || 0)}／${coinText(bankCap())}<br>
             🏦 ぎんこうの こうざ ${coinText(state.bankAcct || 0)}（りそくで +${coinText(st.interest || 0)}）<br>
             🎲 ふしぎな もの ${infHave()}こ（ぜんぶで ${coinText(INF_TOTAL)}こ）<br>
+            🍬 たべた おかし ${st.sweets || 0}こ（おみせには ${coinText(SWEET_TOTAL)}こ）<br>
             🛒 もちもの ${ownedCount}／${SHOP.length}（みにつけ ${wornCount}）<br>
             🎪 できる あそび ${actCount}／${ACTIVITIES.length}
         </div>
@@ -9276,6 +9404,14 @@ function stageInfo() {
 }
 
 function drawFoodItem(key) {
+    if (key === '__sweet') {                             // おかしやさんの おかし
+        ctx.font = '46px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(sweetNow, 0, -12);
+        ctx.textBaseline = 'alphabetic';
+        return;
+    }
     const fd = FOODS[key];
     if (fd && fd.emoji) {                                // あたらしい たべものは 絵文字で
         ctx.font = '46px sans-serif';
