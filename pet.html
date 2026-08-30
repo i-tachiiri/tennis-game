@@ -1964,7 +1964,8 @@ const SHOP_CAT = [
     ['friend', '👫 みんなの'],
     ['style', '🎨 もようがえ'],
     ['inf', '🎲 ふしぎ'],
-    ['sweet', '🍬 おかし']
+    ['sweet', '🍬 おかし'],
+    ['furn', '🪑 かぐ']
 ];
 
 let state = null;
@@ -2208,7 +2209,7 @@ function newState() {
         sleeping: false, sick: false, sickTimer: 0,
         poops: [], poopTimer: 90, postTimer: 180, robotTimer: 45, chatTimer: 20, jobs: 0,
         helps: 0, lastTalk: 0, savings: 0n, bankTimer: 180, bankAcct: 0n, acctTimer: 180, bankLog: [],
-        friends: {}, roomies: {}, invites: {}, inf: {}, infAll: false,
+        friends: {}, roomies: {}, invites: {}, inf: {}, infAll: false, furn: {}, furnAll: false,
         stats: { earned: 0n, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0, interest: 0n, sweets: 0 },
         view: 'out',
         owned: {},
@@ -2271,6 +2272,8 @@ function load() {
         if (!s.inf) s.inf = {};                                   // むげんショップの もちもの
         decorDirty();
         if (typeof s.infAll !== 'boolean') s.infAll = false;
+        if (!s.furn) s.furn = {};                                 // かぐやさんの もちもの
+        if (typeof s.furnAll !== 'boolean') s.furnAll = false;
         // おかねは BigInt に もどす（ふるい セーブの すうじも そのまま つかえる）
         ['coins', 'savings', 'bankAcct'].forEach(function (k) { s[k] = big(strip(s[k])); });
         ['earned', 'interest'].forEach(function (k) { s.stats[k] = big(strip(s.stats[k])); });
@@ -4052,7 +4055,7 @@ function setShopTab(cat) {
 
 function openShop() {
     goPlace('shop');                                  // おみせまで あるいて いく
-    const allMine = state.infAll && SHOP.every(function (it) { return has(it.id); });
+    const allMine = state.infAll && state.furnAll && SHOP.every(function (it) { return has(it.id); });
     let html = `<div class="font-bold text-lg mb-1">🛒 ショップ</div>
         <div class="text-sm font-bold text-amber-700 mb-2">もっているコイン ${coinText(state.coins)}🪙</div>
         <div class="game-btn ${allMine ? 'gray disabled' : 'pink'} mb-2"
@@ -4062,6 +4065,12 @@ function openShop() {
         <div class="grid grid-cols-3 gap-1 mb-3">`;
     SHOP_CAT.forEach(function (pair) {
         const cat = pair[0];
+        if (cat === 'furn') {
+            html += `<div class="game-btn ${shopTab === cat ? '' : 'gray'}" onclick="setShopTab('${cat}')">
+                <div style="font-size:0.8em">${pair[1]}</div>
+                <div style="font-size:0.72em">${state.furnAll ? 'ぜんぶ' : furnHave() + '/10ちょう'}</div></div>`;
+            return;
+        }
         if (cat === 'sweet') {
             html += `<div class="game-btn ${shopTab === cat ? '' : 'gray'}" onclick="setShopTab('${cat}')">
                 <div style="font-size:0.8em">${pair[1]}</div>
@@ -4083,8 +4092,9 @@ function openShop() {
     html += `</div>`;
     if (shopTab === 'inf') html += infShopHtml();
     if (shopTab === 'sweet') html += sweetShopHtml();
+    if (shopTab === 'furn') html += furnShopHtml();
     SHOP_CAT.filter(function (pair) {
-        return pair[0] === shopTab && pair[0] !== 'inf' && pair[0] !== 'sweet';
+        return pair[0] === shopTab && pair[0] !== 'inf' && pair[0] !== 'sweet' && pair[0] !== 'furn';
     }).forEach(function (pair) {
         const cat = pair[0];
         const all = SHOP.filter(function (it) { return it.cat === cat; });
@@ -4393,6 +4403,121 @@ function sweetShopHtml() {
     return html;
 }
 
+/* ---------------- 🪑 かぐやさん（10兆こ） ---------------- */
+
+const FURN_TOTAL = 10000000000000n;     // 10ちょうこ の かぐ
+const FURN_PER = 8n;
+
+const FU_SIZE = ['ミニ', '', 'おおきな', 'とくだいの', 'ちいさな', 'ながい', 'まるい', 'しかくい', 'たかい', 'ひくい'];
+const FU_MAT  = ['木の', 'てつの', 'ガラスの', 'ふわふわの', 'きらきらの', 'たけの', 'いしの', 'ぬのの', 'とうめいな', 'きんの'];
+const FU_COL  = ['あかい', 'あおい', 'きいろい', 'みどりの', 'しろい', 'くろい', 'ピンクの', 'むらさきの', 'オレンジの', 'みずいろの'];
+const FU_PAT  = ['', 'みずたまの', 'しましまの', 'はなもようの', 'ほしがらの', 'チェックの', 'にじいろの', 'ハートの', 'くもがらの', 'キラキラの'];
+const FU_KIND = [
+    { n: 'イス', e: '🪑' }, { n: 'テーブル', e: '🍽' }, { n: 'ベッド', e: '🛏' }, { n: 'ソファ', e: '🛋' },
+    { n: 'たな', e: '🗄' }, { n: 'ランプ', e: '💡' }, { n: 'とけい', e: '⏰' }, { n: 'かがみ', e: '🪞' },
+    { n: 'はこ', e: '🧰' }, { n: 'かびん', e: '🏺' }
+];
+
+function fuDigit(i, place) { return Number((i / (10n ** BigInt(place))) % 10n); }
+function furnName(i) {
+    return FU_SIZE[fuDigit(i, 4)] + FU_MAT[fuDigit(i, 3)] + FU_COL[fuDigit(i, 2)]
+         + FU_PAT[fuDigit(i, 1)] + FU_KIND[fuDigit(i, 0)].n;
+}
+function furnEmoji(i) { return FU_KIND[fuDigit(i, 0)].e; }
+function furnCost(i) { return 80 + Number(i % 3921n); }
+function furnOwned(i) { return !!state.furnAll || !!(state.furn && state.furn[i.toString()]); }
+function furnHave() { return state.furnAll ? coinText(FURN_TOTAL) : String(Object.keys(state.furn || {}).length); }
+
+let fuPage = 0n;
+let fuDraft = '';
+
+function setFuDraft(v) { fuDraft = v; }
+
+function fuGo(dir) {
+    const last = FURN_TOTAL / FURN_PER - 1n;
+    fuPage += BigInt(dir);
+    if (fuPage < 0n) fuPage = 0n;
+    if (fuPage > last) fuPage = last;
+    openShop();
+}
+
+function fuJump() {
+    const box = el('fu-input');
+    const raw = (box ? box.value : fuDraft).replace(/[^0-9]/g, '').replace(/^0+/, '');
+    if (!raw) { addLog('ばんごうを いれてね（れい: 12345）'); return; }
+    let n = BigInt(raw);
+    if (n >= FURN_TOTAL) n = FURN_TOTAL - 1n;
+    fuDraft = '';
+    fuPage = n / FURN_PER;
+    openShop();
+}
+
+function fuRandom() {
+    let d = String(1 + Math.floor(Math.random() * 9));
+    for (let k = 1; k < 13; k++) d += Math.floor(Math.random() * 10);
+    fuPage = BigInt(d) / FURN_PER;
+    openShop();
+}
+
+function buyFurn(key) {
+    const i = BigInt(key);
+    if (furnOwned(i)) return;
+    const cost = big(furnCost(i));
+    if (state.coins < cost) { addLog('コインが たりない…'); return; }
+    state.coins = big(state.coins) - cost;
+    if (!state.furn) state.furn = {};
+    state.furn[key] = true;
+    decorDirty();
+    burst('star', 6);
+    addLog(`${furnEmoji(i)} ${furnName(i)} を かった！ おうちに かざった。`);
+    robotSay('いい かぐだね！');
+    friendsCopy('🪑');
+    save();
+    openShop();
+}
+
+// ショップの 🪑 タブ
+function furnShopHtml() {
+    const start = fuPage * FURN_PER;
+    let html = `<div class="text-left text-xs mb-2" style="background:#fef3c7;border-radius:10px;padding:8px;line-height:1.6">
+        🪑 <b>かぐやさん</b>には ${coinText(FURN_TOTAL)}こ の かぐが あるよ！<br>
+        かうと おうちに かざられて、みんなの きげんが へりにくくなる。
+        ${state.furnAll ? '<br><b>いまは ぜんぶ もっているよ。</b>' : ''}
+    </div>
+    <div class="text-xs font-bold text-gray-600 text-left mb-1">ページ ${coinText(fuPage + 1n)}</div>`;
+    for (let k = 0n; k < FURN_PER; k++) {
+        const i = start + k;
+        if (i >= FURN_TOTAL) break;
+        const key = i.toString();
+        const owned = furnOwned(i);
+        const cost = furnCost(i);
+        const poor = state.coins < big(cost);
+        const btn = owned
+            ? `<div class="game-btn gray disabled">おうちに あるよ</div>`
+            : `<div class="game-btn ${poor ? 'disabled' : ''}" onclick="buyFurn('${key}')">${cost}🪙 で かう</div>`;
+        html += `<div class="flex items-center gap-2 mb-2">
+            <div class="text-left text-sm" style="flex:1">
+                <div class="font-bold">${furnEmoji(i)} ${furnName(i)}</div>
+                <div class="text-xs text-gray-500">No.${key}</div>
+            </div>
+            <div style="width:38%">${btn}</div>
+        </div>`;
+    }
+    html += `<div class="grid grid-cols-3 gap-1 mb-2">
+        <div class="game-btn gray" onclick="fuGo(-1)">◀ まえ</div>
+        <div class="game-btn green" onclick="fuRandom()">🎲 ランダム</div>
+        <div class="game-btn gray" onclick="fuGo(1)">つぎ ▶</div>
+    </div>
+    <div class="text-xs font-bold text-gray-600 text-left mb-1">すきな ばんごうへ（0〜${coinText(FURN_TOTAL - 1n)}）</div>
+    <input id="fu-input" value="${escAttr(fuDraft)}" placeholder="れい: 1234567890" inputmode="numeric"
+        oninput="setFuDraft(this.value)" onkeydown="if(event.key==='Enter'){fuJump();}"
+        style="width:100%;box-sizing:border-box;font-family:inherit;font-size:0.95rem;padding:9px 10px;
+               border:3px solid #78350f;border-radius:12px;background:#fff;margin-bottom:6px">
+    <div class="game-btn mb-2" onclick="fuJump()">🔎 その ばんごうへ</div>
+    <div class="text-xs text-gray-500 text-left mb-2">もっている かぐ ${furnHave()}こ</div>`;
+    return html;
+}
+
 /* ---------------- ぜんぶ もらう ---------------- */
 
 function confirmGetAll() {
@@ -4403,6 +4528,7 @@ function confirmGetAll() {
             ショップの しなもの <b>${SHOP.length}ひん</b>を ぜんぶ もらえるよ！<br>
             （まだ もっていないのは ${left}ひん）<br>
             🎲 むげんショップの <b>${coinText(INF_TOTAL)}こ</b>も ぜんぶ ついてくる！<br>
+            🪑 かぐやさんの <b>${coinText(FURN_TOTAL)}こ</b>も ぜんぶ ついてくる！<br>
             コインは へらないよ。
         </div>
         <div class="game-btn pink mb-2" onclick="getAllItems()">🎁 ぜんぶ もらう！</div>
@@ -4418,9 +4544,10 @@ function getAllItems() {
     decorDirty();
     state.infAll = true;                          // ふしぎな ものも ぜんぶ
     for (let k = 0; k < 120; k++) state.inf[String(k)] = true;
+    state.furnAll = true;                         // かぐも ぜんぶ
     state.happy = clamp(state.happy + 20, 0, 100);
     burst('star', 20);
-    addLog(`🎁 ショップの ${SHOP.length}ひんと ふしぎな もの ${coinText(INF_TOTAL)}こを ぜんぶ てに いれた！`);
+    addLog(`🎁 ショップの ${SHOP.length}ひんと ふしぎな もの ${coinText(INF_TOTAL)}こ、かぐ ${coinText(FURN_TOTAL)}こを ぜんぶ てに いれた！`);
     robotSay('わあ！ ぜんぶ そろったね！', 6);
     save();
     openShop();
@@ -4449,6 +4576,8 @@ function shopReset() {
     state.theme = {};
     state.inf = {};
     state.infAll = false;
+    state.furn = {};
+    state.furnAll = false;
     addLog('🔁 しなものを ぜんぶ てばなした。また ショップで かえるよ！');
     robotSay('また かいものが たのしめるね！');
     save();
@@ -4795,6 +4924,7 @@ function openReport() {
             🏦 ぎんこうの こうざ ${coinText(state.bankAcct || 0)}（りそくで +${coinText(st.interest || 0)}）<br>
             🎲 ふしぎな もの ${infHave()}こ（ぜんぶで ${coinText(INF_TOTAL)}こ）<br>
             🍬 たべた おかし ${st.sweets || 0}こ（おみせには ${coinText(SWEET_TOTAL)}こ）<br>
+            🪑 かぐ ${furnHave()}こ（おみせには ${coinText(FURN_TOTAL)}こ）<br>
             🛒 もちもの ${ownedCount}／${SHOP.length}（みにつけ ${wornCount}）<br>
             🎪 できる あそび ${actCount}／${ACTIVITIES.length}
         </div>
@@ -10132,6 +10262,20 @@ function decorBuild() {
         n++;
         (byCat[it.cat] = byCat[it.cat] || []).push(it);
     });
+    // 🪑 かぐやさんで かった かぐも おうちに かざる
+    const furn = byCat.room = byCat.room || [];
+    if (state.furnAll) {
+        n += DECOR_MAX;
+        for (let k = 0; k < DECOR_MAX; k++) {
+            furn.push({ deco: FU_KIND[k % FU_KIND.length].e, cat: 'room' });
+        }
+    } else if (state.furn) {
+        const keys = Object.keys(state.furn);
+        n += keys.length;
+        keys.slice(0, DECOR_MAX).forEach(function (k) {
+            try { furn.push({ deco: furnEmoji(BigInt(k)), cat: 'room' }); } catch (e) { /* こわれた キーは むし */ }
+        });
+    }
     decorCache = { count: n, byCat: byCat };
 }
 
