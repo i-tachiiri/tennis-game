@@ -1516,7 +1516,31 @@ const SHOP = [
     { id: 'yogurt', cat: 'health', label: '🥛 のむヨーグルト', cost: 260, note: 'たいりょくが かいふく しやすい' },
     { id: 'cocoa5', cat: 'health', label: '☕ ホットココア', cost: 190, note: 'ねると げんきが もどる' },
     { id: 'atlas', cat: 'health', label: '🗺 ちずちょう', cost: 380, note: 'けいけんちが ふえる' },
-    { id: 'luckycoin', cat: 'health', label: '🪙 ラッキーコイン', cost: 900, note: 'おだちんが ふえる' }
+    { id: 'luckycoin', cat: 'health', label: '🪙 ラッキーコイン', cost: 900, note: 'おだちんが ふえる' },
+{ id: 'fr_bed', cat: 'friend', label: '🛏 みんなの ベッド', cost: 900, note: 'ねるとき ともだちも ベッドで ねる', deco: '🛏' },
+    { id: 'fr_cushion', cat: 'friend', label: '🛋 みんなの クッション', cost: 600, note: 'ともだちが クッションに すわる', deco: '🛋' },
+    { id: 'fr_table', cat: 'friend', label: '🪑 みんなの テーブル', cost: 520, note: 'おうちに かざる／きげんが へりにくい', deco: '🪑' },
+    { id: 'fr_shelf', cat: 'friend', label: '🗄 みんなの ロッカー', cost: 480, note: 'おうちに かざる／きげんが へりにくい', deco: '🗄' },
+    { id: 'fr_rug', cat: 'friend', label: '🟨 みんなの ラグ', cost: 420, note: 'おうちに かざる／きげんが へりにくい', deco: '🟨' },
+    { id: 'fr_lamp', cat: 'friend', label: '💡 みんなの ランプ', cost: 380, note: 'おうちに かざる／きげんが へりにくい', deco: '💡' },
+    { id: 'fr_clock', cat: 'friend', label: '⏰ みんなの とけい', cost: 360, note: 'おうちに かざる／きげんが へりにくい', deco: '⏰' },
+    { id: 'fr_mirror', cat: 'friend', label: '🪞 みんなの かがみ', cost: 400, note: 'おうちに かざる／きげんが へりにくい', deco: '🪞' },
+    { id: 'fr_fridge', cat: 'friend', label: '🧊 みんなの れいぞうこ', cost: 700, note: 'おうちに かざる／きげんが へりにくい', deco: '🧊' },
+    { id: 'fr_bath', cat: 'friend', label: '🛁 みんなの おふろ', cost: 800, note: 'おうちに かざる／きげんが へりにくい', deco: '🛁' },
+    { id: 'fr_bench', cat: 'friend', label: '🪵 みんなの ベンチ', cost: 440, note: 'おうちに かざる／きげんが へりにくい', deco: '🪵' },
+    { id: 'fr_swing', cat: 'friend', label: '🎠 みんなの ブランコ', cost: 760, note: 'おうちに かざる／きげんが へりにくい', deco: '🎠' },
+    { id: 'fr_tent', cat: 'friend', label: '⛺ みんなの テント', cost: 680, note: 'おうちに かざる／きげんが へりにくい', deco: '⛺' },
+    { id: 'fr_pool', cat: 'friend', label: '🏊 みんなの プール', cost: 980, note: 'おうちに かざる／きげんが へりにくい', deco: '🏊' },
+    { id: 'fr_table2', cat: 'friend', label: '🍽 みんなの しょくたく', cost: 560, note: 'おうちに かざる／きげんが へりにくい', deco: '🍽' },
+    { id: 'fr_tv', cat: 'friend', label: '📺 みんなの テレビ', cost: 900, note: 'おうちに かざる／きげんが へりにくい', deco: '📺' },
+    { id: 'fr_piano', cat: 'friend', label: '🎹 みんなの ピアノ', cost: 1100, note: 'おうちに かざる／きげんが へりにくい', deco: '🎹' },
+    { id: 'fr_shelf2', cat: 'friend', label: '📚 みんなの ほんだな', cost: 520, note: 'おうちに かざる／きげんが へりにくい', deco: '📚' },
+    { id: 'fr_toybox', cat: 'friend', label: '🧸 みんなの おもちゃばこ', cost: 460, note: 'おうちに かざる／きげんが へりにくい', deco: '🧸' },
+    { id: 'fr_board', cat: 'friend', label: '🎲 みんなの ボードゲーム', cost: 420, note: 'おうちに かざる／きげんが へりにくい', deco: '🎲' },
+    { id: 'fr_flower', cat: 'friend', label: '💐 みんなの おはな', cost: 300, note: 'おうちに かざる／きげんが へりにくい', deco: '💐' },
+    { id: 'fr_photo', cat: 'friend', label: '🖼 みんなの しゅうごうしゃしん', cost: 640, note: 'おうちに かざる／きげんが へりにくい', deco: '🖼' },
+    { id: 'fr_cake', cat: 'friend', label: '🎂 みんなの おいわいケーキ', cost: 720, note: 'おうちに かざる／きげんが へりにくい', deco: '🎂' },
+    { id: 'fr_flag', cat: 'friend', label: '🎌 みんなの はた', cost: 340, note: 'おうちに かざる／きげんが へりにくい', deco: '🎌' }
 ];
 
 // もようがえ: スロットごとに 1つ えらぶ
@@ -1895,6 +1919,41 @@ function paintBands(x, y, w, h, cols) {
     }
 }
 
+// ぜんぶで 1まんこに なるまで、いろちがい・そざいちがいを じどうで つくる
+(function fillShop() {
+    const MAT  = ['木の', 'てつの', 'ガラスの', 'ふわふわの', 'きらきらの', 'たけの', 'いしの', 'ぬのの', 'とうめいな', 'きんの'];
+    const COL  = ['あかい', 'あおい', 'きいろい', 'みどりの', 'しろい', 'くろい', 'ピンクの', 'むらさきの', 'オレンジの', 'みずいろの'];
+    const SIZE = ['ミニ', '', 'おおきな', 'とくだいの', 'ちいさな'];
+    const KIND = [
+        { n: 'イス', e: '🪑', c: 'friend' },      { n: 'テーブル', e: '🍽', c: 'friend' },
+        { n: 'ベッド', e: '🛏', c: 'friend' },    { n: 'クッション', e: '🛋', c: 'friend' },
+        { n: 'ランプ', e: '💡', c: 'room' },      { n: 'とけい', e: '⏰', c: 'room' },
+        { n: 'かびん', e: '🏺', c: 'room' },      { n: 'えほん', e: '📕', c: 'room' },
+        { n: 'ぬいぐるみ', e: '🧸', c: 'bedroom' }, { n: 'オルゴール', e: '🎵', c: 'bedroom' },
+        { n: 'まくら', e: '🛌', c: 'bedroom' },   { n: 'ライト', e: '🔦', c: 'bedroom' },
+        { n: 'コップ', e: '🥤', c: 'kitchen' },   { n: 'おさら', e: '🍽', c: 'kitchen' },
+        { n: 'なべ', e: '🍲', c: 'kitchen' },     { n: 'びん', e: '🫙', c: 'kitchen' },
+        { n: 'はちうえ', e: '🪴', c: 'yard' },    { n: 'おきもの', e: '🗿', c: 'yard' },
+        { n: 'ふうせん', e: '🎈', c: 'yard' },    { n: 'ふうりん', e: '🎐', c: 'yard' }
+    ];
+    let k = 0;
+    while (SHOP.length < 10000 && k < MAT.length * COL.length * SIZE.length * KIND.length) {
+        const kind = KIND[k % KIND.length];
+        const col  = COL[Math.floor(k / KIND.length) % COL.length];
+        const mat  = MAT[Math.floor(k / (KIND.length * COL.length)) % MAT.length];
+        const size = SIZE[Math.floor(k / (KIND.length * COL.length * MAT.length)) % SIZE.length];
+        SHOP.push({
+            id: 'gf' + k,
+            cat: kind.c,
+            label: `${kind.e} ${size}${mat}${col}${kind.n}`,
+            cost: 60 + (k % 940),
+            note: 'おうちに かざる／きげんが へりにくい',
+            deco: kind.e
+        });
+        k++;
+    }
+})();
+
 const SHOP_CAT = [
     ['room', '🛋 リビング'],
     ['kitchen', '🍳 キッチン'],
@@ -1902,6 +1961,7 @@ const SHOP_CAT = [
     ['yard', '🌳 そと'],
     ['wear', '✨ みにつける'],
     ['health', '💊 けんこう'],
+    ['friend', '👫 みんなの'],
     ['style', '🎨 もようがえ'],
     ['inf', '🎲 ふしぎ'],
     ['sweet', '🍬 おかし']
@@ -2209,6 +2269,7 @@ function load() {
         if (!s.roomies) s.roomies = {};                           // いっしょに すんでいる ともだち
         if (!s.invites) s.invites = {};
         if (!s.inf) s.inf = {};                                   // むげんショップの もちもの
+        decorDirty();
         if (typeof s.infAll !== 'boolean') s.infAll = false;
         // おかねは BigInt に もどす（ふるい セーブの すうじも そのまま つかえる）
         ['coins', 'savings', 'bankAcct'].forEach(function (k) { s[k] = big(strip(s[k])); });
@@ -2486,6 +2547,21 @@ function drawFriend(f, x, y, s, t, i, sc) {
 
     ctx.fillStyle = 'rgba(0,0,0,0.16)';
     ellipse(x, y + 1 * s, r * 0.8, r * 0.22);
+
+    // みんなの かぐ（ベッド・クッション）
+    if (state.sleeping && has('fr_bed')) {
+        ctx.fillStyle = night ? '#7c3a5a' : '#f472b6';
+        ctx.fillRect(x - r * 1.05, y - r * 0.34, r * 2.1, r * 0.30);
+        ctx.fillStyle = night ? '#57534e' : '#a16207';
+        ctx.fillRect(x - r * 1.1, y - r * 0.10, r * 2.2, r * 0.14);
+        ctx.fillStyle = night ? '#e2e8f0' : '#fff';
+        ellipse(x + r * 0.72, y - r * 0.40, r * 0.28, r * 0.16);
+    } else if (!state.sleeping && has('fr_cushion')) {
+        ctx.fillStyle = night ? '#4c1d95' : '#c4b5fd';
+        ellipse(x, y - r * 0.10, r * 0.85, r * 0.24);
+        ctx.fillStyle = night ? '#5b21b6' : '#ddd6fe';
+        ellipse(x, y - r * 0.16, r * 0.72, r * 0.18);
+    }
 
     // かった マントは からだの うしろに
     const wid = friendWear(f);
@@ -3959,8 +4035,17 @@ function useMedicine() {
 }
 
 let shopTab = 'room';
+let shopPage = 0;
+const SHOP_PER = 20;
+
+function shopGo(d) {
+    shopPage += d;
+    if (shopPage < 0) shopPage = 0;
+    openShop();
+}
 
 function setShopTab(cat) {
+    shopPage = 0;
     shopTab = cat;
     openShop();
 }
@@ -4002,7 +4087,14 @@ function openShop() {
         return pair[0] === shopTab && pair[0] !== 'inf' && pair[0] !== 'sweet';
     }).forEach(function (pair) {
         const cat = pair[0];
-        SHOP.filter(function (it) { return it.cat === cat; }).forEach(function (it) {
+        const all = SHOP.filter(function (it) { return it.cat === cat; });
+        const pages = Math.max(1, Math.ceil(all.length / SHOP_PER));
+        if (shopPage >= pages) shopPage = pages - 1;
+        if (pages > 1) {
+            html += `<div class="text-xs font-bold text-gray-600 text-left mb-1">
+                ${all.length}こ / ページ ${shopPage + 1}／${pages}</div>`;
+        }
+        all.slice(shopPage * SHOP_PER, shopPage * SHOP_PER + SHOP_PER).forEach(function (it) {
             const owned = has(it.id);
             let btn;
             if (!owned) {
@@ -4025,6 +4117,13 @@ function openShop() {
                 <div style="width:38%">${btn}</div>
             </div>`;
         });
+        if (pages > 1) {
+            html += `<div class="grid grid-cols-3 gap-1 mb-2">
+                <div class="game-btn ${shopPage === 0 ? 'gray disabled' : 'gray'}" onclick="shopGo(-1)">◀ まえ</div>
+                <div class="game-btn green" onclick="shopGo(${pages - 1 - shopPage})">さいご ▶▶</div>
+                <div class="game-btn ${shopPage >= pages - 1 ? 'gray disabled' : 'gray'}" onclick="shopGo(1)">つぎ ▶</div>
+            </div>`;
+        }
         if (cat === 'style') {
             const used = SHOP.filter(function (it) { return it.cat === 'style' && styleUsed(it.id); }).length;
             html += `<div class="text-xs text-gray-500 text-left mb-2">おなじ めんに なんまいでも はれるよ（いま ${used}まい）</div>`;
@@ -4316,6 +4415,7 @@ function getAllItems() {
     if (!state.owned) state.owned = {};
     if (!state.inf) state.inf = {};
     SHOP.forEach(function (it) { state.owned[it.id] = true; });
+    decorDirty();
     state.infAll = true;                          // ふしぎな ものも ぜんぶ
     for (let k = 0; k < 120; k++) state.inf[String(k)] = true;
     state.happy = clamp(state.happy + 20, 0, 100);
@@ -4345,6 +4445,7 @@ function shopReset() {
     hideModal();
     state.owned = {};
     state.worn = {};
+    decorDirty();
     state.theme = {};
     state.inf = {};
     state.infAll = false;
@@ -4360,6 +4461,7 @@ function buyItem(id) {
     if (state.coins < it.cost) { addLog('コインが たりない…'); return; }
     state.coins = big(state.coins) - big(it.cost);
     friendsCopy('🛍');
+    decorDirty();
     state.owned[id] = true;
     if (it.cat === 'wear') state.worn[id] = true;
     if (it.cat === 'style') {
@@ -10018,18 +10120,37 @@ function decorSpot(k, zone) {
     return [x, y];
 }
 
+let decorCache = null;                 // { count, byCat }
+
+function decorDirty() { decorCache = null; }
+
+function decorBuild() {
+    const byCat = {};
+    let n = 0;
+    SHOP.forEach(function (it) {
+        if (!it.deco || !has(it.id)) return;
+        n++;
+        (byCat[it.cat] = byCat[it.cat] || []).push(it);
+    });
+    decorCache = { count: n, byCat: byCat };
+}
+
 function decorCount() {
     if (!state.owned) return 0;
-    let n = 0;
-    SHOP.forEach(function (it) { if (it.deco && has(it.id)) n++; });
-    return n;
+    if (!decorCache) decorBuild();
+    return decorCache.count;
 }
+
+const DECOR_MAX = 60;                  // 1つの へやに かざる かずの じょうげん
 
 function drawDecor(cat) {
     const zone = DECOR_ZONE[cat];
     if (!zone || !state.owned) return;
-    const list = SHOP.filter(function (it) { return it.deco && it.cat === cat && has(it.id); });
+    if (!decorCache) decorBuild();
+    let list = decorCache.byCat[cat] || [];
+    if (cat === 'room') list = list.concat(decorCache.byCat.friend || []);
     if (!list.length) return;
+    if (list.length > DECOR_MAX) list = list.slice(0, DECOR_MAX);   // へやに かざるのは 60こまで
 
     const W = cw(), H = ch(), s = W / 380;
     const size = Math.max(9 * s, Math.min(18 * s, 18 * s * Math.pow(16 / list.length, 0.25)));
