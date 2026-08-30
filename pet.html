@@ -4542,7 +4542,7 @@ function furnShopHtml() {
     return html;
 }
 
-/* ---------------- 🏬 おみせビル（デパート 9 ＋ タワー 19 ＋ ワールドモール 50） ---------------- */
+/* ---------------- 🏬 おみせビル（デパート 9 ＋ タワー 19 ＋ モール 50 ＋ ひろば 3） ---------------- */
 
 const MORE_ATT  = ['', 'ゆめの', 'まほうの', 'でんせつの', 'ひみつの', 'キラキラの', 'にじいろの', 'ミラクルな', 'スーパー', 'ウルトラ'];
 const MORE_SIZE = ['', 'ミニ', 'おおきな', 'とくだいの', 'ちいさな', 'ながい', 'まるい', 'しかくい', 'たかい', 'ひくい'];
@@ -4778,11 +4778,31 @@ const MALL_SHOPS = MALL_WORLDS.map(function (w, k) {
     };
 });
 
+/* 🎉 ひろば（3かい）。3かい × 10^149こ ＝ ちょうど 3×10^149こ の ついかぶん。 */
+
+const FES_SHOPS = [
+    { id: 'gift', tab: '🎁 プレゼント', exp: 149, note: 'あけるのが たのしみな おくりもの！',
+      mat: ['ラッピングの', 'リボンの', 'おおきな', 'ちいさな', 'ひみつの', 'きらきらの', 'てづくりの', 'とくべつな', 'あけたくなる', 'ゆめの'],
+      kind: [{ n: 'プレゼント', e: '🎁' }, { n: 'はこ', e: '📦' }, { n: 'カード', e: '💌' }, { n: 'ふうとう', e: '✉️' }, { n: 'ふくろ', e: '🛍' },
+             { n: 'リボン', e: '🎀' }, { n: 'おてがみ', e: '📩' }, { n: 'くつした', e: '🧦' }, { n: 'ツリー', e: '🎄' }, { n: 'ケーキ', e: '🎂' }] },
+    { id: 'party', tab: '🎈 パーティー', exp: 149, note: 'みんなで もりあがる どうぐ！',
+      mat: ['たのしい', 'にぎやかな', 'カラフルな', 'ぴかぴかの', 'おおきな', 'ちいさな', 'ふわふわの', 'おとの でる', 'ひかる', 'まほうの'],
+      kind: [{ n: 'ふうせん', e: '🎈' }, { n: 'クラッカー', e: '🎉' }, { n: 'かみふぶき', e: '🎊' }, { n: 'パーティーぼうし', e: '🥳' }, { n: 'ジュース', e: '🥤' },
+             { n: 'ケーキ', e: '🍰' }, { n: 'おかし', e: '🍬' }, { n: 'おんがく', e: '🎵' }, { n: 'ダンス', e: '💃' }, { n: 'ゲーム', e: '🎮' }] },
+    { id: 'cheer', tab: '🎊 おいわい', exp: 149, note: 'おめでとうの きもちを かたちに！',
+      mat: ['おめでとうの', 'キラキラの', 'はなやかな', 'あたたかい', 'せかいいちの', 'とくべつな', 'おおきな', 'ちいさな', 'ひかる', 'でんせつの'],
+      kind: [{ n: 'はなたば', e: '💐' }, { n: 'はなび', e: '🎆' }, { n: 'メダル', e: '🏅' }, { n: 'トロフィー', e: '🏆' }, { n: 'かんむり', e: '👑' },
+             { n: 'ケーキ', e: '🎂' }, { n: 'かんぱい', e: '🥂' }, { n: 'リボン', e: '🎗' }, { n: 'はた', e: '🎌' }, { n: 'ハート', e: '💖' }] }
+];
+
 const MORE_BLD = [
     { id: 'dept',  tab: '🌈 デパート',  title: 'もっともっとデパート',           floors: MORE_SHOPS },
     { id: 'tower', tab: '🗼 タワー',    title: 'もっともっともっとタワー',       floors: TOWER_SHOPS },
-    { id: 'mall',  tab: '🌍 ワールドモール', title: 'もっともっともっともっとワールドモール', floors: MALL_SHOPS }
+    { id: 'mall',  tab: '🌍 ワールドモール', title: 'もっともっともっともっとワールドモール', floors: MALL_SHOPS },
+    { id: 'fes',   tab: '🎉 ひろば',      title: 'ついかの 3×10^149こ ひろば',    floors: FES_SHOPS }
 ];
+// ひろばは 3かい × 10^149こ ＝ ちょうど 3×10^149こ
+const FES_TOTAL_TEXT = `3.00×10^149（150けた）`;
 
 const MORE_PER = 8;
 const MORE_FLOORS = MORE_BLD.reduce(function (a, b) { return a.concat(b.floors); }, []);
@@ -4974,12 +4994,13 @@ function moreShopHtml() {
     const bld = moreBldCur();
     const sh = moreCur();
     let html = `<div class="text-left text-xs mb-2" style="background:#ffe4e6;border-radius:10px;padding:8px;line-height:1.6">
-        🏬 <b>おみせビル</b>は 3とう だて（ぜんぶで ${MORE_FLOORS.length}かい）。
+        🏬 <b>おみせビル</b>は 4とう だて（ぜんぶで ${MORE_FLOORS.length}かい）。
         しなものは ${MORE_TOTAL_TEXT}こ！<br>
+        🎉 ひろばは あとから ふえた ${FES_TOTAL_TEXT}こ ぶんだよ。<br>
         いきたい たてものと かいを えらんでね。
         ${state.moreAll ? '<br><b>いまは ぜんぶ もっているよ。</b>' : ''}
     </div>
-    <div class="grid grid-cols-3 gap-1 mb-2">`;
+    <div class="grid grid-cols-2 gap-1 mb-2">`;
     MORE_BLD.forEach(function (b, k) {
         html += `<div class="game-btn ${moreBld === k ? '' : 'gray'}" onclick="setMoreBld(${k})">
             <div style="font-size:0.76em">${b.tab}</div>
@@ -5042,7 +5063,7 @@ function confirmGetAll() {
             （まだ もっていないのは ${left}ひん）<br>
             🎲 むげんショップの <b>${coinText(INF_TOTAL)}こ</b>も ぜんぶ ついてくる！<br>
             🪑 かぐやさんの <b>${coinText(FURN_TOTAL)}こ</b>も ぜんぶ ついてくる！<br>
-            🏬 おみせビル 78かい ぶんの <b>${MORE_TOTAL_TEXT}こ</b>も ぜんぶ ついてくる！<br>
+            🏬 おみせビル 81かい ぶんの <b>${MORE_TOTAL_TEXT}こ</b>も ぜんぶ ついてくる！<br>
             コインは へらないよ。
         </div>
         <div class="game-btn pink mb-2" onclick="getAllItems()">🎁 ぜんぶ もらう！</div>
