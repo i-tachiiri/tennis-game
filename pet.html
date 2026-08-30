@@ -1965,7 +1965,8 @@ const SHOP_CAT = [
     ['style', '🎨 もようがえ'],
     ['inf', '🎲 ふしぎ'],
     ['sweet', '🍬 おかし'],
-    ['furn', '🪑 かぐ']
+    ['furn', '🪑 かぐ'],
+    ['more', '🌈 デパート']
 ];
 
 let state = null;
@@ -2209,7 +2210,7 @@ function newState() {
         sleeping: false, sick: false, sickTimer: 0,
         poops: [], poopTimer: 90, postTimer: 180, robotTimer: 45, chatTimer: 20, jobs: 0,
         helps: 0, lastTalk: 0, savings: 0n, bankTimer: 180, bankAcct: 0n, acctTimer: 180, bankLog: [],
-        friends: {}, roomies: {}, invites: {}, inf: {}, infAll: false, furn: {}, furnAll: false,
+        friends: {}, roomies: {}, invites: {}, inf: {}, infAll: false, furn: {}, furnAll: false, more: {}, moreAll: false,
         stats: { earned: 0n, acts: 0, meds: 0, sick: 0, meals: 0, plays: 0, baths: 0, talks: 0, orders: 0, interest: 0n, sweets: 0 },
         view: 'out',
         owned: {},
@@ -2221,13 +2222,21 @@ function newState() {
     };
 }
 
+let saveWarned = false;
+
 function save() {
     try {
         state.lastTick = now();
         localStorage.setItem(SAVE_KEY, JSON.stringify(state, function (k, v) {
             return typeof v === 'bigint' ? v.toString() + 'n' : v;   // BigInt は もじで のこす
         }));
-    } catch (e) { /* 保存できない環境でも遊べるようにする */ }
+    } catch (e) {
+        // ほぞんばしょが いっぱい（とても ながい ばんごうを たくさん かったとき など）
+        if (!saveWarned) {
+            saveWarned = true;
+            addLog('⚠ セーブの ばしょが いっぱいみたい。🔁「また かえるように する」で すこし かるくできるよ。');
+        }
+    }
 }
 
 // 「123n」の かたちを かずに もどす
@@ -2274,6 +2283,8 @@ function load() {
         if (typeof s.infAll !== 'boolean') s.infAll = false;
         if (!s.furn) s.furn = {};                                 // かぐやさんの もちもの
         if (typeof s.furnAll !== 'boolean') s.furnAll = false;
+        if (!s.more) s.more = {};                                 // もっともっとデパートの もちもの
+        if (typeof s.moreAll !== 'boolean') s.moreAll = false;
         // おかねは BigInt に もどす（ふるい セーブの すうじも そのまま つかえる）
         ['coins', 'savings', 'bankAcct'].forEach(function (k) { s[k] = big(strip(s[k])); });
         ['earned', 'interest'].forEach(function (k) { s.stats[k] = big(strip(s.stats[k])); });
@@ -4055,7 +4066,7 @@ function setShopTab(cat) {
 
 function openShop() {
     goPlace('shop');                                  // おみせまで あるいて いく
-    const allMine = state.infAll && state.furnAll && SHOP.every(function (it) { return has(it.id); });
+    const allMine = state.infAll && state.furnAll && state.moreAll && SHOP.every(function (it) { return has(it.id); });
     let html = `<div class="font-bold text-lg mb-1">🛒 ショップ</div>
         <div class="text-sm font-bold text-amber-700 mb-2">もっているコイン ${coinText(state.coins)}🪙</div>
         <div class="game-btn ${allMine ? 'gray disabled' : 'pink'} mb-2"
@@ -4065,6 +4076,12 @@ function openShop() {
         <div class="grid grid-cols-3 gap-1 mb-3">`;
     SHOP_CAT.forEach(function (pair) {
         const cat = pair[0];
+        if (cat === 'more') {
+            html += `<div class="game-btn ${shopTab === cat ? '' : 'gray'}" onclick="setShopTab('${cat}')">
+                <div style="font-size:0.8em">${pair[1]}</div>
+                <div style="font-size:0.72em">${state.moreAll ? 'ぜんぶ' : moreCount() + 'こ'}</div></div>`;
+            return;
+        }
         if (cat === 'furn') {
             html += `<div class="game-btn ${shopTab === cat ? '' : 'gray'}" onclick="setShopTab('${cat}')">
                 <div style="font-size:0.8em">${pair[1]}</div>
@@ -4093,8 +4110,9 @@ function openShop() {
     if (shopTab === 'inf') html += infShopHtml();
     if (shopTab === 'sweet') html += sweetShopHtml();
     if (shopTab === 'furn') html += furnShopHtml();
+    if (shopTab === 'more') html += moreShopHtml();
     SHOP_CAT.filter(function (pair) {
-        return pair[0] === shopTab && pair[0] !== 'inf' && pair[0] !== 'sweet' && pair[0] !== 'furn';
+        return pair[0] === shopTab && pair[0] !== 'inf' && pair[0] !== 'sweet' && pair[0] !== 'furn' && pair[0] !== 'more';
     }).forEach(function (pair) {
         const cat = pair[0];
         const all = SHOP.filter(function (it) { return it.cat === cat; });
@@ -4518,6 +4536,220 @@ function furnShopHtml() {
     return html;
 }
 
+/* ---------------- 🌈 もっともっとデパート（9かい だて） ---------------- */
+
+const MORE_ATT  = ['', 'ゆめの', 'まほうの', 'でんせつの', 'ひみつの', 'キラキラの', 'にじいろの', 'ミラクルな', 'スーパー', 'ウルトラ'];
+const MORE_SIZE = ['', 'ミニ', 'おおきな', 'とくだいの', 'ちいさな', 'ながい', 'まるい', 'しかくい', 'たかい', 'ひくい'];
+const MORE_COL  = ['あかい', 'あおい', 'きいろい', 'みどりの', 'しろい', 'くろい', 'ピンクの', 'むらさきの', 'オレンジの', 'みずいろの'];
+const MORE_PAT  = ['', 'みずたまの', 'しましまの', 'はなもようの', 'ほしがらの', 'チェックの', 'にじいろの', 'ハートの', 'くもがらの', 'キラキラの'];
+
+const MORE_SHOPS = [
+    {
+        id: 'car', tab: '🚗 のりもの', total: 10n ** 12n, note: 'のって おでかけ できる のりものが いっぱい！',
+        mat: ['てつの', '木の', 'ガラスの', 'きんの', 'ぎんの', 'プラスチックの', 'ゴムの', 'いしの', 'ダイヤの', 'くもの'],
+        kind: [{ n: 'くるま', e: '🚗' }, { n: 'バス', e: '🚌' }, { n: 'でんしゃ', e: '🚃' }, { n: 'ひこうき', e: '✈️' }, { n: 'ふね', e: '⛵' },
+               { n: 'じてんしゃ', e: '🚲' }, { n: 'ロケット', e: '🚀' }, { n: 'ヘリコプター', e: '🚁' }, { n: 'きかんしゃ', e: '🚂' }, { n: 'きゅうきゅうしゃ', e: '🚑' }]
+    },
+    {
+        id: 'cloth', tab: '🎽 ふく', total: 10n ** 13n, note: 'みんなで きられる ふくと こもの！',
+        mat: ['ぬのの', 'けいとの', 'シルクの', 'デニムの', 'レースの', 'もこもこの', 'うすでの', 'あつでの', 'ぴかぴかの', 'ふわふわの'],
+        kind: [{ n: 'ぼうし', e: '🎩' }, { n: 'ティーシャツ', e: '👕' }, { n: 'ズボン', e: '👖' }, { n: 'ドレス', e: '👗' }, { n: 'くつ', e: '👟' },
+               { n: 'マフラー', e: '🧣' }, { n: 'てぶくろ', e: '🧤' }, { n: 'リボン', e: '🎀' }, { n: 'めがね', e: '👓' }, { n: 'かばん', e: '🎒' }]
+    },
+    {
+        id: 'meal', tab: '🍱 ごはん', total: 10n ** 14n, note: 'せかいじゅうの ごはんが そろってる！',
+        mat: ['あつあつの', 'ひやひやの', 'とろとろの', 'さくさくの', 'ふんわりの', 'こんがりの', 'もちもちの', 'ぷりぷりの', 'あまい', 'しょっぱい'],
+        kind: [{ n: 'おべんとう', e: '🍱' }, { n: 'カレー', e: '🍛' }, { n: 'ラーメン', e: '🍜' }, { n: 'おにぎり', e: '🍙' }, { n: 'ハンバーガー', e: '🍔' },
+               { n: 'ピザ', e: '🍕' }, { n: 'サンドイッチ', e: '🥪' }, { n: 'スープ', e: '🍲' }, { n: 'パン', e: '🍞' }, { n: 'サラダ', e: '🥗' }]
+    },
+    {
+        id: 'toy', tab: '🎮 おもちゃ', total: 10n ** 15n, note: 'あそべる おもちゃが やまほど！',
+        mat: ['プラスチックの', '木の', 'ぬいぐるみの', 'でんきの', 'ゼンマイの', 'まほうの', 'ちいさな', 'おおきな', 'ひかる', 'おとの でる'],
+        kind: [{ n: 'ボール', e: '⚽' }, { n: 'ロボット', e: '🤖' }, { n: 'つみき', e: '🧱' }, { n: 'パズル', e: '🧩' }, { n: 'ぬいぐるみ', e: '🧸' },
+               { n: 'カード', e: '🃏' }, { n: 'ヨーヨー', e: '🪀' }, { n: 'たこ', e: '🪁' }, { n: 'まと', e: '🎯' }, { n: 'ゲームき', e: '🎮' }]
+    },
+    {
+        id: 'flower', tab: '🌺 おはな', total: 10n ** 16n, note: 'おうちが はなでいっぱいに なるよ！',
+        mat: ['はちうえの', 'たばの', 'いっぽんの', 'かごの', 'ドライの', 'みずさいばいの', 'たねの', 'つぼみの', 'まんかいの', 'かおりの'],
+        kind: [{ n: 'バラ', e: '🌹' }, { n: 'チューリップ', e: '🌷' }, { n: 'ひまわり', e: '🌻' }, { n: 'さくら', e: '🌸' }, { n: 'クローバー', e: '🍀' },
+               { n: 'サボテン', e: '🌵' }, { n: 'きのこ', e: '🍄' }, { n: 'もみじ', e: '🍁' }, { n: 'ハイビスカス', e: '🌺' }, { n: 'もみのき', e: '🎄' }]
+    },
+    {
+        id: 'art', tab: '🖼 かざり', total: 10n ** 17n, note: 'かべや たなに かざる ものたち！',
+        mat: ['がくの', 'しゃしんの', 'ししゅうの', 'ステンドの', 'ねんどの', 'おりがみの', 'けしごむの', 'ガラスの', 'ひかる', 'うごく'],
+        kind: [{ n: 'え', e: '🖼' }, { n: 'ちょうこく', e: '🗿' }, { n: 'ポスター', e: '📜' }, { n: 'かがみ', e: '🪞' }, { n: 'カレンダー', e: '📅' },
+               { n: 'ちきゅうぎ', e: '🌍' }, { n: 'おめん', e: '🎭' }, { n: 'ふうせん', e: '🎈' }, { n: 'かざり', e: '🎍' }, { n: 'かんばん', e: '🪧' }]
+    },
+    {
+        id: 'music', tab: '🎵 がっき', total: 10n ** 18n, note: 'ならすと みんなが おどりだす！',
+        mat: ['木の', 'きんぞくの', 'たけの', 'ガラスの', 'でんきの', 'ミニサイズの', 'おおきめの', 'きらきらの', 'ふるい', 'あたらしい'],
+        kind: [{ n: 'ピアノ', e: '🎹' }, { n: 'ギター', e: '🎸' }, { n: 'たいこ', e: '🥁' }, { n: 'ラッパ', e: '🎺' }, { n: 'バイオリン', e: '🎻' },
+               { n: 'サックス', e: '🎷' }, { n: 'マイク', e: '🎤' }, { n: 'ベル', e: '🔔' }, { n: 'アコーディオン', e: '🪗' }, { n: 'ふえ', e: '🪈' }]
+    },
+    {
+        id: 'gem', tab: '💎 ほうせき', total: 10n ** 19n, note: 'ぴかぴかの たからものコーナー！',
+        mat: ['すきとおった', 'くもった', 'ひかる', 'おおつぶの', 'こつぶの', 'まほうの', 'ふるい', 'あたらしい', 'あたたかい', 'つめたい'],
+        kind: [{ n: 'ダイヤ', e: '💎' }, { n: 'ゆびわ', e: '💍' }, { n: 'かんむり', e: '👑' }, { n: 'メダル', e: '🏅' }, { n: 'トロフィー', e: '🏆' },
+               { n: 'コイン', e: '🪙' }, { n: 'たからばこ', e: '💰' }, { n: 'すいしょう', e: '🔮' }, { n: 'ほし', e: '⭐' }, { n: 'ハート', e: '💖' }]
+    },
+    {
+        id: 'space', tab: '🌌 うちゅう', total: 10n ** 10000n, note: 'いちばん うえの かい。かずが とんでもない！',
+        mat: ['ほしの', 'つきの', 'たいようの', 'ぎんがの', 'ブラックホールの', 'うちゅうせんの', 'いんせきの', 'オーロラの', 'ゆめの', 'じかんの'],
+        kind: [{ n: 'ほし', e: '🌟' }, { n: 'わくせい', e: '🪐' }, { n: 'つき', e: '🌙' }, { n: 'たいよう', e: '☀' }, { n: 'ロケット', e: '🚀' },
+               { n: 'うちゅうじん', e: '👽' }, { n: 'ぎんが', e: '🌌' }, { n: 'ながれぼし', e: '☄' }, { n: 'ユーフォー', e: '🛸' }, { n: 'うちゅうふく', e: '🧑‍🚀' }]
+    }
+];
+
+const MORE_PER = 8n;
+const MORE_TOTAL = MORE_SHOPS.reduce(function (a, s) { return a + s.total; }, 0n);
+const MORE_TOTAL_TEXT = coinText(MORE_TOTAL);
+
+// ボタンに おさまる みじかい かず（「1.00×10^10000（10001けた）」→「10^10000」）
+function moreShort(n) {
+    const t = coinText(n);
+    const m = t.match(/^([\d.]+)×10\^(\d+)/);
+    return m ? (m[1] === '1.00' ? '10^' + m[2] : m[1] + '×10^' + m[2]) : t;
+}
+
+function moDigit(i, place) { return Number((i / (10n ** BigInt(place))) % 10n); }
+
+function moreName(sh, i) {
+    return MORE_ATT[moDigit(i, 5)] + MORE_SIZE[moDigit(i, 4)] + sh.mat[moDigit(i, 3)]
+         + MORE_COL[moDigit(i, 2)] + MORE_PAT[moDigit(i, 1)] + sh.kind[moDigit(i, 0)].n;
+}
+function moreEmoji(sh, i) { return sh.kind[moDigit(i, 0)].e; }
+function moreCost(i) { return 100 + Number(i % 9901n); }
+
+function moreBag(id) {
+    if (!state.more) state.more = {};
+    if (!state.more[id]) state.more[id] = {};
+    return state.more[id];
+}
+function moreOwned(sh, i) { return !!state.moreAll || !!moreBag(sh.id)[i.toString()]; }
+function moreHave(sh) { return state.moreAll ? coinText(sh.total) : String(Object.keys(moreBag(sh.id)).length); }
+function moreCount() {
+    if (state.moreAll) return MORE_SHOPS.length * 200;
+    if (!state.more) return 0;
+    let n = 0;
+    MORE_SHOPS.forEach(function (sh) { n += Object.keys(moreBag(sh.id)).length; });
+    return n;
+}
+
+let moreShop = 0;                      // いま みている かい（0〜8）
+let morePage = 0n;
+let moreDraft = '';
+
+function moreCur() { return MORE_SHOPS[moreShop]; }
+
+function setMoreShop(k) {
+    moreShop = k;
+    morePage = 0n;
+    moreDraft = '';
+    openShop();
+}
+
+function setMoreDraft(v) { moreDraft = v; }
+
+function moGo(dir) {
+    const last = moreCur().total / MORE_PER - 1n;
+    morePage += BigInt(dir);
+    if (morePage < 0n) morePage = 0n;
+    if (morePage > last) morePage = last;
+    openShop();
+}
+
+function moJump() {
+    const box = el('mo-input');
+    const raw = (box ? box.value : moreDraft).replace(/[^0-9]/g, '').replace(/^0+/, '');
+    if (!raw) { addLog('ばんごうを いれてね（れい: 12345）'); return; }
+    let n = BigInt(raw);
+    const total = moreCur().total;
+    if (n >= total) n = total - 1n;
+    moreDraft = '';
+    morePage = n / MORE_PER;
+    openShop();
+}
+
+function moRandom() {
+    const digits = moreCur().total.toString().length - 1;      // 10^k なので k けた まで
+    let d = String(1 + Math.floor(Math.random() * 9));
+    for (let k = 1; k < digits; k++) d += Math.floor(Math.random() * 10);
+    morePage = BigInt(d) / MORE_PER;
+    openShop();
+}
+
+// ページの なかの k ばんめを かう（ばんごうが ながくても だいじょうぶ）
+function buyMoreAt(k) {
+    const sh = moreCur();
+    const i = morePage * MORE_PER + BigInt(k);
+    if (i >= sh.total || moreOwned(sh, i)) return;
+    const cost = big(moreCost(i));
+    if (state.coins < cost) { addLog('コインが たりない…'); return; }
+    state.coins = big(state.coins) - cost;
+    moreBag(sh.id)[i.toString()] = true;
+    decorDirty();
+    burst('star', 6);
+    addLog(`${moreEmoji(sh, i)} ${moreName(sh, i)} を かった！ おうちに ふえたよ。`);
+    robotSay('いい かいものだね！');
+    friendsCopy(moreEmoji(sh, i));
+    save();
+    openShop();
+}
+
+function moreShopHtml() {
+    const sh = moreCur();
+    let html = `<div class="text-left text-xs mb-2" style="background:#ffe4e6;border-radius:10px;padding:8px;line-height:1.6">
+        🌈 <b>もっともっとデパート</b>は 9かい だて！ ぜんぶで ${MORE_TOTAL_TEXT}こ の しなものが あるよ。<br>
+        いきたい かいを えらんでね。
+        ${state.moreAll ? '<br><b>いまは ぜんぶ もっているよ。</b>' : ''}
+    </div>
+    <div class="grid grid-cols-3 gap-1 mb-2">`;
+    MORE_SHOPS.forEach(function (s, k) {
+        html += `<div class="game-btn ${moreShop === k ? '' : 'gray'}" onclick="setMoreShop(${k})">
+            <div style="font-size:0.78em">${k + 1}かい</div>
+            <div style="font-size:0.72em">${s.tab}</div>
+            <div style="font-size:0.68em">${moreShort(s.total)}</div></div>`;
+    });
+    html += `</div>
+    <div class="text-left text-xs mb-2" style="background:#fef3c7;border-radius:10px;padding:8px;line-height:1.6">
+        <b>${moreShop + 1}かい ${sh.tab}</b>（${coinText(sh.total)}こ）<br>${sh.note}
+    </div>
+    <div class="text-xs font-bold text-gray-600 text-left mb-1">ページ ${coinText(morePage + 1n)}</div>`;
+
+    const start = morePage * MORE_PER;
+    for (let k = 0n; k < MORE_PER; k++) {
+        const i = start + k;
+        if (i >= sh.total) break;
+        const owned = moreOwned(sh, i);
+        const cost = moreCost(i);
+        const poor = state.coins < big(cost);
+        const num = i.toString();
+        const btn = owned
+            ? `<div class="game-btn gray disabled">おうちに あるよ</div>`
+            : `<div class="game-btn ${poor ? 'disabled' : ''}" onclick="buyMoreAt(${k})">${cost}🪙 で かう</div>`;
+        html += `<div class="flex items-center gap-2 mb-2">
+            <div class="text-left text-sm" style="flex:1">
+                <div class="font-bold">${moreEmoji(sh, i)} ${moreName(sh, i)}</div>
+                <div class="text-xs text-gray-500">No.${num.length > 24 ? num.slice(0, 24) + '…' : num}</div>
+            </div>
+            <div style="width:38%">${btn}</div>
+        </div>`;
+    }
+    html += `<div class="grid grid-cols-3 gap-1 mb-2">
+        <div class="game-btn gray" onclick="moGo(-1)">◀ まえ</div>
+        <div class="game-btn green" onclick="moRandom()">🎲 ランダム</div>
+        <div class="game-btn gray" onclick="moGo(1)">つぎ ▶</div>
+    </div>
+    <div class="text-xs font-bold text-gray-600 text-left mb-1">すきな ばんごうへ（0〜${coinText(sh.total - 1n)}）</div>
+    <input id="mo-input" value="${escAttr(moreDraft)}" placeholder="れい: 1234567890" inputmode="numeric"
+        oninput="setMoreDraft(this.value)" onkeydown="if(event.key==='Enter'){moJump();}"
+        style="width:100%;box-sizing:border-box;font-family:inherit;font-size:0.95rem;padding:9px 10px;
+               border:3px solid #78350f;border-radius:12px;background:#fff;margin-bottom:6px">
+    <div class="game-btn mb-2" onclick="moJump()">🔎 その ばんごうへ</div>
+    <div class="text-xs text-gray-500 text-left mb-2">この かいで もっているの ${moreHave(sh)}こ ／ デパートぜんぶで ${state.moreAll ? MORE_TOTAL_TEXT : moreCount()}こ</div>`;
+    return html;
+}
+
 /* ---------------- ぜんぶ もらう ---------------- */
 
 function confirmGetAll() {
@@ -4529,6 +4761,7 @@ function confirmGetAll() {
             （まだ もっていないのは ${left}ひん）<br>
             🎲 むげんショップの <b>${coinText(INF_TOTAL)}こ</b>も ぜんぶ ついてくる！<br>
             🪑 かぐやさんの <b>${coinText(FURN_TOTAL)}こ</b>も ぜんぶ ついてくる！<br>
+            🌈 デパート 9かい ぶんの <b>${MORE_TOTAL_TEXT}こ</b>も ぜんぶ ついてくる！<br>
             コインは へらないよ。
         </div>
         <div class="game-btn pink mb-2" onclick="getAllItems()">🎁 ぜんぶ もらう！</div>
@@ -4545,9 +4778,10 @@ function getAllItems() {
     state.infAll = true;                          // ふしぎな ものも ぜんぶ
     for (let k = 0; k < 120; k++) state.inf[String(k)] = true;
     state.furnAll = true;                         // かぐも ぜんぶ
+    state.moreAll = true;                         // デパートも ぜんぶ
     state.happy = clamp(state.happy + 20, 0, 100);
     burst('star', 20);
-    addLog(`🎁 ショップの ${SHOP.length}ひんと ふしぎな もの ${coinText(INF_TOTAL)}こ、かぐ ${coinText(FURN_TOTAL)}こを ぜんぶ てに いれた！`);
+    addLog(`🎁 ショップの ${SHOP.length}ひんと ふしぎな もの ${coinText(INF_TOTAL)}こ、かぐ ${coinText(FURN_TOTAL)}こ、デパート ${MORE_TOTAL_TEXT}こを ぜんぶ てに いれた！`);
     robotSay('わあ！ ぜんぶ そろったね！', 6);
     save();
     openShop();
@@ -4578,6 +4812,8 @@ function shopReset() {
     state.infAll = false;
     state.furn = {};
     state.furnAll = false;
+    state.more = {};
+    state.moreAll = false;
     addLog('🔁 しなものを ぜんぶ てばなした。また ショップで かえるよ！');
     robotSay('また かいものが たのしめるね！');
     save();
@@ -4925,6 +5161,7 @@ function openReport() {
             🎲 ふしぎな もの ${infHave()}こ（ぜんぶで ${coinText(INF_TOTAL)}こ）<br>
             🍬 たべた おかし ${st.sweets || 0}こ（おみせには ${coinText(SWEET_TOTAL)}こ）<br>
             🪑 かぐ ${furnHave()}こ（おみせには ${coinText(FURN_TOTAL)}こ）<br>
+            🌈 デパート ${state.moreAll ? MORE_TOTAL_TEXT : moreCount()}こ（おみせには ${MORE_TOTAL_TEXT}こ）<br>
             🛒 もちもの ${ownedCount}／${SHOP.length}（みにつけ ${wornCount}）<br>
             🎪 できる あそび ${actCount}／${ACTIVITIES.length}
         </div>
@@ -10274,6 +10511,22 @@ function decorBuild() {
         n += keys.length;
         keys.slice(0, DECOR_MAX).forEach(function (k) {
             try { furn.push({ deco: furnEmoji(BigInt(k)), cat: 'room' }); } catch (e) { /* こわれた キーは むし */ }
+        });
+    }
+    // 🌈 デパートで かった ものも おうちに ならぶ
+    if (state.moreAll) {
+        n += DECOR_MAX;
+        for (let k = 0; k < DECOR_MAX; k++) {
+            const sh = MORE_SHOPS[k % MORE_SHOPS.length];
+            furn.push({ deco: sh.kind[k % sh.kind.length].e, cat: 'room' });
+        }
+    } else if (state.more) {
+        MORE_SHOPS.forEach(function (sh) {
+            const keys = Object.keys(state.more[sh.id] || {});
+            n += keys.length;
+            keys.slice(0, 12).forEach(function (k) {
+                try { furn.push({ deco: moreEmoji(sh, BigInt(k)), cat: 'room' }); } catch (e) { /* こわれた キーは むし */ }
+            });
         });
     }
     decorCache = { count: n, byCat: byCat };
