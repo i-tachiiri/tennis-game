@@ -4228,10 +4228,14 @@ function swRandom() {
 // かって そのばで たべる
 function eatSweet(key) {
     const i = BigInt(key);
-    if (busy()) return;
+    if (state.stage === 'egg') { addLog('たまごを タップして あたためよう！'); return; }
     const cost = big(sweetCost(i));
     if (state.coins < cost) { addLog('コインが たりない…'); return; }
-    if (state.hunger > 96) { addLog(`${state.name}「おなか いっぱいだよ〜」`); return; }
+    if (state.sleeping) {                       // ねていても おかしの においで おきる
+        state.sleeping = false;
+        addLog(`${state.name} は おかしの においで めをさました！`);
+    }
+    // おかしは べつばら！ おなかが いっぱいでも いつでも たべられる
 
     state.coins = big(state.coins) - cost;
     state.hunger = clamp(state.hunger + sweetHunger(i), 0, 100);
@@ -4256,7 +4260,8 @@ function sweetShopHtml() {
     const start = swPage * SW_PER;
     let html = `<div class="text-left text-xs mb-2" style="background:#fce7f3;border-radius:10px;padding:8px;line-height:1.6">
         🍬 <b>おかしやさん</b>には ${coinText(SWEET_TOTAL)}こ の おかしが あるよ！<br>
-        かうと その ばで たべられる。あじも おおきさも ぜんぶ ちがう。
+        かうと その ばで たべられる。あじも おおきさも ぜんぶ ちがう。<br>
+        <b>おなかが いっぱいでも、ねていても、いつでも たべられる</b>（べつばら！）
     </div>
     <div class="text-xs font-bold text-gray-600 text-left mb-1">ページ ${coinText(swPage + 1n)}</div>`;
     for (let k = 0n; k < SW_PER; k++) {
