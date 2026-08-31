@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ミニトマトを そだてよう</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap">
 <style>
 :root {
     --ground: #f3faf0;
@@ -69,7 +69,8 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
 
 /* たねを うえた あとに でる せつめいしょ ボタン */
 .seed-doc {
-    display: flex; align-items: center; gap: .7rem;
+    display: flex; align-items: center; gap: .7rem; width: 100%;
+    text-align: left; font-family: inherit; cursor: pointer;
     padding: .7rem .85rem; border-radius: 18px;
     background: linear-gradient(180deg, #f7fdf3, #e8f6e0);
     border: 2px solid #cfe8c4;
@@ -181,6 +182,7 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
 .doc-link-wrap { margin: 1.1rem 0 0; text-align: center; }
 .doc-link {
     display: inline-block; padding: .5rem 1.1rem; border-radius: 999px;
+    font-family: inherit; cursor: pointer;
     background: #f1f9ec; color: var(--leaf);
     font-size: .78rem; font-weight: 900; text-decoration: none;
     border: 2px solid #d8ecd0;
@@ -277,7 +279,195 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
      78% { opacity: .38; }
     100% { opacity: 0; }
 }
-</style>
+
+/* せつめいしょ シート（ゲームの なかで ひらく） */
+#manual-sheet { position: fixed; inset: 0; z-index: 60; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.manual-bar {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+    padding: .55rem .9rem;
+    background: #d8433a; color: #fff;
+    font-size: .88rem; font-weight: 900;
+    box-shadow: 0 3px 12px rgba(0,0,0,.22);
+}
+.manual-close {
+    border: 0; border-radius: 999px; cursor: pointer; font-family: inherit;
+    background: rgba(255,255,255,.26); color: #fff;
+    font-size: .75rem; font-weight: 900; padding: .35rem .9rem;
+}
+.manual-close:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+#manual-sheet .chapter, #manual-sheet .toc { scroll-margin-top: 3.4rem; }
+
+/* ===== せつめいしょ シートの スタイル（#manual-sheet の なかだけ） ===== */
+#manual-sheet {
+    --ground: #eef7ea;
+    --card: #ffffff;
+    --ink: #22301f;
+    --body: #46543f;
+    --muted: #71806f;
+    --line: #e0eadc;
+    --tomato: #d8433a;
+    --leaf: #45913a;
+    --earth: #8a5a30;
+    --sky: #2f9dd0;
+    --sun: #d9901c;
+    --zone: #cbeec4;
+    --track: #e7ece4;
+    --shadow: 0 6px 20px rgba(34,48,31,.08);
+}
+#manual-sheet * { box-sizing: border-box; }
+#manual-sheet {
+    margin: 0;
+    background: var(--ground);
+    color: var(--body);
+    font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif;
+    font-size: 15px;
+    line-height: 1.85;
+}
+#manual-sheet .page { max-width: 720px; margin: 0 auto; padding: 0 1rem 3rem; }
+#manual-sheet /* ひょうし */
+.cover {
+    margin: 0 -1rem 1.5rem;
+    padding: 2.2rem 1.5rem 1.8rem;
+    background: linear-gradient(160deg, #d8433a 0%, #e9705a 55%, #f0996f 100%);
+    color: #fff;
+    text-align: center;
+}
+#manual-sheet .cover-badge {
+    display: inline-block; margin-bottom: .7rem;
+    padding: .2rem 1rem; border-radius: 999px;
+    background: rgba(255,255,255,.22);
+    font-size: .72rem; font-weight: 900; letter-spacing: .22em;
+}
+#manual-sheet .cover h1 { margin: 0; font-size: 1.9rem; font-weight: 900; line-height: 1.35; text-wrap: balance; }
+#manual-sheet .cover p { margin: .6rem auto 0; max-width: 26em; font-size: .86rem; font-weight: 700; opacity: .95; }
+#manual-sheet .cover-strip { display: flex; justify-content: center; gap: .4rem; margin-top: 1.2rem; }
+#manual-sheet .cover-strip svg { width: 58px; height: 74px; border-radius: 10px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+#manual-sheet /* もくじ */
+.toc { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 1rem 1.2rem; margin-bottom: 1.4rem; }
+#manual-sheet .toc-title { font-size: .74rem; font-weight: 900; letter-spacing: .18em; color: var(--muted); margin-bottom: .5rem; }
+#manual-sheet .toc ol { margin: 0; padding-left: 1.3rem; font-size: .86rem; font-weight: 700; line-height: 1.9; columns: 2; column-gap: 1.4rem; }
+@media (max-width: 520px) {
+#manual-sheet .toc ol { columns: 1; }
+}
+#manual-sheet .toc a { color: var(--body); text-decoration: none; border-bottom: 1px dotted var(--line); }
+#manual-sheet .toc a:hover, #manual-sheet .toc a:focus-visible { color: var(--tomato); border-bottom-color: var(--tomato); }
+#manual-sheet /* しょう */
+.chapter { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); padding: 1.4rem 1.3rem; margin-bottom: 1rem; scroll-margin-top: 1rem; }
+#manual-sheet .chapter h2 {
+    display: flex; align-items: center; gap: .6rem;
+    margin: 0 0 .9rem; font-size: 1.12rem; font-weight: 900; color: var(--ink);
+    text-wrap: balance;
+}
+#manual-sheet .num {
+    flex: none; width: 1.85rem; height: 1.85rem; border-radius: 50%;
+    background: var(--tomato); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; font-weight: 900; font-variant-numeric: tabular-nums;
+}
+#manual-sheet .chapter p { margin: 0 0 .7rem; font-size: .9rem; font-weight: 500; }
+#manual-sheet .chapter p:last-child { margin-bottom: 0; }
+#manual-sheet b, #manual-sheet strong { color: var(--ink); font-weight: 900; }
+#manual-sheet /* がめんの みかた */
+.screen-map { display: grid; grid-template-columns: 190px 1fr; gap: 1.1rem; align-items: start; }
+@media (max-width: 560px) {
+#manual-sheet .screen-map { grid-template-columns: 1fr; }
+}
+#manual-sheet .mock { border: 3px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--ground); }
+#manual-sheet .mock-row { display: flex; align-items: center; gap: .4rem; padding: .35rem .4rem; border-bottom: 1px dashed var(--line); }
+#manual-sheet .mock-row:last-child { border-bottom: 0; }
+#manual-sheet .mock-bar { flex: 1; border-radius: 6px; font-size: .58rem; font-weight: 900; color: #fff; padding: .25rem .4rem; text-align: center; }
+#manual-sheet .badge {
+    flex: none; width: 1.15rem; height: 1.15rem; border-radius: 50%;
+    background: var(--ink); color: #fff; font-size: .6rem; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    font-variant-numeric: tabular-nums;
+}
+#manual-sheet .mock-plant { background: #cdeaf8; text-align: center; padding: .2rem; }
+#manual-sheet .mock-plant svg { width: 70px; height: 88px; }
+#manual-sheet .mock-mini { display: flex; gap: .2rem; flex: 1; }
+#manual-sheet .mock-mini span { flex: 1; height: 1.5rem; border-radius: 5px; background: #fff; border: 1px solid var(--line); }
+#manual-sheet .map-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+#manual-sheet .map-list li { display: flex; gap: .5rem; font-size: .84rem; font-weight: 700; line-height: 1.6; }
+#manual-sheet .map-list .badge { margin-top: .18rem; }
+#manual-sheet /* そうさ */
+.ops { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .7rem; }
+#manual-sheet .op { display: flex; gap: .7rem; padding: .8rem .9rem; border-radius: 14px; background: #f7fbf5; border: 2px solid var(--line); }
+#manual-sheet .op-icon { flex: none; font-size: 1.5rem; line-height: 1.3; }
+#manual-sheet .op-name { font-size: .9rem; font-weight: 900; color: var(--ink); }
+#manual-sheet .op-text { font-size: .8rem; font-weight: 500; line-height: 1.6; }
+#manual-sheet /* メーター */
+.meter-doc { display: flex; flex-direction: column; gap: .9rem; }
+#manual-sheet .meter-doc-row { display: grid; grid-template-columns: 6.2rem 1fr; gap: .8rem; align-items: center; }
+@media (max-width: 560px) {
+#manual-sheet .meter-doc-row { grid-template-columns: 1fr; gap: .3rem; }
+}
+#manual-sheet .meter-doc-name { font-size: .86rem; font-weight: 900; }
+#manual-sheet .meter-doc-name.water { color: var(--sky); }
+#manual-sheet .meter-doc-name.sun { color: var(--sun); }
+#manual-sheet .meter-doc-name.nut { color: var(--earth); }
+#manual-sheet .meter-doc-name.life { color: #2f8f66; }
+#manual-sheet .zonebar { height: 12px; border-radius: 999px; margin-bottom: .3rem; }
+#manual-sheet .zonebar.w { background: linear-gradient(90deg, var(--track) 0 29%, var(--zone) 29% 73%, var(--track) 73%); }
+#manual-sheet .zonebar.s { background: linear-gradient(90deg, var(--track) 0 40%, var(--zone) 40% 88%, var(--track) 88%); }
+#manual-sheet .zonebar.n { background: linear-gradient(90deg, var(--track) 0 23%, var(--zone) 23% 73%, var(--track) 73%); }
+#manual-sheet .zonebar.l { background: #46c08a; }
+#manual-sheet .meter-doc-text { font-size: .8rem; font-weight: 500; line-height: 1.6; }
+#manual-sheet /* せいちょう */
+.stages { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: .6rem; }
+#manual-sheet .stage-fig { text-align: center; }
+#manual-sheet .stage-fig svg { width: 100%; height: auto; border-radius: 12px; background: #cdeaf8; display: block; }
+#manual-sheet .stage-fig .sway { animation: none; }
+#manual-sheet .stage-name { margin-top: .3rem; font-size: .78rem; font-weight: 900; color: var(--ink); }
+#manual-sheet .stage-pct { font-size: .68rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+#manual-sheet /* ちゅうい */
+.warns { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .7rem; }
+#manual-sheet .warn { padding: .8rem .9rem; border-radius: 14px; background: #fff8ec; border-left: 5px solid var(--sun); }
+#manual-sheet .warn b { display: block; font-size: .86rem; margin-bottom: .15rem; }
+#manual-sheet .warn span { font-size: .8rem; font-weight: 500; line-height: 1.6; }
+#manual-sheet .warn.bad { background: #fdf0ee; border-left-color: var(--tomato); }
+#manual-sheet /* コツ */
+.steps { list-style: none; counter-reset: st; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+#manual-sheet .steps li { counter-increment: st; display: flex; gap: .6rem; font-size: .86rem; font-weight: 500; line-height: 1.65; }
+#manual-sheet .steps li::before {
+    content: counter(st); flex: none;
+    width: 1.5rem; height: 1.5rem; margin-top: .15rem; border-radius: 50%;
+    background: var(--leaf); color: #fff; font-size: .74rem; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+}
+#manual-sheet .brix { width: 100%; border-collapse: collapse; margin-top: .9rem; font-size: .82rem; }
+#manual-sheet .brix th, #manual-sheet .brix td { padding: .45rem .6rem; border-bottom: 1px solid var(--line); text-align: left; }
+#manual-sheet .brix th { font-size: .72rem; font-weight: 900; color: var(--muted); letter-spacing: .06em; }
+#manual-sheet .brix td:first-child { font-weight: 900; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+#manual-sheet .table-wrap { overflow-x: auto; }
+#manual-sheet /* しつもん */
+.qa { display: flex; flex-direction: column; gap: .8rem; }
+#manual-sheet .qa dt { font-size: .88rem; font-weight: 900; color: var(--ink); }
+#manual-sheet .qa dt::before { content: "Q. "; color: var(--tomato); }
+#manual-sheet .qa dd { margin: .15rem 0 0; font-size: .84rem; font-weight: 500; line-height: 1.7; }
+#manual-sheet .qa dd::before { content: "A. "; font-weight: 900; color: var(--leaf); }
+#manual-sheet .play-wrap { text-align: center; margin: 1.6rem 0 .4rem; }
+#manual-sheet .play-link {
+    display: inline-block; padding: .8rem 2rem; border-radius: 999px;
+    background: linear-gradient(180deg, #ef6f5d, #c93b2d); color: #fff;
+    font-size: .95rem; font-weight: 900; text-decoration: none;
+    border-bottom: 5px solid #9c2d21;
+    box-shadow: 0 6px 18px rgba(201,59,45,.3);
+}
+#manual-sheet .play-link:active { transform: translateY(4px); border-bottom-width: 1px; }
+#manual-sheet .play-link:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 3px; }
+@media print {
+#manual-sheet .play-wrap { display: none; }
+}
+#manual-sheet footer { text-align: center; font-size: .74rem; font-weight: 700; color: var(--muted); padding-top: 1.4rem; }
+@media print {
+#manual-sheet { background: #fff; }
+#manual-sheet .chapter, #manual-sheet .toc { box-shadow: none; border: 1px solid var(--line); break-inside: avoid; }
+#manual-sheet .cover { background: #d8433a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+@media (prefers-reduced-motion: reduce) {
+#manual-sheet * { animation: none !important; }
+}</style>
 </head>
 <body>
 <div id="app">
@@ -296,14 +486,14 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
             <svg id="plant-svg" viewBox="0 0 300 380"></svg>
         </div>
 
-        <a id="seed-doc" class="seed-doc hidden" href="minitomato-setsumeisho.html" target="_blank" rel="noopener">
+        <button type="button" id="seed-doc" class="seed-doc hidden">
             <span class="seed-doc-icon">📖</span>
             <span class="seed-doc-body">
                 <b>そだてかたを たしかめる</b>
                 <span class="seed-doc-sub">みず・たいよう・えいようの コツが のっているよ</span>
             </span>
             <span class="seed-doc-arrow">›</span>
-        </a>
+        </button>
 
         <section class="card">
             <div class="growth-head">
@@ -365,49 +555,6 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
     </div>
 </div>
 
-<!-- あそびかた -->
-<div id="modal-howto" class="modal hidden">
-    <div class="modal-card pop">
-        <h2 class="modal-title">せつめいしょ</h2>
-        <p class="lead">たねから そだてて、まっかな ミニトマトを しゅうかく しよう！</p>
-
-        <h3 class="sec-title">🎮 そうさ</h3>
-        <div class="mini-table">
-            <span class="mini-key">💧 みずやり</span><span>つちが かわいたら あげる。あげすぎは よくないよ。</span>
-            <span class="mini-key">🌱 ひりょう</span><span>えいようを あげる。15びょうに 1かいだけ。</span>
-            <span class="mini-key">☀️ ひなた</span><span>たいように あてる。あてすぎたら ひかげへ。</span>
-            <span class="mini-key">🐛 むし</span><span>はっぱに でたら タップして つかまえる。</span>
-            <span class="mini-key">🍅 しゅうかく</span><span>まっかに なったら ボタンを おす。</span>
-        </div>
-
-        <h3 class="sec-title">📊 4つの メーター</h3>
-        <div class="mini-table">
-            <span class="mini-key">💧 みず</span><span>すこしずつ へる。ひなたの ほうが はやく へるよ。</span>
-            <span class="mini-key">☀️ たいよう</span><span>ひなたで ふえて、ひかげで へる。</span>
-            <span class="mini-key">🌱 えいよう</span><span>そだつと つかわれて へっていく。</span>
-            <span class="mini-key">🌿 げんき</span><span>ほかの 3つが よいと ふえる。0に なると かれる。</span>
-        </div>
-        <p class="note">バーの <b>みどりの ゾーン</b> に はいっていると せいちょうが はやくなります。</p>
-
-        <h3 class="sec-title">🌱 そだつ じゅんばん</h3>
-        <p class="flow">たね → め → ふたば → わかば → つぼみ →<br>はな → みどりのみ → <b>あかい み</b> → しゅうかく</p>
-
-        <h3 class="sec-title">⚠️ きを つけて</h3>
-        <div class="mini-table">
-            <span class="mini-key">みずの あげすぎ</span><span>ねが いたんで げんきが へる。</span>
-            <span class="mini-key">ひりょうの あげすぎ</span><span>ひりょうやけ。すこし まってから あげよう。</span>
-            <span class="mini-key">ひなたに おきっぱなし</span><span>あつすぎて よわる。ときどき ひかげへ。</span>
-            <span class="mini-key">むしの ほうち</span><span>げんきが どんどん へる。すぐ つかまえよう。</span>
-        </div>
-
-        <h3 class="sec-title">🍬 あまく する コツ</h3>
-        <p class="note">4つの メーターを ずっと <b>みどりの ゾーン</b> に たもてる ほど、しゅうかくの あまさ（とうど）が たかくなります。むしも すぐに とろう。</p>
-
-        <p class="doc-link-wrap"><a class="doc-link" href="minitomato-setsumeisho.html" target="_blank" rel="noopener">📖 ずかい つきの せつめいしょを ひらく</a></p>
-        <div class="modal-foot"><button id="btn-close-howto" class="wide-btn neutral">とじる</button></div>
-    </div>
-</div>
-
 <!-- しゅうかく けっか -->
 <div id="modal-harvest" class="modal hidden">
     <div class="modal-card pop">
@@ -419,9 +566,190 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
             <div class="brix-value" id="harvest-brix">0.0</div>
         </div>
         <p id="harvest-comment" class="harvest-comment"></p>
-        <p class="doc-link-wrap" style="margin:0 0 .9rem"><a class="doc-link" href="minitomato-setsumeisho.html" target="_blank" rel="noopener">📖 もっと あまく する コツを よむ</a></p>
+        <p class="doc-link-wrap" style="margin:0 0 .9rem"><button type="button" id="btn-doc-harvest" class="doc-link">📖 もっと あまく する コツを よむ</button></p>
         <button id="btn-next" class="wide-btn primary">つぎの たねを うえる</button>
     </div>
+</div>
+
+<div id="manual-sheet" class="hidden">
+    <div class="manual-bar"><span>📖 せつめいしょ</span><button type="button" id="btn-manual-close" class="manual-close">✕ とじる</button></div>
+<div class="page">
+
+<header class="cover">
+    <div class="cover-badge">せつめいしょ</div>
+    <h1>ミニトマトを そだてよう</h1>
+    <p>たねを うえてから まっかな みを しゅうかく するまで。そだてかたの ぜんぶが この 1さつに はいっています。</p>
+    <div class="cover-strip" id="cover-strip"></div>
+</header>
+
+<nav class="toc">
+    <div class="toc-title">もくじ</div>
+    <ol>
+        <li><a href="#c1">どんな ゲーム？</a></li>
+        <li><a href="#c2">がめんの みかた</a></li>
+        <li><a href="#c3">そうさ ボタン</a></li>
+        <li><a href="#c4">4つの メーター</a></li>
+        <li><a href="#c5">そだつ じゅんばん</a></li>
+        <li><a href="#c6">きを つけること</a></li>
+        <li><a href="#c7">あまい トマトの つくりかた</a></li>
+        <li><a href="#c8">よくある しつもん</a></li>
+    </ol>
+</nav>
+
+<main>
+
+<section class="chapter" id="c1">
+    <h2><span class="num">1</span>どんな ゲーム？</h2>
+    <p>はちに うえた ミニトマトの なえに <b>みず</b>・<b>たいよう</b>・<b>ひりょう</b> を あげて、まっかな みが なるまで そだてる ゲームです。おみせや おかねは でてきません。じぶんの てで そだてるだけです。</p>
+    <p>じかんは <b>1びょうに 1かい</b> すすみます。じょうずに おせわ できれば <b>2〜3ぷんくらい</b> で しゅうかく できます。おせわを わすれると もっと じかんが かかったり、かれてしまう ことも あります。</p>
+    <p>とちゅうで ページを とじても だいじょうぶ。そだてている とちゅうの ようすと きろくは <b>じどうで ほぞん</b> されます。</p>
+</section>
+
+<section class="chapter" id="c2">
+    <h2><span class="num">2</span>がめんの みかた</h2>
+    <div class="screen-map">
+        <div class="mock" aria-hidden="true">
+            <div class="mock-row"><span class="badge">1</span><span class="mock-bar" style="background:#d8433a">ミニトマトを そだてよう</span></div>
+            <div class="mock-row"><span class="badge">2</span><span class="mock-bar" style="background:#e6ae4a">1日目 / ☀️ ひなた</span></div>
+            <div class="mock-plant"><span class="badge" style="float:left">3</span><span id="mock-plant"></span></div>
+            <div class="mock-row"><span class="badge">4</span><span class="mock-bar" style="background:#7bbf5a">せいちょう と メッセージ</span></div>
+            <div class="mock-row"><span class="badge">5</span><span class="mock-mini"><span></span><span></span><span></span><span></span></span></div>
+            <div class="mock-row"><span class="badge">6</span><span class="mock-mini"><span style="background:#5cc0ea"></span><span style="background:#b98753"></span><span style="background:#f7bd5b"></span><span style="background:#f0705f"></span></span></div>
+            <div class="mock-row"><span class="badge">7</span><span class="mock-bar" style="background:#9fb09c">きろく</span></div>
+        </div>
+        <ul class="map-list">
+            <li><span class="badge">1</span><span><b>タイトルバー</b>／みぎの「あそびかた」で この せつめいを よめます。</span></li>
+            <li><span class="badge">2</span><span><b>ひづけ と ばしょ</b>／いま なんにちめか、ひなたか ひかげかが わかります。</span></li>
+            <li><span class="badge">3</span><span><b>はちの え</b>／なえの ようすが かわります。<b>むしが でたら ここを タップ</b>して つかまえます。</span></li>
+            <li><span class="badge">4</span><span><b>せいちょうバー</b>／いまの だんかいと なんパーセントか。したの ぶんしょうは なえからの メッセージです。</span></li>
+            <li><span class="badge">5</span><span><b>4つの メーター</b>／みず・たいよう・えいよう・げんき。</span></li>
+            <li><span class="badge">6</span><span><b>そうさボタン</b>／みずやり・ひりょう・ひなた／ひかげ・しゅうかく。</span></li>
+            <li><span class="badge">7</span><span><b>きろく</b>／これまでに しゅうかくした かずなどが のこります。</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="chapter" id="c3">
+    <h2><span class="num">3</span>そうさ ボタン</h2>
+    <div class="ops">
+        <div class="op">
+            <div class="op-icon">💧</div>
+            <div><div class="op-name">みずやり</div>
+            <div class="op-text">じょうろで みずを あげます。1かいで みずメーターが おおきく ふえます。つちが かわく まえに あげましょう。</div></div>
+        </div>
+        <div class="op">
+            <div class="op-icon">🌱</div>
+            <div><div class="op-name">ひりょう</div>
+            <div class="op-text">えいようを あげます。<b>15びょうに 1かい</b> だけ。まちじかんの あいだは ボタンに「あと ◯びょう」と でます。</div></div>
+        </div>
+        <div class="op">
+            <div class="op-icon">☀️</div>
+            <div><div class="op-name">ひなた / ひかげ</div>
+            <div class="op-text">おす たびに いれかわります。ひなたでは たいようが ふえ、ひかげでは へります。みずの へりかたも かわります。</div></div>
+        </div>
+        <div class="op">
+            <div class="op-icon">🍅</div>
+            <div><div class="op-name">しゅうかく</div>
+            <div class="op-text">せいちょうが 100%に なると おせるように なります。とれた かずと あまさが でます。</div></div>
+        </div>
+        <div class="op">
+            <div class="op-icon">🐛</div>
+            <div><div class="op-name">むしを つかまえる</div>
+            <div class="op-text">ボタンでは なく、はちの えに でてきた <b>むしを ちょくせつ タップ</b> します。</div></div>
+        </div>
+    </div>
+</section>
+
+<section class="chapter" id="c4">
+    <h2><span class="num">4</span>4つの メーター</h2>
+    <p>バーの <b>みどりの ところ</b> が「ちょうどいい」しるしです。4つとも みどりに はいっていると いちばん はやく そだち、あまさも あがります。</p>
+    <div class="meter-doc">
+        <div class="meter-doc-row">
+            <div class="meter-doc-name water">💧 みず</div>
+            <div><div class="zonebar w"></div>
+            <div class="meter-doc-text">じかんが たつと へります。ひなたに おいて いる ときは はやく へります。<b>すくなすぎる</b>と げんきが へり、<b>おおすぎる</b>と ねが いたみます。</div></div>
+        </div>
+        <div class="meter-doc-row">
+            <div class="meter-doc-name sun">☀️ たいよう</div>
+            <div><div class="zonebar s"></div>
+            <div class="meter-doc-text">ひなたに だすと ふえ、ひかげに いれると へります。<b>あてすぎる</b>と あつくなって よわるので、ときどき ひかげへ。</div></div>
+        </div>
+        <div class="meter-doc-row">
+            <div class="meter-doc-name nut">🌱 えいよう</div>
+            <div><div class="zonebar n"></div>
+            <div class="meter-doc-text">そだつ ときに つかわれて すこしずつ へります。<b>からっぽ</b>だと せいちょうが おそくなり、<b>あげすぎる</b>と ひりょうやけに なります。</div></div>
+        </div>
+        <div class="meter-doc-row">
+            <div class="meter-doc-name life">🌿 げんき</div>
+            <div><div class="zonebar l"></div>
+            <div class="meter-doc-text">ほかの 3つが ちょうどいいと すこしずつ ふえます。わるい ことが つづくと へって、<b>0に なると かれて</b> たねから やりなおしです。</div></div>
+        </div>
+    </div>
+</section>
+
+<section class="chapter" id="c5">
+    <h2><span class="num">5</span>そだつ じゅんばん</h2>
+    <p>せいちょうが すすむと、はちの えが つぎのように かわっていきます。パーセントは せいちょうバーの めやすです。</p>
+    <div class="stages" id="stages"></div>
+</section>
+
+<section class="chapter" id="c6">
+    <h2><span class="num">6</span>きを つけること</h2>
+    <div class="warns">
+        <div class="warn"><b>💧 みずの あげすぎ</b><span>メーターが みどりを こえても あげつづけると、ねが いたんで げんきが へります。「たっぷり」に なったら すこし まちましょう。</span></div>
+        <div class="warn"><b>🌱 ひりょうの あげすぎ</b><span>「おおすぎ」で あげると ひりょうやけ。げんきが へって しまいます。</span></div>
+        <div class="warn"><b>☀️ ひなたに おきっぱなし</b><span>たいようが「あつすぎ」に なると よわります。ときどき ひかげに いれて あげましょう。</span></div>
+        <div class="warn bad"><b>🐛 むしを ほうって おく</b><span>むしが いる あいだは げんきが どんどん へります。みつけたら すぐ タップ！</span></div>
+        <div class="warn bad"><b>🥀 かれて しまったら</b><span>げんきが 0に なると なえは かれ、せいちょうは 0%に もどります。しゅうかくの きろくは のこるので、また たねから そだてましょう。</span></div>
+    </div>
+</section>
+
+<section class="chapter" id="c7">
+    <h2><span class="num">7</span>あまい トマトの つくりかた</h2>
+    <p>あまさ（とうど）は、そだてている あいだ <b>4つの メーターが どれだけ ちょうどいい じょうたい だったか</b> で きまります。ずっと みどりの ゾーンに たもてた ほど あまくなります。</p>
+    <ol class="steps">
+        <li>みずは「ちょうどいい」を たもつ。「すこし かわいた」に なったら あげる。</li>
+        <li>たいようが「まぶしい」に なったら ひかげへ、「たりない」に なったら ひなたへ。</li>
+        <li>ひりょうは まちじかんが あけたら、「たっぷり」に なる まえに あげる。</li>
+        <li>むしは みつけしだい すぐに つかまえる。</li>
+    </ol>
+    <div class="table-wrap">
+        <table class="brix">
+            <thead><tr><th>とうど</th><th>あじの めやす</th></tr></thead>
+            <tbody>
+                <tr><td>〜6.0</td><td>ちょっと すっぱい</td></tr>
+                <tr><td>6.0〜8.0</td><td>まずまずの あじ</td></tr>
+                <tr><td>8.0〜10.0</td><td>あまくて おいしい</td></tr>
+                <tr><td>10.0〜</td><td>とびきり あまい！</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="chapter" id="c8">
+    <h2><span class="num">8</span>よくある しつもん</h2>
+    <dl class="qa">
+        <dt>とちゅうで ページを とじても いい？</dt>
+        <dd>だいじょうぶです。そだてている とちゅうの ようすと きろくは じどうで ほぞんされ、つぎに ひらいた ときに つづきから あそべます。</dd>
+
+        <dt>しゅうかくの ボタンが おせません</dt>
+        <dd>せいちょうが 100%に なるまで おせません。バーが みぎはしまで いって「しゅうかく できる！」と でたら おせます。</dd>
+
+        <dt>ひりょうの ボタンが グレーです</dt>
+        <dd>ひりょうは 15びょうに 1かいだけ。ボタンに でている「あと ◯びょう」が 0に なると また おせます。</dd>
+
+        <dt>ぜんぜん そだちません</dt>
+        <dd>みず・たいよう・えいようの どれかが たりないか おおすぎです。がめんの メッセージに いま なにが たりないか でているので、そこを なおして みてください。</dd>
+
+        <dt>きろくを けしたい</dt>
+        <dd>いちばん したの「さいしょから はじめる」を <b>2かい</b> おすと、しゅうかくの きろくも ふくめて ぜんぶ けせます。まちがえて けさないように 2かい おす しくみです。</dd>
+    </dl>
+</section>
+
+</main>
+
+<footer>ミニトマトを そだてよう ／ せつめいしょ</footer>
+</div>
 </div>
 
 <script>
@@ -637,6 +965,58 @@ function harvest() {
                      "ちょっと すっぱいかも。みずと たいようを ちょうどよくしてみよう。";
     $("modal-harvest").classList.remove("hidden");
     save();
+}
+
+/* ===================== せつめいしょ ===================== */
+let manualReady = false;
+
+/* せつめいしょの なかの え（そだちぐあいだけ さしかえて えがく） */
+function figureAt(g) {
+    const keep = { growth: S.growth, health: S.health, place: S.place, ready: S.ready };
+    S.growth = g; S.health = 100; S.place = "sun"; S.ready = g >= 100;
+    const out = '<svg viewBox="0 0 300 380">' + plantSVG() + "</svg>";
+    Object.assign(S, keep);
+    return out;
+}
+
+const MANUAL_FIGS = [
+    { g:   3, name: "たね",       pct: "0〜8%" },
+    { g:  15, name: "め",         pct: "8〜22%" },
+    { g:  32, name: "ふたば",     pct: "22〜40%" },
+    { g:  50, name: "わかば",     pct: "40〜58%" },
+    { g:  64, name: "つぼみ",     pct: "58〜70%" },
+    { g:  76, name: "はな",       pct: "70〜80%" },
+    { g:  86, name: "みどりのみ", pct: "80〜92%" },
+    { g:  97, name: "あかい み",  pct: "92〜100%" },
+    { g: 100, name: "しゅうかく", pct: "100%" },
+];
+
+function buildManual() {
+    if (manualReady) return;
+    manualReady = true;
+    const strip = $("cover-strip");
+    if (strip) strip.innerHTML = [12, 62, 100].map(figureAt).join("");
+    const mock = $("mock-plant");
+    if (mock) mock.innerHTML = figureAt(84);
+    const stages = $("stages");
+    if (stages) {
+        stages.innerHTML = MANUAL_FIGS.map((f) =>
+            '<div class="stage-fig">' + figureAt(f.g)
+          + '<div class="stage-name">' + f.name + "</div>"
+          + '<div class="stage-pct">' + f.pct + "</div></div>"
+        ).join("");
+    }
+}
+
+function openManual() {
+    buildManual();
+    hideSeedDoc();
+    const sheet = $("manual-sheet");
+    sheet.classList.remove("hidden");
+    sheet.scrollTop = 0;
+}
+function closeManual() {
+    $("manual-sheet").classList.add("hidden");
 }
 
 /* たねを うえた あと、しばらく せつめいしょ ボタンを だす */
@@ -999,9 +1379,13 @@ function init() {
     $("btn-harvest").addEventListener("click", harvest);
     $("btn-next").addEventListener("click", nextSeed);
     $("btn-reset").addEventListener("click", resetAll);
-    $("seed-doc").addEventListener("click", hideSeedDoc);
-    $("btn-howto").addEventListener("click", () => $("modal-howto").classList.remove("hidden"));
-    $("btn-close-howto").addEventListener("click", () => $("modal-howto").classList.add("hidden"));
+    $("seed-doc").addEventListener("click", openManual);
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeManual();
+    });
+    $("btn-howto").addEventListener("click", openManual);
+    $("btn-manual-close").addEventListener("click", closeManual);
+    $("btn-doc-harvest").addEventListener("click", openManual);
 
     render();
     setInterval(tick, TICK_MS);
