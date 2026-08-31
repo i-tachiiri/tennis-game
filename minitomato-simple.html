@@ -67,6 +67,23 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
 }
 #plant-svg { display: block; width: 100%; height: 100%; }
 
+/* たねを うえた あとに でる せつめいしょ ボタン */
+.seed-doc {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .7rem .85rem; border-radius: 18px;
+    background: linear-gradient(180deg, #f7fdf3, #e8f6e0);
+    border: 2px solid #cfe8c4;
+    box-shadow: var(--shadow);
+    color: var(--ink); text-decoration: none;
+    animation: pop .4s cubic-bezier(.2,1.6,.4,1) both;
+}
+.seed-doc:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
+.seed-doc-icon { font-size: 1.5rem; line-height: 1; }
+.seed-doc-body { display: flex; flex-direction: column; gap: .1rem; flex: 1; }
+.seed-doc-body b { font-size: .85rem; font-weight: 900; }
+.seed-doc-sub { font-size: .68rem; font-weight: 700; color: var(--muted); }
+.seed-doc-arrow { font-size: 1.4rem; font-weight: 900; color: var(--leaf); line-height: 1; }
+
 .card { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: .8rem .9rem; }
 
 /* せいちょう */
@@ -279,6 +296,15 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
             <svg id="plant-svg" viewBox="0 0 300 380"></svg>
         </div>
 
+        <a id="seed-doc" class="seed-doc hidden" href="minitomato-setsumeisho.html" target="_blank" rel="noopener">
+            <span class="seed-doc-icon">📖</span>
+            <span class="seed-doc-body">
+                <b>そだてかたを たしかめる</b>
+                <span class="seed-doc-sub">みず・たいよう・えいようの コツが のっているよ</span>
+            </span>
+            <span class="seed-doc-arrow">›</span>
+        </a>
+
         <section class="card">
             <div class="growth-head">
                 <span id="stage-name" class="stage">たね</span>
@@ -393,6 +419,7 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
             <div class="brix-value" id="harvest-brix">0.0</div>
         </div>
         <p id="harvest-comment" class="harvest-comment"></p>
+        <p class="doc-link-wrap" style="margin:0 0 .9rem"><a class="doc-link" href="minitomato-setsumeisho.html" target="_blank" rel="noopener">📖 もっと あまく する コツを よむ</a></p>
         <button id="btn-next" class="wide-btn primary">つぎの たねを うえる</button>
     </div>
 </div>
@@ -612,12 +639,28 @@ function harvest() {
     save();
 }
 
+/* たねを うえた あと、しばらく せつめいしょ ボタンを だす */
+let seedDocTimer = 0;
+function showSeedDoc() {
+    const el = $("seed-doc");
+    if (!el) return;
+    el.classList.remove("hidden");
+    clearTimeout(seedDocTimer);
+    seedDocTimer = setTimeout(() => el.classList.add("hidden"), 20000);
+}
+function hideSeedDoc() {
+    clearTimeout(seedDocTimer);
+    const el = $("seed-doc");
+    if (el) el.classList.add("hidden");
+}
+
 function nextSeed() {
     $("modal-harvest").classList.add("hidden");
     S.growth = 0; S.water = 60; S.sun = 50; S.nut = 55; S.health = 100;
     S.bug = false; S.ready = false;
     S.goodTicks = 0; S.careTicks = 0;
     setMessage("あたらしい たねを うえたよ。みずを あげてね。");
+    showSeedDoc();
     save(); render();
 }
 
@@ -639,6 +682,7 @@ function resetAll() {
     resetArmedUntil = 0;
     btn.textContent = "さいしょから はじめる";
     btn.style.color = "";
+    hideSeedDoc();
     Object.assign(S, {
         day:1, tick:0, growth:0, water:60, sun:50, nut:55, health:100, place:"sun",
         bug:false, bugAge:0, goodTicks:0, careTicks:0, ready:false, fertReady:0,
@@ -955,6 +999,7 @@ function init() {
     $("btn-harvest").addEventListener("click", harvest);
     $("btn-next").addEventListener("click", nextSeed);
     $("btn-reset").addEventListener("click", resetAll);
+    $("seed-doc").addEventListener("click", hideSeedDoc);
     $("btn-howto").addEventListener("click", () => $("modal-howto").classList.remove("hidden"));
     $("btn-close-howto").addEventListener("click", () => $("modal-howto").classList.add("hidden"));
 
