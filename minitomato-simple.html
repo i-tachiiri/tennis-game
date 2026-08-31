@@ -127,7 +127,26 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
 
 /* モーダル */
 .modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 1.1rem; background: rgba(28,40,28,.55); }
-.modal-card { width: 100%; max-width: 360px; background: var(--card); border-radius: 22px; padding: 1.25rem 1.1rem; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.modal-card {
+    width: 100%; max-width: 360px; max-height: 86vh; overflow-y: auto;
+    background: var(--card); border-radius: 22px; padding: 1.25rem 1.1rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,.3);
+    -webkit-overflow-scrolling: touch;
+}
+.lead { margin: 0 0 .25rem; text-align: center; font-size: .8rem; font-weight: 700; color: #55634f; line-height: 1.5; }
+.sec-title {
+    display: flex; align-items: center; gap: .3rem;
+    margin: 1.1rem 0 .45rem; padding-bottom: .3rem;
+    border-bottom: 2px dotted var(--line);
+    font-size: .82rem; font-weight: 900; color: var(--leaf);
+}
+.mini-table {
+    display: grid; grid-template-columns: auto 1fr; gap: .45rem .6rem;
+    font-size: .79rem; font-weight: 700; color: #46543f; line-height: 1.45;
+}
+.mini-key { white-space: nowrap; font-weight: 900; color: var(--ink); }
+.flow { margin: 0; font-size: .78rem; font-weight: 900; color: #46543f; line-height: 1.9; }
+.flow b { color: var(--tomato); }
 .modal-title { margin: 0 0 .75rem; text-align: center; font-size: 1.05rem; font-weight: 900; color: var(--tomato); }
 .legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .55rem; font-size: .82rem; font-weight: 700; color: #46543f; line-height: 1.45; }
 .legend b { color: var(--ink); }
@@ -142,6 +161,14 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
 .wide-btn.primary { background: linear-gradient(180deg, #f0705f, #c93b2d); }
 .wide-btn.neutral { background: linear-gradient(180deg, #9fb09c, #5f7059); }
 .modal-foot { margin-top: 1rem; }
+.doc-link-wrap { margin: 1.1rem 0 0; text-align: center; }
+.doc-link {
+    display: inline-block; padding: .5rem 1.1rem; border-radius: 999px;
+    background: #f1f9ec; color: var(--leaf);
+    font-size: .78rem; font-weight: 900; text-decoration: none;
+    border: 2px solid #d8ecd0;
+}
+.doc-link:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
 
 /* しゅうかく モーダル */
 .harvest-emoji { font-size: 3rem; text-align: center; line-height: 1; }
@@ -315,15 +342,42 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
 <!-- あそびかた -->
 <div id="modal-howto" class="modal hidden">
     <div class="modal-card pop">
-        <h2 class="modal-title">あそびかた</h2>
-        <ul class="legend">
-            <li>💧 <b>みずやり</b>… つちが かわいたら みずを あげよう。あげすぎも よくないよ。</li>
-            <li>☀️ <b>ひなた / ひかげ</b>… たいように あてると そだつ。あてすぎると げんきが なくなる。</li>
-            <li>🌱 <b>ひりょう</b>… えいようを あげると はやく そだつ。つづけては あげられないよ。</li>
-            <li>🐛 <b>むし</b>… でてきたら タップして つかまえよう。ほうっておくと げんきが へるよ。</li>
-            <li>🍅 <b>しゅうかく</b>… まっかに なったら しゅうかく！ おせわが じょうずだと あまくなる。</li>
-        </ul>
-        <p class="note">みず・たいよう・えいよう が みどりの ゾーンに はいっていると せいちょうが はやくなります。</p>
+        <h2 class="modal-title">せつめいしょ</h2>
+        <p class="lead">たねから そだてて、まっかな ミニトマトを しゅうかく しよう！</p>
+
+        <h3 class="sec-title">🎮 そうさ</h3>
+        <div class="mini-table">
+            <span class="mini-key">💧 みずやり</span><span>つちが かわいたら あげる。あげすぎは よくないよ。</span>
+            <span class="mini-key">🌱 ひりょう</span><span>えいようを あげる。15びょうに 1かいだけ。</span>
+            <span class="mini-key">☀️ ひなた</span><span>たいように あてる。あてすぎたら ひかげへ。</span>
+            <span class="mini-key">🐛 むし</span><span>はっぱに でたら タップして つかまえる。</span>
+            <span class="mini-key">🍅 しゅうかく</span><span>まっかに なったら ボタンを おす。</span>
+        </div>
+
+        <h3 class="sec-title">📊 4つの メーター</h3>
+        <div class="mini-table">
+            <span class="mini-key">💧 みず</span><span>すこしずつ へる。ひなたの ほうが はやく へるよ。</span>
+            <span class="mini-key">☀️ たいよう</span><span>ひなたで ふえて、ひかげで へる。</span>
+            <span class="mini-key">🌱 えいよう</span><span>そだつと つかわれて へっていく。</span>
+            <span class="mini-key">🌿 げんき</span><span>ほかの 3つが よいと ふえる。0に なると かれる。</span>
+        </div>
+        <p class="note">バーの <b>みどりの ゾーン</b> に はいっていると せいちょうが はやくなります。</p>
+
+        <h3 class="sec-title">🌱 そだつ じゅんばん</h3>
+        <p class="flow">たね → め → ふたば → わかば → つぼみ →<br>はな → みどりのみ → <b>あかい み</b> → しゅうかく</p>
+
+        <h3 class="sec-title">⚠️ きを つけて</h3>
+        <div class="mini-table">
+            <span class="mini-key">みずの あげすぎ</span><span>ねが いたんで げんきが へる。</span>
+            <span class="mini-key">ひりょうの あげすぎ</span><span>ひりょうやけ。すこし まってから あげよう。</span>
+            <span class="mini-key">ひなたに おきっぱなし</span><span>あつすぎて よわる。ときどき ひかげへ。</span>
+            <span class="mini-key">むしの ほうち</span><span>げんきが どんどん へる。すぐ つかまえよう。</span>
+        </div>
+
+        <h3 class="sec-title">🍬 あまく する コツ</h3>
+        <p class="note">4つの メーターを ずっと <b>みどりの ゾーン</b> に たもてる ほど、しゅうかくの あまさ（とうど）が たかくなります。むしも すぐに とろう。</p>
+
+        <p class="doc-link-wrap"><a class="doc-link" href="minitomato-setsumeisho.html" target="_blank" rel="noopener">📖 ずかい つきの せつめいしょを ひらく</a></p>
         <div class="modal-foot"><button id="btn-close-howto" class="wide-btn neutral">とじる</button></div>
     </div>
 </div>
@@ -746,9 +800,23 @@ function plantSVG() {
         });
     });
 
+    /* つぼみ */
+    if (g >= 56 && g < 72) {
+        const a = clamp(Math.min((g - 56) / 5, (72 - g) / 5), 0, 1);
+        const fy = 300 - stemH * 0.6;
+        [-30, 0, 30].forEach((dx, i) => {
+            const cx = 150 + dx, cy = fy + (i === 1 ? -10 : 6);
+            s += '<g opacity="' + a.toFixed(2) + '">'
+              +  '<line x1="150" y1="' + (fy - 4).toFixed(1) + '" x2="' + cx + '" y2="' + cy + '" stroke="' + stemC + '" stroke-width="1.5"/>'
+              +  '<ellipse cx="' + cx + '" cy="' + cy + '" rx="4.2" ry="6.2" fill="#d9e58a"/>'
+              +  '<ellipse cx="' + (cx - 1.2) + '" cy="' + (cy - 1) + '" rx="1.6" ry="3.2" fill="#f0f6c0"/>'
+              +  '</g>';
+        });
+    }
+
     /* はな */
-    if (g >= 58 && g < 84) {
-        const a = clamp(Math.min((g - 58) / 6, (84 - g) / 6), 0, 1);
+    if (g >= 68 && g < 86) {
+        const a = clamp(Math.min((g - 68) / 5, (86 - g) / 6), 0, 1);
         const fy = 300 - stemH * 0.6;
         [-30, 0, 30].forEach((dx, i) => {
             const cx = 150 + dx, cy = fy + (i === 1 ? -10 : 6);
