@@ -81,33 +81,37 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
 .fill-growth { background: linear-gradient(90deg, #8fce5a, #e0483c); }
 .fill-water  { background: var(--water); }
 .fill-sun    { background: var(--sun); }
+.fill-nut    { background: #a06f38; }
 .fill-health { background: #46c08a; }
 .zone-water { background: linear-gradient(90deg, var(--track) 0 29%, var(--zone) 29% 73%, var(--track) 73%); }
 .zone-sun   { background: linear-gradient(90deg, var(--track) 0 40%, var(--zone) 40% 88%, var(--track) 88%); }
+.zone-nut   { background: linear-gradient(90deg, var(--track) 0 23%, var(--zone) 23% 73%, var(--track) 73%); }
 
-.meters { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
-.meter { padding: .6rem .6rem .5rem; text-align: center; }
-.meter-name { font-size: .74rem; font-weight: 900; margin-bottom: .4rem; white-space: nowrap; }
+.meters { display: grid; grid-template-columns: repeat(4, 1fr); gap: .4rem; }
+.meter { padding: .55rem .4rem .45rem; text-align: center; }
+.meter-name { font-size: .7rem; font-weight: 900; margin-bottom: .4rem; white-space: nowrap; }
 .meter-name.water  { color: var(--water-d); }
 .meter-name.sun    { color: var(--sun-d); }
+.meter-name.nut    { color: #7a4f27; }
 .meter-name.health { color: #2f8f66; }
 .meter-state { margin-top: .4rem; font-size: .68rem; font-weight: 700; color: var(--muted); }
 
 /* そうさボタン */
-.actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: .4rem; }
 .btn {
     border: 0; border-radius: 16px; cursor: pointer;
-    padding: .7rem .25rem; color: #fff;
-    font-size: 1.35rem; line-height: 1.15; font-weight: 900;
+    padding: .65rem .15rem; color: #fff;
+    font-size: 1.25rem; line-height: 1.15; font-weight: 900;
     border-bottom: 5px solid rgba(0,0,0,.22);
     box-shadow: 0 4px 12px rgba(34,48,31,.13);
     transition: transform .08s ease, opacity .15s ease;
 }
-.btn-label { display: block; font-size: .76rem; margin-top: .25rem; }
+.btn-label { display: block; font-size: .72rem; margin-top: .25rem; }
 .btn:active:not(:disabled) { transform: translateY(4px); border-bottom-width: 1px; }
 .btn:disabled { opacity: .42; cursor: default; }
 .btn-water   { background: linear-gradient(180deg, #5cc0ea, #2b93c8); }
 .btn-sun     { background: linear-gradient(180deg, #f7bd5b, #d78a12); }
+.btn-fert    { background: linear-gradient(180deg, #b98753, #86592c); }
 .btn-harvest { background: linear-gradient(180deg, #f0705f, #c93b2d); }
 
 /* きろく */
@@ -175,6 +179,60 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
     .sway, .pop, .blink, .bug, .drop, .float-txt { animation: none !important; }
 }
+
+/* おせわの えんしゅつ（じょうろ / ひりょう） */
+.fx-layer { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
+.fx-layer svg { display: block; width: 100%; height: 100%; }
+#fx-can { transform-box: view-box; transform-origin: 50px 174px; animation: fx-can 2.4s ease-in-out both; }
+@keyframes fx-can {
+      0% { transform: translate(-95px, -25px) rotate(0deg); opacity: 0; }
+     16% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+     30% { transform: translate(0, 0) rotate(26deg); opacity: 1; }
+     76% { transform: translate(0, 0) rotate(26deg); opacity: 1; }
+     90% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-95px, -25px) rotate(0deg); opacity: 0; }
+}
+#fx-bag { transform-box: view-box; transform-origin: 224px 182px; animation: fx-bag 2.4s ease-in-out both; }
+@keyframes fx-bag {
+      0% { transform: translate(95px, -25px) rotate(0deg); opacity: 0; }
+     16% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+     32% { transform: translate(0, 0) rotate(-34deg); opacity: 1; }
+     74% { transform: translate(0, 0) rotate(-34deg); opacity: 1; }
+     90% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(95px, -25px) rotate(0deg); opacity: 0; }
+}
+.fx-drop  { animation: fx-fall-water .78s linear both; }
+@keyframes fx-fall-water {
+      0% { transform: translateY(0); opacity: 0; }
+     12% { opacity: 1; }
+     86% { opacity: 1; }
+    100% { transform: translateY(104px); opacity: 0; }
+}
+.fx-grain { transform-box: fill-box; transform-origin: center; animation: fx-fall-grain .85s ease-in both; }
+@keyframes fx-fall-grain {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+     12% { opacity: 1; }
+     88% { opacity: 1; }
+    100% { transform: translateY(118px) rotate(160deg); opacity: 0; }
+}
+.fx-splash { transform-box: fill-box; transform-origin: center; animation: fx-splash .7s ease-out both; }
+@keyframes fx-splash {
+      0% { transform: scale(.25); opacity: .85; }
+    100% { transform: scale(1.7); opacity: 0; }
+}
+.fx-spark { transform-box: fill-box; transform-origin: center; animation: fx-spark 1s ease-out both; }
+@keyframes fx-spark {
+      0% { transform: translateY(0) scale(.3); opacity: 0; }
+     30% { opacity: 1; }
+    100% { transform: translateY(-42px) scale(1); opacity: 0; }
+}
+.fx-soil { animation: fx-soil 2.4s ease-in-out both; }
+@keyframes fx-soil {
+      0% { opacity: 0; }
+     28% { opacity: .5; }
+     78% { opacity: .38; }
+    100% { opacity: 0; }
+}
 </style>
 </head>
 <body>
@@ -215,6 +273,11 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
                 <div id="sun-text" class="meter-state">ちょうどいい</div>
             </div>
             <div class="card meter">
+                <div class="meter-name nut">🌱 えいよう</div>
+                <div class="bar zone-nut"><i id="nut-bar" class="fill-nut"></i></div>
+                <div id="nut-text" class="meter-state">ちょうどいい</div>
+            </div>
+            <div class="card meter">
                 <div class="meter-name health">🌿 げんき</div>
                 <div class="bar"><i id="health-bar" class="fill-health"></i></div>
                 <div id="health-text" class="meter-state">げんき</div>
@@ -223,6 +286,7 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
 
         <section class="actions">
             <button id="btn-water" class="btn btn-water">💧<span class="btn-label">みずやり</span></button>
+            <button id="btn-fert" class="btn btn-fert">🌱<span class="btn-label">ひりょう</span></button>
             <button id="btn-place" class="btn btn-sun">☀️<span class="btn-label">ひかげへ</span></button>
             <button id="btn-harvest" class="btn btn-harvest" disabled>🍅<span class="btn-label">しゅうかく</span></button>
         </section>
@@ -255,10 +319,11 @@ button:focus-visible { outline: 3px solid #7cc0e8; outline-offset: 2px; }
         <ul class="legend">
             <li>💧 <b>みずやり</b>… つちが かわいたら みずを あげよう。あげすぎも よくないよ。</li>
             <li>☀️ <b>ひなた / ひかげ</b>… たいように あてると そだつ。あてすぎると げんきが なくなる。</li>
+            <li>🌱 <b>ひりょう</b>… えいようを あげると はやく そだつ。つづけては あげられないよ。</li>
             <li>🐛 <b>むし</b>… でてきたら タップして つかまえよう。ほうっておくと げんきが へるよ。</li>
             <li>🍅 <b>しゅうかく</b>… まっかに なったら しゅうかく！ おせわが じょうずだと あまくなる。</li>
         </ul>
-        <p class="note">みず・たいよう・げんき が みどりの ゾーンに はいっていると せいちょうが はやくなります。</p>
+        <p class="note">みず・たいよう・えいよう が みどりの ゾーンに はいっていると せいちょうが はやくなります。</p>
         <div class="modal-foot"><button id="btn-close-howto" class="wide-btn neutral">とじる</button></div>
     </div>
 </div>
@@ -301,11 +366,11 @@ const STAGES = [
 
 const S = {
     day: 1, tick: 0,
-    growth: 0, water: 60, sun: 50, health: 100,
+    growth: 0, water: 60, sun: 50, nut: 55, health: 100,
     place: "sun",                 // sun = ひなた / shade = ひかげ
     bug: false, bugAge: 0,
     goodTicks: 0, careTicks: 0,   // おせわの ていねいさ（あまさに つかう）
-    ready: false,
+    ready: false, fertReady: 0,
     totalHarvest: 0, bestBrix: 0, round: 0,
 };
 
@@ -351,7 +416,8 @@ function floatText(text, color) {
 /* ===================== はんてい ===================== */
 const waterOK = () => S.water >= 35 && S.water <= 88;
 const sunOK   = () => S.sun   >= 40 && S.sun   <= 88;
-const perfect = () => waterOK() && sunOK() && !S.bug && S.health >= 60;
+const nutOK   = () => S.nut   >= 30 && S.nut   <= 95;
+const perfect = () => waterOK() && sunOK() && nutOK() && !S.bug && S.health >= 60;
 
 /* ===================== 1ティックの しょり ===================== */
 function tick() {
@@ -366,6 +432,9 @@ function tick() {
     // たいよう
     S.sun = clamp(S.sun + (S.place === "sun" ? 1.1 : -0.9), 0, 100);
 
+    // えいよう（そだつと つかわれて へる）
+    S.nut = clamp(S.nut - 0.3, 0, 130);
+
     // むし
     if (!S.bug && S.growth > 15 && Math.random() < 0.012) { S.bug = true; S.bugAge = 0; }
     if (S.bug) {
@@ -379,6 +448,7 @@ function tick() {
     if (S.water > 100) d -= 0.45;          // みずの あげすぎ（ねぐされ）
     if (S.sun > 95)    d -= 0.30;          // ひなたに おきっぱなし
     if (S.sun < 12)    d -= 0.25;
+    if (S.nut > 105)   d -= 0.40;          // ひりょうの あげすぎ（ひりょうやけ）
     if (S.bug)         d -= 0.55;
     S.health = clamp(S.health + d, 0, 100);
 
@@ -386,10 +456,12 @@ function tick() {
     S.careTicks++;
     if (perfect()) S.goodTicks++;
     if (S.health > 20 && S.water >= 18 && S.water <= 105 && S.sun >= 20) {
-        let rate = 0.30;
-        if (waterOK()) rate += 0.22;
-        if (sunOK())   rate += 0.22;
-        if (!S.bug)    rate += 0.08;
+        let rate = 0.28;
+        if (waterOK()) rate += 0.20;
+        if (sunOK())   rate += 0.20;
+        if (nutOK())   rate += 0.16;
+        if (!S.bug)    rate += 0.06;
+        if (S.nut < 10) rate *= 0.6;       // えいよう ぎれ
         rate *= 0.5 + S.health / 200;
         S.growth = clamp(S.growth + rate, 0, 100);
     }
@@ -405,7 +477,7 @@ function tick() {
 
 function wither() {
     floatText("かれちゃった…", "#6b7280");
-    S.growth = 0; S.water = 60; S.sun = 50; S.health = 55;
+    S.growth = 0; S.water = 60; S.sun = 50; S.nut = 55; S.health = 55;
     S.bug = false; S.ready = false;
     S.goodTicks = 0; S.careTicks = 0;
     setMessage("かれちゃった… もういちど たねから そだてよう。");
@@ -424,7 +496,27 @@ function doWater() {
         floatText("💧 ごくごく", "#0284c7");
         setMessage(waterOK() ? "おいしい みずを もらった！" : "もう すこし あげても いいかも。");
     }
-    rainDrops();
+    careFx("water");
+    save(); render();
+}
+
+/* ひりょうを あげる（つづけては あげられない） */
+const FERT_WAIT = 15000;
+function doFertilizer() {
+    if (S.ready) return;
+    if (Date.now() < S.fertReady) return;
+    S.fertReady = Date.now() + FERT_WAIT;
+    if (S.nut > 95) {
+        S.nut = clamp(S.nut + 14, 0, 130);
+        S.health = clamp(S.health - 4, 0, 100);
+        floatText("ひりょうが おおすぎ！", "#a16207");
+        setMessage("ひりょうの あげすぎは ねっこが いたむよ。すこし まってね。");
+    } else {
+        S.nut = clamp(S.nut + 32, 0, 130);
+        floatText("🌱 えいよう まんてん", "#7a4f27");
+        setMessage(nutOK() ? "えいようを もらった！ ぐんぐん そだつよ。" : "もう すこし あげても だいじょうぶ。");
+    }
+    careFx("fert");
     save(); render();
 }
 
@@ -468,7 +560,7 @@ function harvest() {
 
 function nextSeed() {
     $("modal-harvest").classList.add("hidden");
-    S.growth = 0; S.water = 60; S.sun = 50; S.health = 100;
+    S.growth = 0; S.water = 60; S.sun = 50; S.nut = 55; S.health = 100;
     S.bug = false; S.ready = false;
     S.goodTicks = 0; S.careTicks = 0;
     setMessage("あたらしい たねを うえたよ。みずを あげてね。");
@@ -494,8 +586,8 @@ function resetAll() {
     btn.textContent = "さいしょから はじめる";
     btn.style.color = "";
     Object.assign(S, {
-        day:1, tick:0, growth:0, water:60, sun:50, health:100, place:"sun",
-        bug:false, bugAge:0, goodTicks:0, careTicks:0, ready:false,
+        day:1, tick:0, growth:0, water:60, sun:50, nut:55, health:100, place:"sun",
+        bug:false, bugAge:0, goodTicks:0, careTicks:0, ready:false, fertReady:0,
         totalHarvest:0, bestBrix:0, round:0,
     });
     setMessage("つちに たねを うえたよ。みずを あげてね。");
@@ -503,18 +595,65 @@ function resetAll() {
 }
 
 /* ===================== えんしゅつ ===================== */
-function rainDrops() {
-    const box = $("plant-box");
-    for (let i = 0; i < 6; i++) {
-        const d = document.createElement("div");
-        d.className = "drop";
-        d.textContent = "💧";
-        d.style.left = (25 + Math.random() * 50) + "%";
-        d.style.top  = (10 + Math.random() * 20) + "%";
-        d.style.animationDelay = (i * 0.07) + "s";
-        box.appendChild(d);
-        setTimeout(() => d.remove(), 1100);
+const reduceMotion = window.matchMedia
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* じょうろで みずを あげている ところ */
+function waterFxSVG() {
+    let s = '<ellipse class="fx-soil" cx="150" cy="292" rx="60" ry="9" fill="#2c1a08"/>';
+    s += '<g id="fx-can">'
+      +  '<path d="M78,158 L132,138 L140,152 L86,176 Z" fill="#8fcfec"/>'
+      +  '<ellipse cx="136" cy="145" rx="7" ry="9" fill="#6fb9de" transform="rotate(-20 136 145)"/>'
+      +  '<path d="M26,150 Q22,118 50,116 Q78,114 74,150" fill="none" stroke="#6fb9de" stroke-width="7" stroke-linecap="round"/>'
+      +  '<rect x="18" y="150" width="64" height="52" rx="12" fill="#7cc4e8"/>'
+      +  '<rect x="18" y="150" width="64" height="15" rx="7" fill="#a9e0f7"/>'
+      +  '<rect x="14" y="194" width="72" height="11" rx="5" fill="#57a6cf"/>'
+      +  '</g>';
+    for (let i = 0; i < 8; i++) {
+        s += '<ellipse class="fx-drop" cx="' + (138 + ((i % 3) - 1) * 5) + '" cy="192" rx="3.2" ry="5" '
+          +  'fill="#5fb0d9" style="animation-delay:' + (0.70 + i * 0.13).toFixed(2) + 's"/>';
     }
+    for (let i = 0; i < 3; i++) {
+        s += '<ellipse class="fx-splash" cx="140" cy="297" rx="15" ry="4.5" fill="none" stroke="#7cc4e8" '
+          +  'stroke-width="2.5" style="animation-delay:' + (1.10 + i * 0.34).toFixed(2) + 's"/>';
+    }
+    return s;
+}
+
+/* ひりょうを まいている ところ */
+function fertFxSVG() {
+    let s = '<ellipse class="fx-soil" cx="150" cy="292" rx="60" ry="9" fill="#3a250d"/>';
+    s += '<g id="fx-bag">'
+      +  '<path d="M196,152 L252,152 L252,208 Q252,216 244,216 L204,216 Q196,216 196,208 Z" fill="#b5814c"/>'
+      +  '<path d="M196,152 L224,138 L252,152 Z" fill="#8b5e3c"/>'
+      +  '<rect x="205" y="170" width="38" height="24" rx="7" fill="#f6ead2"/>'
+      +  '<path d="M215,182 q9,-9 18,0 q-9,9 -18,0 Z" fill="#6f9c3a"/>'
+      +  '<line x1="224" y1="176" x2="224" y2="188" stroke="#4d7c0f" stroke-width="1.6"/>'
+      +  '</g>';
+    const cols = ["#7a5230", "#a9743f", "#8b5a2b", "#c39152"];
+    for (let i = 0; i < 12; i++) {
+        s += '<circle class="fx-grain" cx="' + (172 + (i % 5) * 4.5) + '" cy="' + (174 + (i % 3) * 3) + '" '
+          +  'r="' + (2.2 + (i % 3) * 0.5).toFixed(1) + '" fill="' + cols[i % 4] + '" '
+          +  'style="animation-delay:' + (0.72 + i * 0.075).toFixed(2) + 's"/>';
+    }
+    for (let i = 0; i < 5; i++) {
+        const x = 118 + i * 16;
+        s += '<path class="fx-spark" d="M' + x + ',288 l3,-7 l3,7 l7,3 l-7,3 l-3,7 l-3,-7 l-7,-3 Z" '
+          +  'fill="#fde68a" style="animation-delay:' + (1.35 + i * 0.12).toFixed(2) + 's"/>';
+    }
+    return s;
+}
+
+/* おせわの えんしゅつを だす */
+function careFx(kind) {
+    const box = $("plant-box");
+    box.querySelectorAll(".fx-layer").forEach((el) => el.remove());
+    if (reduceMotion) return;
+    const layer = document.createElement("div");
+    layer.className = "fx-layer";
+    layer.innerHTML = '<svg viewBox="0 0 300 380">' + (kind === "fert" ? fertFxSVG() : waterFxSVG()) + "</svg>";
+    box.appendChild(layer);
+    setTimeout(() => layer.remove(), 2500);
 }
 
 let lastMessage = "";
@@ -555,16 +694,19 @@ function plantSVG() {
     s += '<rect x="0" y="330" width="300" height="50" fill="' + (sunny ? "#bbf7d0" : "#cfe0d4") + '"/>';
 
     /* はち */
-    s += '<ellipse cx="150" cy="303" rx="71" ry="13" fill="#4b2e17"/>';
     s += '<path d="M80,300 L220,300 L205,366 Q202,372 196,372 L104,372 Q98,372 95,366 Z" fill="#e07a45"/>';
     s += '<path d="M80,300 L220,300 L214,326 L86,326 Z" fill="#c96436" opacity=".35"/>';
-    s += '<rect x="74" y="288" width="152" height="20" rx="10" fill="#f08a4b"/>';
-    s += '<rect x="74" y="288" width="152" height="8" rx="4" fill="#ffa76a" opacity=".7"/>';
+    s += '<rect x="74" y="286" width="152" height="22" rx="11" fill="#f08a4b"/>';
+    s += '<rect x="74" y="286" width="152" height="8" rx="4" fill="#ffa76a" opacity=".7"/>';
+
+    /* つちの めん（はちの ふちより てまえ） */
+    s += '<ellipse cx="150" cy="292" rx="62" ry="9.5" fill="#4b2e17"/>';
+    s += '<ellipse cx="150" cy="291" rx="58" ry="7.5" fill="#66432a"/>';
 
     /* つちの もりあがり（たねの ころ） */
     if (g < 6) {
-        s += '<ellipse cx="150" cy="298" rx="18" ry="7" fill="#6b4423"/>';
-        s += '<circle cx="144" cy="296" r="2" fill="#8b5a2b"/><circle cx="157" cy="299" r="2" fill="#8b5a2b"/>';
+        s += '<ellipse cx="150" cy="289" rx="15" ry="5" fill="#7d5533"/>';
+        s += '<circle cx="144" cy="288" r="1.8" fill="#96683f"/><circle cx="156" cy="290" r="1.8" fill="#96683f"/>';
     }
 
     s += '<g class="sway">';
@@ -654,6 +796,8 @@ function hintMessage() {
     if (S.water > 100) return "みずが おおすぎ。すこし かわかそう。";
     if (S.sun > 95)    return "ひざしが つよすぎ。ひかげに いれてあげよう。";
     if (S.sun < 12)    return "くらいよ。ひなたに だしてあげよう。";
+    if (S.nut < 12)    return "えいようが たりない。ひりょうを あげよう。";
+    if (S.nut > 105)   return "ひりょうが おおすぎ。すこし まってね。";
     if (S.health < 30) return "ぐったり… おせわを ちょうどよくしてね。";
     if (S.ready)       return "まっかに なったよ！ しゅうかく しよう！";
     return lastMessage;
@@ -690,6 +834,7 @@ function render() {
     // メーター
     $("water-bar").style.width  = clamp(S.water / 120 * 100, 0, 100) + "%";
     $("sun-bar").style.width    = S.sun + "%";
+    $("nut-bar").style.width    = clamp(S.nut / 130 * 100, 0, 100) + "%";
     $("health-bar").style.width = S.health + "%";
     $("water-text").textContent =
         S.water < 15 ? "からから" : S.water < 35 ? "すこし かわいた" :
@@ -697,6 +842,9 @@ function render() {
     $("sun-text").textContent =
         S.sun < 12 ? "くらい" : S.sun < 40 ? "たりない" :
         S.sun <= 88 ? "ちょうどいい" : S.sun <= 95 ? "まぶしい" : "あつすぎ";
+    $("nut-text").textContent =
+        S.nut < 12 ? "からっぽ" : S.nut < 30 ? "すこし たりない" :
+        S.nut <= 95 ? "ちょうどいい" : S.nut <= 105 ? "たっぷり" : "おおすぎ";
     $("health-text").textContent =
         S.health >= 70 ? "げんき" : S.health >= 40 ? "ふつう" :
         S.health >= 15 ? "よわってる" : "ぐったり";
@@ -706,7 +854,7 @@ function render() {
     const pl = $("place-label");
     pl.textContent = sunny ? "☀️ ひなた" : "🌥 ひかげ";
     pl.className = "place-chip " + (sunny ? "sunny" : "shady");
-    $("btn-place").innerHTML = (sunny ? "🌥" : "☀️") + '<span class="btn-label">' + (sunny ? "ひかげへ" : "ひなたへ") + "</span>";
+    $("btn-place").innerHTML = (sunny ? "🌥" : "☀️") + '<br><span class="btn-label">' + (sunny ? "ひかげへ" : "ひなたへ") + "</span>";
 
     // ひづけ・きろく
     $("day-label").textContent = S.day + "日目";
@@ -719,6 +867,13 @@ function render() {
     hb.disabled = !S.ready;
     hb.classList.toggle("blink", S.ready);
     $("btn-water").disabled = S.ready;
+
+    // ひりょうは つづけては あげられない
+    const wait = Math.ceil((S.fertReady - Date.now()) / 1000);
+    const fb = $("btn-fert");
+    fb.disabled = S.ready || wait > 0;
+    fb.innerHTML = "🌱" + '<span class="btn-label">'
+                 + (!S.ready && wait > 0 ? "あと " + wait + "びょう" : "ひりょう") + "</span>";
 }
 
 /* ===================== スタート ===================== */
@@ -727,6 +882,7 @@ function init() {
     setMessage(S.growth === 0 ? "つちに たねを うえたよ。みずを あげてね。" : "おかえり！ つづきから そだてよう。");
 
     $("btn-water").addEventListener("click", doWater);
+    $("btn-fert").addEventListener("click", doFertilizer);
     $("btn-place").addEventListener("click", togglePlace);
     $("btn-harvest").addEventListener("click", harvest);
     $("btn-next").addEventListener("click", nextSeed);
