@@ -71,19 +71,28 @@ const STAGES: readonly { readonly max: number; readonly name: string }[] = [
 ];
 
 /** せつめいしょの「そだつ じゅんばん」に ならべる え。 */
-const MANUAL_FIGS: readonly { readonly g: number; readonly name: string; readonly pct: string }[] = [
-  { g: 3, name: 'たね', pct: '0〜8%' },
-  { g: 15, name: 'め', pct: '8〜22%' },
-  { g: 32, name: 'ふたば', pct: '22〜40%' },
-  { g: 50, name: 'わかば', pct: '40〜58%' },
-  { g: 64, name: 'つぼみ', pct: '58〜70%' },
-  { g: 76, name: 'はな', pct: '70〜80%' },
-  { g: 86, name: 'みどりのみ', pct: '80〜92%' },
-  { g: 97, name: 'あかい み', pct: '92〜100%' },
-  { g: 100, name: 'しゅうかく', pct: '100%' },
+const MANUAL_FIGS: readonly {
+  readonly g: number; readonly name: string; readonly pct: string; readonly cm: string;
+}[] = [
+  { g: 3, name: 'たね', pct: '0〜8%', cm: '0cm' },
+  { g: 15, name: 'め', pct: '8〜22%', cm: '8cm' },
+  { g: 32, name: 'ふたば', pct: '22〜40%', cm: '30cm' },
+  { g: 50, name: 'わかば', pct: '40〜58%', cm: '54cm' },
+  { g: 64, name: 'つぼみ', pct: '58〜70%', cm: '72cm' },
+  { g: 76, name: 'はな', pct: '70〜80%', cm: '88cm' },
+  { g: 86, name: 'みどりのみ', pct: '80〜92%', cm: '101cm' },
+  { g: 97, name: 'あかい み', pct: '92〜100%', cm: '116cm' },
+  { g: 100, name: 'しゅうかく', pct: '100%', cm: '120cm' },
 ];
 
 const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
+
+/** 1cm ぶんの えの ながさ。しゅうかく（100%）で ちょうど 120cm に なる。 */
+const CM = 1.813;
+/** いまの たかさ（cm）。つちの めんから なえの てっぺんまで。 */
+const heightCm = (g: number): number => Math.max(0, Math.round(((g - 6) * 2.4 - 8) / CM));
+/** cm を えの たかさ（y）に なおす。つちの めんが 0cm。 */
+const cmY = (cm: number): number => 292 - cm * CM;
 
 function lerpColor(a: string, b: string, t: number): string {
   const k = clamp(t, 0, 1);
@@ -144,6 +153,30 @@ function plantSVG(g: number, health: number, place: Place, ready: boolean): stri
     if (g < 6) {
         s += '<ellipse cx="150" cy="289" rx="15" ry="5" fill="#7d5533"/>';
         s += '<circle cx="144" cy="288" r="1.8" fill="#96683f"/><circle cx="156" cy="290" r="1.8" fill="#96683f"/>';
+    }
+
+    /* たかさの ひょう（ものさし） */
+    s += '<g stroke-linecap="round">';
+    s += '<line x1="40" y1="292.5" x2="40" y2="' + cmY(127).toFixed(1) + '" stroke="#b7c9b3" stroke-width="2.4"/>';
+    for (let cm = 0; cm <= 120; cm += 10) {
+        const y = cmY(cm), big = cm % 20 === 0;
+        s += '<line x1="' + (big ? 32 : 36) + '" y1="' + y.toFixed(1) + '" x2="45" y2="' + y.toFixed(1) + '" '
+          +  'stroke="#b7c9b3" stroke-width="' + (big ? 2.2 : 1.4) + '"/>';
+        if (big) {
+            s += '<text x="29" y="' + (y + 3.3).toFixed(1) + '" text-anchor="end" font-size="9.5" '
+              +  'font-weight="700" fill="#8fa38b">' + cm + '</text>';
+        }
+    }
+    s += '</g>';
+    s += '<text x="40" y="' + (cmY(127) - 7).toFixed(1) + '" text-anchor="middle" font-size="9.5" '
+      +  'font-weight="700" fill="#8fa38b">cm</text>';
+
+    /* いま どこまで のびたか */
+    const hc = heightCm(g);
+    if (hc > 0) {
+        const hy = cmY(hc);
+        s += '<line x1="40" y1="292.5" x2="40" y2="' + hy.toFixed(1) + '" stroke="#7cc45a" stroke-width="4.5" stroke-linecap="round"/>';
+        s += '<path d="M47,' + hy.toFixed(1) + ' l8,-4.5 v9 Z" fill="#4c9a3e"/>';
     }
 
     s += '<g class="sway">';
@@ -317,6 +350,8 @@ const CSS = `
 .ms-growth-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: .5rem; }
 .ms-root .ms-stage { font-size: .98rem; font-weight: 900; color: var(--leaf); }
 .ms-root .ms-pct { font-size: .82rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ms-root .ms-pct b { color: var(--leaf); font-weight: 900; }
+.ms-root .ms-pct-sep { margin: 0 .35em; opacity: .5; }
 .ms-root .ms-msg { margin: .6rem 0 0; font-size: .84rem; font-weight: 700; color: #4a5a49; line-height: 1.5; min-height: 2.5em; }
 .ms-root /* メーター */
 .ms-bar { height: 10px; border-radius: 999px; background: var(--track); overflow: hidden; }
@@ -635,6 +670,8 @@ const CSS = `
 .ms-root .ms-manual-sheet .ms-stage-fig .ms-sway { animation: none; }
 .ms-root .ms-manual-sheet .ms-stage-name { margin-top: .3rem; font-size: .78rem; font-weight: 900; color: var(--ink); }
 .ms-root .ms-manual-sheet .ms-stage-pct { font-size: .68rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ms-root .ms-manual-sheet .ms-stage-cm { font-size: .7rem; font-weight: 900; color: var(--leaf); font-variant-numeric: tabular-nums; }
+.ms-root .ms-manual-sheet .ms-height-title { margin: 1.4rem 0 .5rem; font-size: .95rem; font-weight: 900; color: var(--ink); }
 .ms-root .ms-manual-sheet /* ちゅうい */
 .ms-warns { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .7rem; }
 .ms-root .ms-manual-sheet .ms-warn { padding: .8rem .9rem; border-radius: 14px; background: #fff8ec; border-left: 5px solid var(--sun); }
@@ -716,7 +753,7 @@ const HTML = `
         <section class="ms-card">
             <div class="ms-growth-head">
                 <span data-stage-name class="ms-stage">たね</span>
-                <span class="ms-pct"><span data-growth-percent>0</span>%</span>
+                <span class="ms-pct"><b data-height-label>0</b>cm<span class="ms-pct-sep">・</span><span data-growth-percent>0</span>%</span>
             </div>
             <div class="ms-bar"><i data-growth-bar class="ms-fill-growth" style="width:0%"></i></div>
             <p data-message class="ms-msg">つちに たねを うえたよ。みずを あげてね。</p>
@@ -909,6 +946,24 @@ const HTML = `
     <h2><span class="ms-num">5</span>そだつ じゅんばん</h2>
     <p>せいちょうが すすむと、はちの えが つぎのように かわっていきます。パーセントは せいちょうバーの めやすです。</p>
     <div class="ms-stages" data-stages></div>
+
+    <h3 class="ms-height-title">たかさの ひょう</h3>
+    <p>はちの よこに ものさしが たっています。つちの めんが 0cm、しゅうかくの ころで <b>120cm</b> くらいに なります。みどりの しるしが、いまの たかさです。</p>
+    <div class="ms-table-wrap">
+        <table class="ms-brix">
+            <thead><tr><th>だんかい</th><th>せいちょう</th><th>たかさ</th></tr></thead>
+            <tbody>
+                <tr><td>たね</td><td>0〜8%</td><td>0cm</td></tr>
+                <tr><td>め</td><td>8〜22%</td><td>0〜17cm</td></tr>
+                <tr><td>ふたば</td><td>22〜40%</td><td>17〜41cm</td></tr>
+                <tr><td>わかば</td><td>40〜58%</td><td>41〜64cm</td></tr>
+                <tr><td>つぼみ</td><td>58〜70%</td><td>64〜80cm</td></tr>
+                <tr><td>はな</td><td>70〜80%</td><td>80〜94cm</td></tr>
+                <tr><td>みどりのみ</td><td>80〜92%</td><td>94〜109cm</td></tr>
+                <tr><td>あかい み</td><td>92〜100%</td><td>109〜120cm</td></tr>
+            </tbody>
+        </table>
+    </div>
 </section>
 
 <section class="ms-chapter" data-c6>
@@ -1098,7 +1153,8 @@ export const mountMinitomatoSodate: GameMount = (host, ctx) => {
     q('stages').innerHTML = MANUAL_FIGS.map((f) =>
       '<div class="ms-stage-fig">' + figureAt(f.g)
       + '<div class="ms-stage-name">' + f.name + '</div>'
-      + '<div class="ms-stage-pct">' + f.pct + '</div></div>').join('');
+      + '<div class="ms-stage-pct">' + f.pct + '</div>'
+      + '<div class="ms-stage-cm">' + f.cm + '</div></div>').join('');
   }
 
   const sheet = root.querySelector('.ms-manual-sheet') as HTMLElement;
@@ -1335,6 +1391,7 @@ export const mountMinitomatoSodate: GameMount = (host, ctx) => {
 
     q('stage-name').textContent = stageName(S.growth);
     q('growth-percent').textContent = String(Math.floor(S.growth));
+    q('height-label').textContent = String(heightCm(S.growth));
     q('growth-bar').style.width = S.growth + '%';
     q('message').textContent = hintMessage();
 
