@@ -4542,7 +4542,7 @@ function furnShopHtml() {
     return html;
 }
 
-/* ---------------- 🏬 おみせビル（デパート 9 ＋ タワー 19 ＋ モール 50 ＋ ひろば 3） ---------------- */
+/* ---------------- 🏬 おみせビル（デパート9＋タワー19＋モール50＋ひろば3＋しろ9） ---------------- */
 
 const MORE_ATT  = ['', 'ゆめの', 'まほうの', 'でんせつの', 'ひみつの', 'キラキラの', 'にじいろの', 'ミラクルな', 'スーパー', 'ウルトラ'];
 const MORE_SIZE = ['', 'ミニ', 'おおきな', 'とくだいの', 'ちいさな', 'ながい', 'まるい', 'しかくい', 'たかい', 'ひくい'];
@@ -4795,11 +4795,57 @@ const FES_SHOPS = [
              { n: 'ケーキ', e: '🎂' }, { n: 'かんぱい', e: '🥂' }, { n: 'リボン', e: '🎗' }, { n: 'はた', e: '🎌' }, { n: 'ハート', e: '💖' }] }
 ];
 
+/* 🐉 でんせつのしろ（9かい）。1かいごとに 100000けたずつ ふえて、
+   てっぺんは 10^1400000こ。 */
+
+const CASTLE_SHOPS = [
+    { id: 'gate', tab: '🗝 いりぐち', note: 'しろの もんの まえ。ここから はじまる！',
+      mat: ['おおきな', 'おもい', 'ふるい', 'きんの', 'いしの', 'まほうの', 'ひかる', 'ひみつの', 'とざされた', 'ひらいた'],
+      kind: [{ n: 'とびら', e: '🚪' }, { n: 'かぎ', e: '🗝' }, { n: 'もん', e: '⛩' }, { n: 'はし', e: '🌉' }, { n: 'かいだん', e: '🪜' },
+             { n: 'ちょうちん', e: '🏮' }, { n: 'かんばん', e: '🪧' }, { n: 'ベル', e: '🔔' }, { n: 'はた', e: '🚩' }, { n: 'いし', e: '🪨' }] },
+    { id: 'hall', tab: '🕯 ろうか', note: 'ながい ろうか。ろうそくが ゆれている。',
+      mat: ['ながい', 'くらい', 'ひかる', 'せまい', 'ひろい', 'ふしぎな', 'しずかな', 'ひんやりした', 'あたたかい', 'まほうの'],
+      kind: [{ n: 'ろうそく', e: '🕯' }, { n: 'ランタン', e: '🏮' }, { n: 'え', e: '🖼' }, { n: 'よろい', e: '🛡' }, { n: 'じゅうたん', e: '🧶' },
+             { n: 'まど', e: '🪟' }, { n: 'かがみ', e: '🪞' }, { n: 'くものす', e: '🕸' }, { n: 'ネズミ', e: '🐭' }, { n: 'コウモリ', e: '🦇' }] },
+    { id: 'library', tab: '📚 としょしつ', note: 'よみきれない ほんが ならんでる。',
+      mat: ['ふるい', 'ぶあつい', 'うすい', 'きんいろの', 'ひかる', 'ほこりの', 'まほうの', 'ひみつの', 'よみかけの', 'でんせつの'],
+      kind: [{ n: 'ほん', e: '📕' }, { n: 'まきもの', e: '📜' }, { n: 'ちず', e: '🗺' }, { n: 'ペン', e: '🖊' }, { n: 'インク', e: '🖋' },
+             { n: 'めがね', e: '👓' }, { n: 'フクロウ', e: '🦉' }, { n: 'はしご', e: '🪜' }, { n: 'つくえ', e: '🪑' }, { n: 'ランプ', e: '💡' }] },
+    { id: 'magic', tab: '⚗ まほうのへや', note: 'なべが ぐつぐつ。なにが できるかな？',
+      mat: ['あわだつ', 'ひかる', 'けむりの', 'いろが かわる', 'ふしぎな', 'ちょっと あぶない', 'あまい', 'つめたい', 'あつい', 'でんせつの'],
+      kind: [{ n: 'フラスコ', e: '⚗' }, { n: 'なべ', e: '🫕' }, { n: 'つえ', e: '🪄' }, { n: 'すいしょうだま', e: '🔮' }, { n: 'ほうき', e: '🧹' },
+             { n: 'きのこ', e: '🍄' }, { n: 'ほし', e: '✨' }, { n: 'ろうそく', e: '🕯' }, { n: 'くろネコ', e: '🐈‍⬛' }, { n: 'カエル', e: '🐸' }] },
+    { id: 'knight', tab: '🛡 きしのま', note: 'きしたちの そうびが ずらり！',
+      mat: ['てつの', 'きんの', 'ぎんの', 'おもい', 'かるい', 'つよい', 'ふるい', 'ひかる', 'きずついた', 'でんせつの'],
+      kind: [{ n: 'よろい', e: '🛡' }, { n: 'けん', e: '⚔' }, { n: 'かぶと', e: '🪖' }, { n: 'やり', e: '🔱' }, { n: 'ゆみ', e: '🏹' },
+             { n: 'たて', e: '🛡' }, { n: 'うま', e: '🐎' }, { n: 'はた', e: '🎌' }, { n: 'くんしょう', e: '🎖' }, { n: 'たいこ', e: '🥁' }] },
+    { id: 'treasure', tab: '💎 たからのま', note: 'ゆかが みえないほどの おたから！',
+      mat: ['きらきらの', 'やまもりの', 'すきとおった', 'おおつぶの', 'こつぶの', 'きんの', 'ぎんの', 'にじいろの', 'ひかる', 'でんせつの'],
+      kind: [{ n: 'ダイヤ', e: '💎' }, { n: 'きんか', e: '🪙' }, { n: 'たからばこ', e: '💰' }, { n: 'かんむり', e: '👑' }, { n: 'ゆびわ', e: '💍' },
+             { n: 'ネックレス', e: '📿' }, { n: 'つぼ', e: '🏺' }, { n: 'すいしょう', e: '🔮' }, { n: 'メダル', e: '🏅' }, { n: 'トロフィー', e: '🏆' }] },
+    { id: 'dragon', tab: '🐉 ドラゴンのま', note: 'しずかに… ドラゴンが ねむっているよ。',
+      mat: ['おおきな', 'ちょっと こわい', 'やさしい', 'まっかな', 'まっさおな', 'きんの', 'ひをはく', 'そらとぶ', 'ねむっている', 'でんせつの'],
+      kind: [{ n: 'ドラゴン', e: '🐉' }, { n: 'たまご', e: '🥚' }, { n: 'うろこ', e: '🪶' }, { n: 'ほのお', e: '🔥' }, { n: 'つばさ', e: '🪽' },
+             { n: 'かせき', e: '🦴' }, { n: 'いわ', e: '🪨' }, { n: 'きば', e: '🦷' }, { n: 'すみか', e: '🕳' }, { n: 'たから', e: '💎' }] },
+    { id: 'throne', tab: '👑 おうのま', note: 'おうさまの へや。おうざに すわれるかな？',
+      mat: ['りっぱな', 'きんの', 'まっかな', 'ビロードの', 'おおきな', 'ひかる', 'だいじな', 'ふるい', 'できたての', 'でんせつの'],
+      kind: [{ n: 'おうざ', e: '🪑' }, { n: 'かんむり', e: '👑' }, { n: 'しゃく', e: '🪄' }, { n: 'マント', e: '🧥' }, { n: 'じゅうたん', e: '🧵' },
+             { n: 'はた', e: '🏳' }, { n: 'かがみ', e: '🪞' }, { n: 'とけい', e: '🕰' }, { n: 'しょうぞうが', e: '🖼' }, { n: 'かね', e: '🔔' }] },
+    { id: 'top', tab: '⭐ てっぺん', note: 'しろの いちばん うえ。せかいが ぜんぶ みえる！',
+      mat: ['いちばん うえの', 'そらに ちかい', 'かぜの', 'くもの', 'ほしの', 'つきの', 'まぶしい', 'しずかな', 'とおくまで みえる', 'でんせつの'],
+      kind: [{ n: 'ほし', e: '⭐' }, { n: 'つき', e: '🌙' }, { n: 'たいよう', e: '☀' }, { n: 'くも', e: '☁' }, { n: 'かぜ', e: '🌬' },
+             { n: 'トリ', e: '🕊' }, { n: 'はた', e: '🚩' }, { n: 'のろし', e: '🔥' }, { n: 'ぼうえんきょう', e: '🔭' }, { n: 'にじ', e: '🌈' }] }
+];
+
+// 1かいめ 10^600000 から 100000けたずつ ふえて、てっぺんは 10^1400000
+CASTLE_SHOPS.forEach(function (s, k) { s.exp = 600000 + 100000 * k; });
+
 const MORE_BLD = [
     { id: 'dept',  tab: '🌈 デパート',  title: 'もっともっとデパート',           floors: MORE_SHOPS },
     { id: 'tower', tab: '🗼 タワー',    title: 'もっともっともっとタワー',       floors: TOWER_SHOPS },
     { id: 'mall',  tab: '🌍 ワールドモール', title: 'もっともっともっともっとワールドモール', floors: MALL_SHOPS },
-    { id: 'fes',   tab: '🎉 ひろば',      title: 'ついかの 3×10^149こ ひろば',    floors: FES_SHOPS }
+    { id: 'fes',   tab: '🎉 ひろば',      title: 'ついかの 3×10^149こ ひろば',    floors: FES_SHOPS },
+    { id: 'castle', tab: '🐉 でんせつのしろ', title: 'でんせつのしろ',              floors: CASTLE_SHOPS }
 ];
 // ひろばは 3かい × 10^149こ ＝ ちょうど 3×10^149こ
 const FES_TOTAL_TEXT = `3.00×10^149（150けた）`;
@@ -4870,6 +4916,13 @@ function moNumText(num) {                      // もじれつの まま よみ�
     if (num.length <= 20) return coinText(BigInt(num));
     return `${num[0]}.${num.slice(1, 3)}×10^${num.length - 1}（${num.length}けた）`;
 }
+// ページばんごう（さいしょの ばんごう ÷ 8 ＋ 1）を さいしょの すうけただけで もとめる
+function moPageText(start) {
+    if (start.length <= 20) return coinText(BigInt(start) / BigInt(MORE_PER) + 1n);
+    const q = (BigInt(start.slice(0, 19)) / BigInt(MORE_PER)).toString();
+    const len = start.length - (19 - q.length);
+    return `${q[0]}.${q.slice(1, 3)}×10^${len - 1}（${len}けた）`;
+}
 
 // ながい ばんごうは そのまま しまうと セーブが おもいので、みじかい かぎに する
 function moHash(num) {
@@ -4902,10 +4955,9 @@ function moreText(sh) { return sh.exp <= 20 ? coinText(moreTotal(sh)) : `1.00×1
 function moreShortT(sh) { return sh.exp <= 20 ? coinText(moreTotal(sh)) : '10^' + sh.exp; }
 function moreMaxText(sh) { return sh.exp <= 20 ? coinText(moreTotal(sh) - 1n) : `9.99×10^${sh.exp - 1}（${sh.exp}けた）`; }
 function moreLast(sh) {                        // さいごの ページの さいしょの ばんごう
-    if (!sh._l) {
-        const nines = '9'.repeat(sh.exp);      // 10^e - 1
-        sh._l = moSub(nines, moMod(nines, MORE_PER));
-    }
+    // e が 3いじょう なら 10^e は 8で わりきれるので、10^e - 8 が さいごの ページ
+    if (!sh._l) sh._l = sh.exp >= 3 ? '9'.repeat(sh.exp - 1) + '2'
+                                    : moSub('9'.repeat(sh.exp), moMod('9'.repeat(sh.exp), MORE_PER));
     return sh._l;
 }
 
@@ -4914,7 +4966,7 @@ function moreName(sh, num) {
          + MORE_COL[moDigit(num, 2)] + MORE_PAT[moDigit(num, 1)] + sh.kind[moDigit(num, 0) % sh.kind.length].n;
 }
 function moreEmoji(sh, num) { return sh.kind[moDigit(num, 0) % sh.kind.length].e; }
-function moreCost(num) { return 100 + moMod(num, 9901); }
+function moreCost(num) { return 100 + (Number(num.length > 15 ? num.slice(-15) : num) % 9901); }
 
 function moreBag(id) {
     if (!state.more) state.more = {};
@@ -4966,9 +5018,15 @@ function moJump() {
 
 function moRandom() {
     const digits = moreCur().exp;                        // 10^e なので e けた まで
-    let d = String(1 + Math.floor(Math.random() * 9));
-    for (let k = 1; k < digits; k++) d += Math.floor(Math.random() * 10);
-    moreStart = moSub(d, moMod(d, MORE_PER));
+    const parts = [String(1 + Math.floor(Math.random() * 9))];
+    let len = 1;
+    while (len < digits) {                               // 16けたずつ まとめて つくる
+        const chunk = String(Math.random()).slice(2);
+        parts.push(chunk);
+        len += chunk.length;
+    }
+    const d = parts.join('').slice(0, digits);
+    moreStart = moSub(d, d.length > 15 ? Number(d.slice(-15)) % MORE_PER : Number(d) % MORE_PER);
     openShop();
 }
 
@@ -4994,7 +5052,7 @@ function moreShopHtml() {
     const bld = moreBldCur();
     const sh = moreCur();
     let html = `<div class="text-left text-xs mb-2" style="background:#ffe4e6;border-radius:10px;padding:8px;line-height:1.6">
-        🏬 <b>おみせビル</b>は 4とう だて（ぜんぶで ${MORE_FLOORS.length}かい）。
+        🏬 <b>おみせビル</b>は 5とう だて（ぜんぶで ${MORE_FLOORS.length}かい）。
         しなものは ${MORE_TOTAL_TEXT}こ！<br>
         🎉 ひろばは あとから ふえた ${FES_TOTAL_TEXT}こ ぶんだよ。<br>
         いきたい たてものと かいを えらんでね。
@@ -5018,7 +5076,7 @@ function moreShopHtml() {
     <div class="text-left text-xs mb-2" style="background:#fef3c7;border-radius:10px;padding:8px;line-height:1.6">
         <b>${bld.title} ${moreShop + 1}かい ${sh.tab}</b>（${moreText(sh)}こ）<br>${sh.note}
     </div>
-    <div class="text-xs font-bold text-gray-600 text-left mb-1">ページ ${moNumText(moAdd(moDiv(moreStart, MORE_PER), 1))}</div>`;
+    <div class="text-xs font-bold text-gray-600 text-left mb-1">ページ ${moPageText(moreStart)}</div>`;
 
     for (let k = 0; k < MORE_PER; k++) {
         const num = moAdd(moreStart, k);
@@ -5063,7 +5121,7 @@ function confirmGetAll() {
             （まだ もっていないのは ${left}ひん）<br>
             🎲 むげんショップの <b>${coinText(INF_TOTAL)}こ</b>も ぜんぶ ついてくる！<br>
             🪑 かぐやさんの <b>${coinText(FURN_TOTAL)}こ</b>も ぜんぶ ついてくる！<br>
-            🏬 おみせビル 81かい ぶんの <b>${MORE_TOTAL_TEXT}こ</b>も ぜんぶ ついてくる！<br>
+            🏬 おみせビル 90かい ぶんの <b>${MORE_TOTAL_TEXT}こ</b>も ぜんぶ ついてくる！<br>
             コインは へらないよ。
         </div>
         <div class="game-btn pink mb-2" onclick="getAllItems()">🎁 ぜんぶ もらう！</div>
