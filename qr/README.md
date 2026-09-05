@@ -3,23 +3,13 @@
 `minitomato-qr.png` … ミニトマトのゲームを ひらく QR コード（いんさつ できる カード）
 `minitomato-qr-card.html` … その もとの ページ。ひらいて いんさつ しても いい
 
-## いま どこを さして いるか
+## さして いる さき
 
 ```
-https://claude.ai/code/artifact/9becdf93-cf02-4b1c-9ebc-78e37d15c834
+https://asobi.tachiiri.com/play/minitomato-sodate
 ```
 
-これは **アーティファクト**（claude.ai の ページ）。
-じぶんの スマホで、claude.ai に ログイン した じょうたい なら そのまま あそべる。
-ともだちに わたす ときは、アーティファクトの がめんの「共有」から
-リンクを ひらけるように してから わたす こと。
-
-## だれでも あそべる リンクに したい ときは
-
-1. `minitomato-simple.html` を main ブランチに いれる
-2. GitHub の Settings → Pages で、main ブランチを こうかいに する
-3. `https://i-tachiiri.github.io/tennis-game/minitomato-simple.html` が つかえるように なる
-4. その URL で QR を つくりなおす
+あそびばに おいてある ミニトマトの ゲーム。
 
 ## つくりなおしかた
 
@@ -28,5 +18,14 @@ pip install segno
 python3 -c "import segno; segno.make('<URL>', error='h').save('qr.png', scale=10, border=4)"
 ```
 
-`minitomato-qr-card.html` の QR（インライン SVG）と いちばん したの URL を
-さしかえて、ブラウザで ひらいて スクリーンショットを とる。
+`minitomato-qr-card.html` の なかの QR（インライン SVG）と、いちばん したの
+URL を さしかえて、ブラウザで ひらいて スクリーンショットを とる。
+
+## たしかめかた
+
+QR の なかみは、じっさいに よみとって たしかめる。
+
+```
+pip install opencv-python-headless
+python3 -c "import cv2; print(cv2.QRCodeDetector().detectAndDecode(cv2.imread('minitomato-qr.png'))[0])"
+```
